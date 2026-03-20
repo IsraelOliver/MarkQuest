@@ -67,8 +67,58 @@ export type ProcessingJob = {
   finishedAt?: string
 }
 
+export type CardPresetId =
+  | 'enem-a4'
+  | 'school-a4'
+  | 'quiz-20'
+  | 'quiz-45'
+  | 'quiz-60'
+  | 'answer-sheet-4'
+  | 'answer-sheet-5'
+
+export type CardTemplateDefinition = {
+  pageSize: 'A4'
+  totalQuestions: number
+  choicesPerQuestion: 4 | 5
+  columns: number
+  rowsPerColumn: number
+  numberingMode: 'continuous' | 'by-block'
+  groupByArea: boolean
+  showBlockTitles: boolean
+  identification: {
+    showStudentName: boolean
+    showStudentCode: boolean
+    showClassroom: boolean
+    showDate: boolean
+    showExamCode: boolean
+    showSignature: boolean
+    showManualIdGrid: boolean
+    extraFields: string[]
+  }
+  header: {
+    institutionName: string
+    examName: string
+    subtitle: string
+    classroomLabel: string
+    instructions: string
+    omrGuidance: string
+    showInstitutionLogo: boolean
+  }
+}
+
+export type CardVisualTheme = {
+  visualStyle: 'institutional' | 'vestibular' | 'compact'
+  density: 'compact' | 'balanced' | 'spacious'
+  softBorders: boolean
+  showSectionSeparators: boolean
+  refinedAlignment: boolean
+  highlightHeader: boolean
+  answerGridStyle: 'classic' | 'lined' | 'minimal'
+}
+
 export type OMRTemplateConfig = {
   totalQuestions: number
+  choicesPerQuestion: 4 | 5
   columns: number
   rowsPerColumn: number
   startXRatio: number
@@ -86,6 +136,9 @@ export type Template = {
   name: string
   examId: string
   totalQuestions: number
+  presetId: CardPresetId
+  definition: CardTemplateDefinition
+  visualTheme: CardVisualTheme
   omrConfig: OMRTemplateConfig
   createdAt: string
 }

@@ -82,6 +82,247 @@
   "jobs": [],
   "results": [],
   "studentResults": [],
-  "templates": [],
+  "templates": [
+    {
+      "id": "tpl_6a748768-ec2b-4f74-b811-ac97727d1fb3",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 45,
+      "omrConfig": {
+        "totalQuestions": 45,
+        "choicesPerQuestion": 5,
+        "columns": 2,
+        "rowsPerColumn": 23,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T17:42:33.921Z",
+      "presetId": "enem-a4",
+      "definition": {
+        "pageSize": "A4",
+        "totalQuestions": 45,
+        "choicesPerQuestion": 5,
+        "columns": 2,
+        "rowsPerColumn": 23,
+        "numberingMode": "continuous",
+        "groupByArea": false,
+        "showBlockTitles": false,
+        "identification": {
+          "showStudentName": true,
+          "showStudentCode": true,
+          "showClassroom": true,
+          "showDate": false,
+          "showExamCode": true,
+          "showSignature": false,
+          "showManualIdGrid": false,
+          "extraFields": []
+        },
+        "header": {
+          "institutionName": "Instituicao",
+          "examName": "Simulado ENEM",
+          "subtitle": "Cartao-resposta oficial",
+          "classroomLabel": "Turma",
+          "instructions": "Marque apenas uma alternativa por questao e mantenha o cartao limpo.",
+          "omrGuidance": "Use caneta escura e evite dobras na folha.",
+          "showInstitutionLogo": false
+        }
+      },
+      "visualTheme": {
+        "visualStyle": "vestibular",
+        "density": "balanced",
+        "softBorders": true,
+        "showSectionSeparators": true,
+        "refinedAlignment": true,
+        "highlightHeader": true,
+        "answerGridStyle": "lined"
+      }
+    },
+    {
+      "id": "tpl_97265c9b-1523-452c-aef8-cea7d952fd53",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 20,
+      "omrConfig": {
+        "totalQuestions": 20,
+        "columns": 2,
+        "rowsPerColumn": 10,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:06:45.312Z"
+    },
+    {
+      "id": "tpl_39a071e7-fc5f-4307-9374-4b18a1338797",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:06:54.116Z"
+    },
+    {
+      "id": "tpl_5e8f348b-5378-4dc7-9ceb-36d241560846",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 1,
+        "rowsPerColumn": 10,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:07:32.923Z"
+    },
+    {
+      "id": "tpl_008887a0-774e-406d-a3e7-4c3d40a83a3c",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 4,
+        "rowsPerColumn": 3,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:07:40.211Z"
+    },
+    {
+      "id": "tpl_17fc15ed-459c-4b57-a799-604999b1d7bb",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.014,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:07:50.684Z"
+    },
+    {
+      "id": "tpl_edb6a3d8-c302-488d-af41-4288e03f82cb",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.191,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:08:09.035Z"
+    },
+    {
+      "id": "tpl_c0162122-c3d4-4b74-ab7d-cff601291ae3",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.001,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:08:25.724Z"
+    },
+    {
+      "id": "tpl_ec9c738e-8c10-464a-b553-9ed28c1c9546",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.01,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:08:35.468Z"
+    },
+    {
+      "id": "tpl_acfa367b-d185-468f-a121-671579e9ec59",
+      "name": "Template ENEM A4",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "totalQuestions": 10,
+      "omrConfig": {
+        "totalQuestions": 10,
+        "columns": 2,
+        "rowsPerColumn": 5,
+        "startXRatio": 0.18,
+        "startYRatio": 0.15,
+        "columnGapRatio": 0.34,
+        "rowGapRatio": 0.07,
+        "optionGapRatio": 0.048,
+        "bubbleRadiusRatio": 0.016,
+        "markThreshold": 0.35,
+        "ambiguityThreshold": 0.07
+      },
+      "createdAt": "2026-03-20T18:08:45.524Z"
+    }
+  ],
   "answerKeys": []
 }

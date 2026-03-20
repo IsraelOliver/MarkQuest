@@ -74,11 +74,100 @@ export type StudentResult = {
   blankAnswers: number
 }
 
+export type CardPresetId =
+  | 'enem-a4'
+  | 'school-a4'
+  | 'quiz-20'
+  | 'quiz-45'
+  | 'quiz-60'
+  | 'answer-sheet-4'
+  | 'answer-sheet-5'
+
+export type CardPageSize = 'A4'
+export type CardNumberingMode = 'continuous' | 'by-block'
+export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
+export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
+export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
+
+export type CardTemplateDefinition = {
+  pageSize: CardPageSize
+  totalQuestions: number
+  choicesPerQuestion: 4 | 5
+  columns: number
+  rowsPerColumn: number
+  numberingMode: CardNumberingMode
+  groupByArea: boolean
+  showBlockTitles: boolean
+  identification: {
+    showStudentName: boolean
+    showStudentCode: boolean
+    showClassroom: boolean
+    showDate: boolean
+    showExamCode: boolean
+    showSignature: boolean
+    showManualIdGrid: boolean
+    extraFields: string[]
+  }
+  header: {
+    institutionName: string
+    examName: string
+    subtitle: string
+    classroomLabel: string
+    instructions: string
+    omrGuidance: string
+    showInstitutionLogo: boolean
+  }
+}
+
+export type CardVisualTheme = {
+  visualStyle: CardVisualStyle
+  density: CardVisualDensity
+  softBorders: boolean
+  showSectionSeparators: boolean
+  refinedAlignment: boolean
+  highlightHeader: boolean
+  answerGridStyle: 'classic' | 'lined' | 'minimal'
+}
+
+export type OMRTemplateConfig = {
+  totalQuestions: number
+  choicesPerQuestion: 4 | 5
+  columns: number
+  rowsPerColumn: number
+  startXRatio: number
+  startYRatio: number
+  columnGapRatio: number
+  rowGapRatio: number
+  optionGapRatio: number
+  bubbleRadiusRatio: number
+  markThreshold: number
+  ambiguityThreshold: number
+}
+
+export type CardTemplateValidationIssue = {
+  severity: 'error' | 'warning' | 'info'
+  code: string
+  message: string
+  field?: string
+}
+
+export type CardTemplateEditorState = {
+  name: string
+  presetId: CardPresetId
+  definition: CardTemplateDefinition
+  visualTheme: CardVisualTheme
+  omrConfig: OMRTemplateConfig
+}
+
 export type Template = {
   id: string
   name: string
   examId: string
   totalQuestions: number
+  presetId: CardPresetId
+  definition: CardTemplateDefinition
+  visualTheme: CardVisualTheme
+  omrConfig: OMRTemplateConfig
   version: string
   createdAt: string
 }

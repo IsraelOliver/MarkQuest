@@ -2,11 +2,14 @@ import type {
   AnswerKey,
   AnswerSheet,
   Exam,
+  OMRTemplateConfig,
   OMRResult,
   ProcessingJob,
   StudentResult,
   Template,
 } from '../types/omr'
+import { createEditorStateFromPreset } from '../utils/cardTemplatePresets'
+import { createTemplateLayoutConfig } from '../utils/templateLayout'
 
 export const examsMock: Exam[] = [
   {
@@ -97,6 +100,10 @@ export const templatesMock: Template[] = [
     name: 'Template ENEM A4 - 45 questoes',
     examId: 'exam-2026-math-01',
     totalQuestions: 45,
+    presetId: 'enem-a4',
+    definition: createEditorStateFromPreset('enem-a4').definition,
+    visualTheme: createEditorStateFromPreset('enem-a4').visualTheme,
+    omrConfig: createTemplateLayoutConfig(45) satisfies OMRTemplateConfig,
     version: 'v1.0.0',
     createdAt: '2026-03-01T07:00:00Z',
   },

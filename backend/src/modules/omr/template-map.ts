@@ -1,8 +1,11 @@
 import type { OMRTemplateConfig } from '../../types/entities.js'
 import type { OMRTemplate } from './omr.types.js'
 
+const OMR_OPTIONS = ['A', 'B', 'C', 'D', 'E'] as const
+
 export const DEFAULT_TEMPLATE_CONFIG_20Q: OMRTemplateConfig = {
   totalQuestions: 20,
+  choicesPerQuestion: 5,
   columns: 2,
   rowsPerColumn: 10,
   startXRatio: 0.18,
@@ -18,7 +21,7 @@ export const DEFAULT_TEMPLATE_CONFIG_20Q: OMRTemplateConfig = {
 export function buildOMRTemplate(templateName: string, config: OMRTemplateConfig): OMRTemplate {
   return {
     ...config,
-    options: ['A', 'B', 'C', 'D', 'E'],
+    options: OMR_OPTIONS.slice(0, config.choicesPerQuestion),
   }
 }
 

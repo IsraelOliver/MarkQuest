@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { createTemplateSchema } from '../schemas/templates.schema.js'
+import { createTemplateSchema, updateTemplateSchema } from '../schemas/templates.schema.js'
 import { TemplateService } from '../services/template.service.js'
 import { ok } from '../utils/http-response.js'
 
@@ -13,5 +13,10 @@ export class TemplatesController {
 
   async list(_request: FastifyRequest, reply: FastifyReply) {
     return ok(reply, templateService.list())
+  }
+
+  async update(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const payload = updateTemplateSchema.parse(request.body)
+    return ok(reply, templateService.update(request.params.id, payload))
   }
 }

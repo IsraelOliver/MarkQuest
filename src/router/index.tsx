@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
       { path: 'units/:unitId/classrooms/:classroomId/students', element: <ClassroomStudentsPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams/:examId', element: <ExamDetailPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/layout', element: <TemplatesPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/layout/:templateId/edit', element: <TemplatesPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/answer-key', element: <AnswerKeysPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/uploads', element: <UploadsPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/results', element: <ResultsPage /> },

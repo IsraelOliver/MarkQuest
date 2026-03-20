@@ -1,4 +1,17 @@
-import type { AnswerKey, AnswerSheet, OMRResult, ProcessingJob, StudentResult, Template } from '../types/omr'
+import type {
+  AnswerKey,
+  AnswerSheet,
+  CardPresetId,
+  CardTemplateDefinition,
+  CardVisualTheme,
+  OMRResult,
+  OMRTemplateConfig,
+  ProcessingJob,
+  StudentResult,
+  Template,
+} from '../types/omr'
+import { createEditorStateFromPreset } from '../utils/cardTemplatePresets'
+import { createTemplateLayoutConfig } from '../utils/templateLayout'
 import { API_ENDPOINTS, request } from './apiClient'
 import { formatStudentLabel } from '../utils/display'
 
@@ -54,6 +67,10 @@ type BackendTemplate = {
   name: string
   examId: string
   totalQuestions: number
+  presetId?: CardPresetId
+  definition?: CardTemplateDefinition
+  visualTheme?: CardVisualTheme
+  omrConfig?: Partial<OMRTemplateConfig>
   createdAt: string
 }
 
@@ -118,11 +135,25 @@ function mapOmrResult(result: BackendOMRResult): OMRResult {
 }
 
 function mapTemplate(template: BackendTemplate): Template {
+  const fallbackState = createEditorStateFromPreset('enem-a4', template.name)
+
   return {
     id: template.id,
     name: template.name,
     examId: template.examId,
     totalQuestions: template.totalQuestions,
+    presetId: template.presetId ?? fallbackState.presetId,
+    definition: template.definition
+      ? {
+          ...template.definition,
+          totalQuestions: template.totalQuestions,
+        }
+      : {
+          ...fallbackState.definition,
+          totalQuestions: template.totalQuestions,
+        },
+    visualTheme: template.visualTheme ?? fallbackState.visualTheme,
+    omrConfig: createTemplateLayoutConfig(template.totalQuestions, template.omrConfig),
     version: 'API',
     createdAt: template.createdAt,
   }
@@ -209,6 +240,10 @@ export const omrService = {
     name: string
     examId: string
     totalQuestions: number
+    presetId: CardPresetId
+    definition: CardTemplateDefinition
+    visualTheme: CardVisualTheme
+    omrConfig: OMRTemplateConfig
   }): Promise<{ endpoint: string; item: Template }> {
     const template = await request<BackendTemplate>(API_ENDPOINTS.templates, {
       method: 'POST',
@@ -225,6 +260,26 @@ export const omrService = {
       endpoint: API_ENDPOINTS.templates,
       items: templates.map(mapTemplate),
     }
+  },
+
+  async updateTemplate(
+    templateId: string,
+    payload: {
+      name: string
+      examId: string
+      totalQuestions: number
+      presetId: CardPresetId
+      definition: CardTemplateDefinition
+      visualTheme: CardVisualTheme
+      omrConfig: OMRTemplateConfig
+    },
+  ): Promise<{ endpoint: string; item: Template }> {
+    const template = await request<BackendTemplate>(`${API_ENDPOINTS.templates}/${templateId}`, {
+      method: 'PUT',
+      body: payload,
+    })
+
+    return { endpoint: `${API_ENDPOINTS.templates}/${templateId}`, item: mapTemplate(template) }
   },
 
   async createAnswerKey(payload: {
