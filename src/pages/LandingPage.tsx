@@ -6,11 +6,11 @@ export function LandingPage() {
   return (
     <main className="landing landing--saas">
       <section className="landing__hero">
-        <span className="landing__badge">Leitura OMR para operacao academica</span>
-        <h1>Automatize a correcao de provas com um fluxo claro, rastreavel e pronto para producao</h1>
+        <span className="landing__badge">Leitura OMR para operação acadêmica</span>
+        <h1>Automatize a correção de provas com um fluxo claro, rastreável e pronto para produção</h1>
         <p>
-          Envie cartoes, organize templates e gabaritos, processe lotes completos e acompanhe os resultados em uma
-          interface pensada para operacao diaria.
+          Envie cartões, organize templates e gabaritos, processe lotes completos e acompanhe os resultados em uma
+          interface pensada para operação diária.
         </p>
         <div className="landing__actions">
           <Link to="/app/dashboard">

@@ -67,7 +67,7 @@ export async function request<T>(url: string, config: RequestConfig): Promise<T>
   }
 
   if (!parsed || !('success' in parsed) || !parsed.success) {
-    throw new Error('Resposta invalida da API.')
+    throw new Error('Resposta inválida da API.')
   }
 
   return parsed.data

@@ -38,7 +38,7 @@ export function ClassroomsPage() {
           setSelectedClassroomIdState(activeClassroom.id)
         }
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar as turmas.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar as turmas.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -66,7 +66,7 @@ export function ClassroomsPage() {
       setSelectedExamId('')
       setMessage(`Turma ${classroom.name} criada para a unidade ${selectedUnit?.name ?? ''}.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel criar a turma.', submitError))
+      setError(formatApiErrorMessage('Não foi possível criar a turma.', submitError))
     } finally {
       setIsSubmitting(false)
     }

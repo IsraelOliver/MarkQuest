@@ -34,7 +34,7 @@ export function UploadsPage() {
         const response = await omrService.getUploads()
         setUploads(response.items.filter((item) => item.examId === selectedExam?.id))
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar os uploads.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar os uploads.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -71,7 +71,7 @@ export function UploadsPage() {
       setFiles([])
       setMessage(`${response.totalFiles} arquivo(s) enviado(s) com sucesso para processamento.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel enviar os arquivos.', submitError))
+      setError(formatApiErrorMessage('Não foi possível enviar os arquivos.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -91,7 +91,7 @@ export function UploadsPage() {
       />
 
       <SectionTitle
-        title="Upload de cartoes-resposta"
+        title="Upload de cartões-resposta"
         subtitle="Envie os arquivos do lote e acompanhe imediatamente o que entrou na fila de leitura."
       />
 
@@ -148,7 +148,7 @@ export function UploadsPage() {
       </Card>
 
       <Card>
-        <h3>Ultimos arquivos no lote</h3>
+        <h3>Últimos arquivos no lote</h3>
         {isLoading ? <p>Carregando uploads...</p> : null}
         {!isLoading && !uploads.length ? <p>Nenhum upload enviado ainda.</p> : null}
         {!!uploads.length ? (

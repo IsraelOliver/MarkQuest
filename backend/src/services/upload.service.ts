@@ -17,7 +17,7 @@ export class UploadService {
   createUpload(input: CreateUploadInput): UploadFile {
     const exam = db.exams.find((item) => item.id === input.examId)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada para upload nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada para upload não existe.', 404)
     }
 
     const upload: UploadFile = {

@@ -16,7 +16,7 @@ export class TemplateService {
   }): Template {
     const exam = db.exams.find((item) => item.id === input.examId)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada não existe.', 404)
     }
 
     const template: Template = {
@@ -66,12 +66,12 @@ export class TemplateService {
   ): Template {
     const templateIndex = db.templates.findIndex((item) => item.id === id)
     if (templateIndex < 0) {
-      throw new AppError('TEMPLATE_NOT_FOUND', 'Template informado nao existe.', 404)
+      throw new AppError('TEMPLATE_NOT_FOUND', 'Template informado não existe.', 404)
     }
 
     const exam = db.exams.find((item) => item.id === input.examId)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada não existe.', 404)
     }
 
     const currentTemplate = db.templates[templateIndex]

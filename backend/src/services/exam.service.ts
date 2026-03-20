@@ -7,7 +7,7 @@ export class ExamService {
   create(input: { classroomId: string; title: string; subject: string; totalQuestions: number }): Exam {
     const classroom = db.classrooms.find((item) => item.id === input.classroomId)
     if (!classroom) {
-      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada nao existe.', 404)
+      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada não existe.', 404)
     }
 
     const exam: Exam = {
@@ -35,7 +35,7 @@ export class ExamService {
   update(id: string, input: { classroomId: string; title: string; subject: string; totalQuestions: number }) {
     const exam = this.findById(id)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada não existe.', 404)
     }
 
     exam.classroomId = input.classroomId
@@ -49,7 +49,7 @@ export class ExamService {
   delete(id: string) {
     const examIndex = db.exams.findIndex((item) => item.id === id)
     if (examIndex < 0) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada não existe.', 404)
     }
 
     const hasDependencies =
@@ -60,7 +60,7 @@ export class ExamService {
       db.studentResults.some((item) => item.examId === id)
 
     if (hasDependencies) {
-      throw new AppError('EXAM_HAS_DEPENDENCIES', 'Nao e possivel excluir a prova porque ela ja possui dados vinculados.', 400)
+      throw new AppError('EXAM_HAS_DEPENDENCIES', 'Não é possível excluir a prova porque ela já possui dados vinculados.', 400)
     }
 
     const [deleted] = db.exams.splice(examIndex, 1)

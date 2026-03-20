@@ -15,8 +15,8 @@ export const examsMock: Exam[] = [
   {
     id: 'exam-2026-math-01',
     classroomId: 'cls-demo-001',
-    name: 'Simulado ENEM - Matematica',
-    subject: 'Matematica',
+    name: 'Simulado ENEM - Matemática',
+    subject: 'Matemática',
     totalQuestions: 45,
     createdAt: '2026-03-01T08:30:00Z',
   },
@@ -67,7 +67,7 @@ export const omrResultsMock: OMRResult[] = [
     answerSheetId: 'sheet-002',
     confidence: 0.93,
     detectedAnswers: ['A', 'C', 'B', 'B', 'E'],
-    warnings: ['Questao 3 com marcacao ambigua.'],
+    warnings: ['Questão 3 com marcação ambígua.'],
   },
 ]
 
@@ -97,7 +97,7 @@ export const studentResultsMock: StudentResult[] = [
 export const templatesMock: Template[] = [
   {
     id: 'template-01',
-    name: 'Template ENEM A4 - 45 questoes',
+    name: 'Template ENEM A4 - 45 questões',
     examId: 'exam-2026-math-01',
     totalQuestions: 45,
     presetId: 'enem-a4',

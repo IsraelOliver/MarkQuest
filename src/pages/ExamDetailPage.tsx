@@ -37,7 +37,7 @@ export function ExamDetailPage() {
 
       <SectionTitle
         title={exam?.name ?? 'Prova'}
-        subtitle="Entre no fluxo de provas da turma. A lista de alunos fica fixada na lateral para consulta rapida."
+        subtitle="Entre no fluxo de provas da turma. A lista de alunos fica fixada na lateral para consulta rápida."
       />
 
       <div className="inline-actions page-actions">

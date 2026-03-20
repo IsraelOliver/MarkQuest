@@ -78,7 +78,7 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
     color: rgb(0.059, 0.09, 0.165),
   })
 
-  page.drawText(definition.header.subtitle || 'Cartao-resposta oficial', {
+  page.drawText(definition.header.subtitle || 'Cartão-resposta oficial', {
     x: zones.header.x + 18,
     y: toPdfY(zones.header.y + 66),
     size: 9,
@@ -132,7 +132,7 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
   })
 
   page.drawText(
-    definition.header.instructions || 'Marque assim: bolha totalmente preenchida. Nao marque assim: X, circulo parcial ou check.',
+    definition.header.instructions || 'Marque assim: bolha totalmente preenchida. Não marque assim: X, círculo parcial ou check.',
     {
       x: zones.instructions.x + 72,
       y: toPdfY(zones.instructions.y + 14),

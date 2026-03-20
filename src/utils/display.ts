@@ -4,7 +4,7 @@ export function formatStudentLabel(studentId: string) {
     .replace(/\s+/g, ' ')
     .trim()
 
-  if (!normalized) return 'Aluno sem identificacao'
+  if (!normalized) return 'Aluno sem identificação'
 
   return normalized.replace(/\b\w/g, (char) => char.toUpperCase())
 }

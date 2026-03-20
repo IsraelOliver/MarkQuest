@@ -120,8 +120,8 @@ function mapStudentResult(result: BackendStudentResult): StudentResult {
 
 function mapOmrResult(result: BackendOMRResult): OMRResult {
   const warnings = [
-    ...result.blankQuestions.map((questionNumber) => `Questao ${questionNumber} em branco.`),
-    ...result.multipleMarkedQuestions.map((questionNumber) => `Questao ${questionNumber} com marcacao multipla.`),
+    ...result.blankQuestions.map((questionNumber) => `Questão ${questionNumber} em branco.`),
+    ...result.multipleMarkedQuestions.map((questionNumber) => `Questão ${questionNumber} com marcação múltipla.`),
   ]
 
   return {

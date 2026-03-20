@@ -29,7 +29,7 @@ export function UnitsPage() {
         setClassrooms(nextClassrooms)
         setShowCreateForm(nextUnits.length === 0)
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar as unidades.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar as unidades.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -53,7 +53,7 @@ export function UnitsPage() {
       setShowCreateForm(false)
       setMessage(`Unidade ${unit.name} criada com sucesso.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel criar a unidade.', submitError))
+      setError(formatApiErrorMessage('Não foi possível criar a unidade.', submitError))
     } finally {
       setIsSubmitting(false)
     }

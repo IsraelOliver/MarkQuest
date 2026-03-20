@@ -13,7 +13,7 @@ export class StudentService {
   }): Student {
     const classroom = db.classrooms.find((item) => item.id === input.classroomId)
     if (!classroom) {
-      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada para aluno nao existe.', 404)
+      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada para aluno não existe.', 404)
     }
 
     const student: Student = {
@@ -47,7 +47,7 @@ export class StudentService {
   ) {
     const student = db.students.find((item) => item.id === id)
     if (!student) {
-      throw new AppError('STUDENT_NOT_FOUND', 'Aluno informado nao existe.', 404)
+      throw new AppError('STUDENT_NOT_FOUND', 'Aluno informado não existe.', 404)
     }
 
     student.classroomId = input.classroomId
@@ -62,7 +62,7 @@ export class StudentService {
   delete(id: string) {
     const studentIndex = db.students.findIndex((item) => item.id === id)
     if (studentIndex < 0) {
-      throw new AppError('STUDENT_NOT_FOUND', 'Aluno informado nao existe.', 404)
+      throw new AppError('STUDENT_NOT_FOUND', 'Aluno informado não existe.', 404)
     }
 
     const [deleted] = db.students.splice(studentIndex, 1)

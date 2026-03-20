@@ -39,7 +39,7 @@ export function ExamsPage() {
           setSelectedExamIdState(activeExam.id)
         }
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar as provas.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar as provas.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -72,7 +72,7 @@ export function ExamsPage() {
       setSelectedExamIdState(exam.id)
       setMessage(`Prova ${exam.name} criada e definida como prova ativa do fluxo.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel criar a prova.', submitError))
+      setError(formatApiErrorMessage('Não foi possível criar a prova.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -81,12 +81,12 @@ export function ExamsPage() {
   const handleSelect = (examId: string) => {
     setSelectedExamId(examId)
     setSelectedExamIdState(examId)
-    setMessage('Prova ativa atualizada. Os modulos de layout, gabarito, upload e leitura usarao esta prova.')
+    setMessage('Prova ativa atualizada. Os módulos de layout, gabarito, upload e leitura usarão esta prova.')
   }
 
   return (
     <section>
-      <SectionTitle title="Provas" subtitle="Crie as provas dentro da turma ativa e escolha qual delas sera usada no fluxo OMR." />
+      <SectionTitle title="Provas" subtitle="Crie as provas dentro da turma ativa e escolha qual delas será usada no fluxo OMR." />
 
       <Card>
         <h3>Turma ativa</h3>
@@ -106,7 +106,7 @@ export function ExamsPage() {
           </label>
 
           <label className="field">
-            <span>Total de questoes</span>
+            <span>Total de questões</span>
             <input value={totalQuestions} type="number" min="1" onChange={(event) => setTotalQuestions(event.target.value)} />
           </label>
 
@@ -131,7 +131,7 @@ export function ExamsPage() {
               <label key={exam.id} className="selection-item">
                 <input type="radio" name="selected-exam" checked={selectedExamId === exam.id} onChange={() => handleSelect(exam.id)} />
                 <span>
-                  {exam.name} - {exam.subject} - {exam.totalQuestions} questoes
+                  {exam.name} - {exam.subject} - {exam.totalQuestions} questões
                 </span>
               </label>
             ))}

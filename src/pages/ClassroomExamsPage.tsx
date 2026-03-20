@@ -51,7 +51,7 @@ export function ClassroomExamsPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!classroomId) {
-      setError('Turma invalida para cadastro de prova.')
+      setError('Turma inválida para cadastro de prova.')
       return
     }
 
@@ -81,7 +81,7 @@ export function ClassroomExamsPage() {
       resetForm()
       await refresh()
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel salvar a prova.', submitError))
+      setError(formatApiErrorMessage('Não foi possível salvar a prova.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -95,9 +95,9 @@ export function ClassroomExamsPage() {
       await academicService.deleteExam(examId)
       if (editingExamId === examId) resetForm()
       await refresh()
-      setMessage('Prova excluida com sucesso.')
+      setMessage('Prova excluída com sucesso.')
     } catch (deleteError) {
-      setError(formatApiErrorMessage('Nao foi possivel excluir a prova.', deleteError))
+      setError(formatApiErrorMessage('Não foi possível excluir a prova.', deleteError))
     }
   }
 
@@ -142,7 +142,7 @@ export function ClassroomExamsPage() {
             </label>
 
             <label className="field">
-              <span>Total de questoes</span>
+              <span>Total de questões</span>
               <input value={totalQuestions} type="number" min="1" onChange={(event) => setTotalQuestions(event.target.value)} />
             </label>
 
@@ -176,7 +176,7 @@ export function ClassroomExamsPage() {
               <h3>{exam.name}</h3>
               <p className="entity-card__meta">{exam.subject}</p>
               <div className="entity-card__stats">
-                <span>{exam.totalQuestions} questoes</span>
+                <span>{exam.totalQuestions} questões</span>
                 <span>{classroomStudents.length} aluno(s)</span>
               </div>
             </button>

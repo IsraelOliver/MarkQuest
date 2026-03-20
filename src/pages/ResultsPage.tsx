@@ -77,7 +77,7 @@ export function ResultsPage() {
         setSelectedTemplateId((current) => current || templates.items[0]?.id || '')
         setSelectedAnswerKeyId((current) => current || answerKeys.items[0]?.id || '')
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar os resultados.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar os resultados.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -143,7 +143,7 @@ export function ResultsPage() {
       setSelectedUploadIds([])
       setMessage(`Job ${response.job.id} enviado com status ${response.job.status}. Atualize para acompanhar a leitura.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel processar os uploads.', submitError))
+      setError(formatApiErrorMessage('Não foi possível processar os uploads.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -188,7 +188,7 @@ export function ResultsPage() {
               <option value="">Selecionar template</option>
               {data.templates.map((template) => (
                 <option key={template.id} value={template.id}>
-                  {template.name} - {template.totalQuestions} questoes
+                  {template.name} - {template.totalQuestions} questões
                 </option>
               ))}
             </select>
@@ -207,7 +207,7 @@ export function ResultsPage() {
           </label>
 
           <div className="field">
-            <span>Uploads disponiveis</span>
+            <span>Uploads disponíveis</span>
             <div className="selection-list">
               {data.uploads.map((upload) => (
                 <label key={upload.id} className="selection-item">
@@ -221,7 +221,7 @@ export function ResultsPage() {
                   </span>
                 </label>
               ))}
-              {!data.uploads.length ? <p className="muted-text">Nenhum upload disponivel para processamento.</p> : null}
+              {!data.uploads.length ? <p className="muted-text">Nenhum upload disponível para processamento.</p> : null}
             </div>
           </div>
 
@@ -259,13 +259,13 @@ export function ResultsPage() {
         <Table
           data={data.omr}
           columns={[
-            { key: 'answerSheetId', header: 'Cartao' },
-            { key: 'confidence', header: 'Confianca', render: (item) => `${(item.confidence * 100).toFixed(1)}%` },
+            { key: 'answerSheetId', header: 'Cartão' },
+            { key: 'confidence', header: 'Confiança', render: (item) => `${(item.confidence * 100).toFixed(1)}%` },
             { key: 'warnings', header: 'Alertas', render: (item) => (item.warnings.length ? item.warnings.join(', ') : 'Nenhum') },
           ]}
         />
       ) : null}
-      {!isLoading && !data.omr.length ? <Card><p>Nenhum resultado OMR disponivel ainda.</p></Card> : null}
+      {!isLoading && !data.omr.length ? <Card><p>Nenhum resultado OMR disponível ainda.</p></Card> : null}
 
       <SectionTitle title="Resultados por aluno" />
       {!!data.students.length ? (
@@ -280,7 +280,7 @@ export function ResultsPage() {
           ]}
         />
       ) : null}
-      {!isLoading && !data.students.length ? <Card><p>Nenhum resultado por aluno disponivel ainda.</p></Card> : null}
+      {!isLoading && !data.students.length ? <Card><p>Nenhum resultado por aluno disponível ainda.</p></Card> : null}
     </section>
   )
 }

@@ -7,7 +7,7 @@ export class AnswerKeyService {
   create(input: { name: string; examId: string; templateId: string; answers: BubbleOption[] }): AnswerKey {
     const exam = db.exams.find((item) => item.id === input.examId)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova informada para gabarito nao existe.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova informada para gabarito não existe.', 404)
     }
 
     const template = db.templates.find((item) => item.id === input.templateId)

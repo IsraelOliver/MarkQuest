@@ -31,13 +31,13 @@ export function TemplateLayoutPreview({
     <div className="layout-preview-card">
       <div className="layout-section-header">
         <div>
-          <h3>Preview do cartao</h3>
-          <p>Visual gerado a partir da configuracao atual do layout.</p>
+          <h3>Preview do cartão</h3>
+          <p>Visual gerado a partir da configuração atual do layout.</p>
         </div>
 
         <div className="layout-preview-card__meta">
           <span>
-            {config.totalQuestions} questoes
+            {config.totalQuestions} questões
           </span>
           <span>
             {config.columns} colunas
@@ -207,7 +207,7 @@ export function TemplateLayoutPreview({
                   y={TEMPLATE_PAGE_Y + TEMPLATE_PAGE_HEIGHT - 61}
                   className="layout-preview-svg__warning"
                 >
-                  Estrutura insuficiente: faltam espacos para todas as questoes.
+                  Estrutura insuficiente: faltam espaços para todas as questões.
                 </text>
               </g>
             ) : null}

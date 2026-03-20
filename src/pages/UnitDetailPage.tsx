@@ -53,7 +53,7 @@ export function UnitDetailPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!unitId) {
-      setError('Unidade invalida para cadastro de turma.')
+      setError('Unidade inválida para cadastro de turma.')
       return
     }
 
@@ -73,7 +73,7 @@ export function UnitDetailPage() {
       resetForm()
       await refresh()
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel salvar a turma.', submitError))
+      setError(formatApiErrorMessage('Não foi possível salvar a turma.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -89,9 +89,9 @@ export function UnitDetailPage() {
         resetForm()
       }
       await refresh()
-      setMessage('Turma excluida com sucesso.')
+      setMessage('Turma excluída com sucesso.')
     } catch (deleteError) {
-      setError(formatApiErrorMessage('Nao foi possivel excluir a turma.', deleteError))
+      setError(formatApiErrorMessage('Não foi possível excluir a turma.', deleteError))
     }
   }
 

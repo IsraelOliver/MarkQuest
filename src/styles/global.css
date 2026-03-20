@@ -556,11 +556,60 @@ a {
   margin-bottom: 0;
 }
 
+.card-editor-section {
+  padding: 0;
+  overflow: hidden;
+}
+
 .card-editor-section__header {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+}
+
+.card-editor-section__trigger {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem;
+  border: 0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  text-align: left;
+  cursor: pointer;
+}
+
+.card-editor-section__trigger-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.card-editor-section__trigger-copy h3 {
+  margin: 0;
+}
+
+.card-editor-section__trigger-copy p {
+  margin: 0;
+  color: #64748b;
+}
+
+.card-editor-section__trigger-state {
+  flex-shrink: 0;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.card-editor-section__body {
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem 1.2rem 1.25rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .card-editor-section__header h3,
@@ -669,6 +718,11 @@ a {
 
 .card-editor-advanced-grid {
   margin-top: 1rem;
+}
+
+.card-editor-omr-detail {
+  padding-top: 0.25rem;
+  border-top: 1px solid #e2e8f0;
 }
 
 .card-editor-footer {
@@ -848,17 +902,12 @@ a {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
-  align-items: start;
+  align-items: center;
   flex-wrap: wrap;
 }
 
 .card-editor-preview__header h3 {
   margin: 0;
-}
-
-.card-editor-preview__header p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
 }
 
 .card-editor-preview__chips {
@@ -878,10 +927,22 @@ a {
 }
 
 .card-editor-preview__frame {
-  border-radius: 1.25rem;
-  background: radial-gradient(circle at top, #eff6ff 0%, #f8fafc 70%);
-  padding: 1rem;
+  border-radius: 1rem;
+  background: #eef2f7;
+  padding: 0.08rem;
   overflow: auto;
+  border: 1px solid #e5eaf0;
+  max-height: 78vh;
+}
+
+.card-editor-preview__pages {
+  display: grid;
+  gap: 1rem;
+  min-width: min-content;
+}
+
+.card-editor-preview__page-sheet {
+  background: transparent;
 }
 
 .card-editor-preview__svg {

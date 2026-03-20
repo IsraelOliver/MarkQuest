@@ -45,7 +45,7 @@ export function AnswerKeysPage() {
         setAnswerKeys(filteredAnswerKeys)
         setSelectedTemplateId((current) => current || filteredTemplates[0]?.id || '')
       } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar os gabaritos.', loadError))
+        setError(formatApiErrorMessage('Não foi possível carregar os gabaritos.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -95,7 +95,7 @@ export function AnswerKeysPage() {
       setAnswerKeys((current) => [response.item, ...current])
       setMessage(`Gabarito ${response.item.version} criado e vinculado ao template selecionado.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel criar o gabarito.', submitError))
+      setError(formatApiErrorMessage('Não foi possível criar o gabarito.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -114,7 +114,7 @@ export function AnswerKeysPage() {
         ]}
       />
 
-      <SectionTitle title="Gabaritos" subtitle="Monte a sequencia correta de respostas para cada template cadastrado." />
+      <SectionTitle title="Gabaritos" subtitle="Monte a sequência correta de respostas para cada template cadastrado." />
 
       <div className="inline-actions page-actions">
         <Link to={`/app/units/${unitId}/classrooms/${classroomId}/exams/${examId}`}>
@@ -142,7 +142,7 @@ export function AnswerKeysPage() {
               <option value="">Selecione um template</option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
-                  {template.name} - {template.totalQuestions} questoes
+                  {template.name} - {template.totalQuestions} questões
                 </option>
               ))}
             </select>

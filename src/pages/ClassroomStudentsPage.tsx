@@ -49,7 +49,7 @@ export function ClassroomStudentsPage() {
   const handleSubmitStudent = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!classroomId) {
-      setError('Turma invalida para cadastro de aluno.')
+      setError('Turma inválida para cadastro de aluno.')
       return
     }
 
@@ -81,7 +81,7 @@ export function ClassroomStudentsPage() {
       resetStudentForm()
       await refresh()
     } catch (submitError) {
-      setError(formatApiErrorMessage('Nao foi possivel salvar o aluno.', submitError))
+      setError(formatApiErrorMessage('Não foi possível salvar o aluno.', submitError))
     } finally {
       setIsSavingStudent(false)
     }
@@ -97,7 +97,7 @@ export function ClassroomStudentsPage() {
       await refresh()
       setMessage('Aluno excluido com sucesso.')
     } catch (deleteError) {
-      setError(formatApiErrorMessage('Nao foi possivel excluir o aluno.', deleteError))
+      setError(formatApiErrorMessage('Não foi possível excluir o aluno.', deleteError))
     }
   }
 
@@ -142,7 +142,7 @@ export function ClassroomStudentsPage() {
               </label>
 
               <label className="field">
-                <span>Ultimo nome</span>
+                <span>Último nome</span>
                 <input value={lastName} onChange={(event) => setLastName(event.target.value)} />
               </label>
 
@@ -200,7 +200,7 @@ export function ClassroomStudentsPage() {
         <aside className="students-layout__right">
           <Card>
             <h3>Importar lista</h3>
-            <p className="muted-text">Envie uma planilha Excel com a lista de alunos. A importacao automatica sera a proxima etapa.</p>
+            <p className="muted-text">Envie uma planilha Excel com a lista de alunos. A importação automática será a próxima etapa.</p>
             <label className="field">
               <span>Arquivo Excel</span>
               <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportFile} />

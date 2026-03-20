@@ -81,8 +81,8 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
     rowsPerColumn: nextState.definition.rowsPerColumn,
   })
 
-  nextState.definition.header.examName = nextState.definition.header.examName.trim() || nextState.name.trim() || 'Cartao-resposta'
-  nextState.definition.header.institutionName = nextState.definition.header.institutionName.trim() || 'Instituicao'
+  nextState.definition.header.examName = nextState.definition.header.examName.trim() || nextState.name.trim() || 'Cartão-resposta'
+  nextState.definition.header.institutionName = nextState.definition.header.institutionName.trim() || 'Instituição'
   nextState.name = nextState.name.trim() || nextState.definition.header.examName
 
   const safeZones = getCardTemplateZones(nextState)
@@ -247,7 +247,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'INSUFFICIENT_CAPACITY',
       field: 'definition.rowsPerColumn',
-      message: 'A grade atual nao comporta todas as questoes da prova.',
+      message: 'A grade atual não comporta todas as questões da prova.',
     })
   }
 
@@ -256,7 +256,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'ROW_GAP_UNSAFE',
       field: 'omrConfig.rowGapRatio',
-      message: 'O espacamento entre linhas esta abaixo do minimo seguro para leitura OMR.',
+      message: 'O espaçamento entre linhas está abaixo do mínimo seguro para leitura OMR.',
     })
   }
 
@@ -265,7 +265,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'OPTION_GAP_UNSAFE',
       field: 'omrConfig.optionGapRatio',
-      message: 'O espacamento entre alternativas esta abaixo do minimo seguro.',
+      message: 'O espaçamento entre alternativas está abaixo do mínimo seguro.',
     })
   }
 
@@ -274,7 +274,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'BUBBLE_RADIUS_UNSAFE',
       field: 'omrConfig.bubbleRadiusRatio',
-      message: 'O tamanho das bolhas saiu do intervalo confiavel para impressao e leitura.',
+      message: 'O tamanho das bolhas saiu do intervalo confiável para impressão e leitura.',
     })
   }
 
@@ -283,7 +283,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'START_X_UNSAFE',
       field: 'omrConfig.startXRatio',
-      message: 'A grade de respostas ficou fora da faixa segura horizontal da pagina.',
+      message: 'A grade de respostas ficou fora da faixa segura horizontal da página.',
     })
   }
 
@@ -292,7 +292,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'START_Y_UNSAFE',
       field: 'omrConfig.startYRatio',
-      message: 'A grade de respostas ficou fora da faixa segura vertical da pagina.',
+      message: 'A grade de respostas ficou fora da faixa segura vertical da página.',
     })
   }
 
@@ -301,7 +301,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'COLUMN_GAP_UNSAFE',
       field: 'omrConfig.columnGapRatio',
-      message: 'A distancia entre colunas saiu da janela segura para leitura.',
+      message: 'A distância entre colunas saiu da janela segura para leitura.',
     })
   }
 
@@ -310,7 +310,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'COLUMN_WIDTH_OVERFLOW',
       field: 'definition.columns',
-      message: 'Quatro colunas com cinco alternativas deixam a area util apertada demais em A4.',
+      message: 'Quatro colunas com cinco alternativas deixam a área útil apertada demais em A4.',
     })
   }
 
@@ -319,7 +319,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'HEADER_OVERLAP',
       field: 'definition.header.instructions',
-      message: 'Cabecalho e identificacao invadem a area reservada para a grade OMR.',
+      message: 'Cabeçalho e identificação invadem a área reservada para a grade OMR.',
     })
   }
 
@@ -337,7 +337,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'GRID_HITS_HEADER_ZONE',
       field: 'omrConfig.startYRatio',
-      message: 'A grade de respostas subiu demais e invadiu o cabecalho ou as instrucoes.',
+      message: 'A grade de respostas subiu demais e invadiu o cabeçalho ou as instruções.',
     })
   }
 
@@ -346,7 +346,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'GRID_HITS_FOOTER_ZONE',
       field: 'omrConfig.rowGapRatio',
-      message: 'A grade de respostas desceu demais e invadiu o rodape tecnico da folha.',
+      message: 'A grade de respostas desceu demais e invadiu o rodapé técnico da folha.',
     })
   }
 
@@ -355,7 +355,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'error',
       code: 'BUBBLES_OVERLAP_HORIZONTAL',
       field: 'omrConfig.optionGapRatio',
-      message: 'As bolhas ficaram proximas demais horizontalmente e comprometem a leitura OMR.',
+      message: 'As bolhas ficaram próximas demais horizontalmente e comprometem a leitura OMR.',
     })
   }
 
@@ -379,11 +379,11 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
 
   ;(
     [
-      ['startXRatio', 'O deslocamento horizontal foi limitado para manter a grade dentro da area segura.'],
-      ['startYRatio', 'O deslocamento vertical foi limitado para proteger cabecalho e rodape.'],
-      ['columnGapRatio', 'O espacamento entre colunas foi limitado para nao sair da folha.'],
-      ['rowGapRatio', 'O espacamento entre linhas foi limitado para nao invadir o rodape.'],
-      ['optionGapRatio', 'O espacamento entre alternativas foi limitado para nao estourar a largura da grade.'],
+      ['startXRatio', 'O deslocamento horizontal foi limitado para manter a grade dentro da área segura.'],
+      ['startYRatio', 'O deslocamento vertical foi limitado para proteger cabeçalho e rodapé.'],
+      ['columnGapRatio', 'O espaçamento entre colunas foi limitado para não sair da folha.'],
+      ['rowGapRatio', 'O espaçamento entre linhas foi limitado para não invadir o rodapé.'],
+      ['optionGapRatio', 'O espaçamento entre alternativas foi limitado para não estourar a largura da grade.'],
       ['bubbleRadiusRatio', 'O tamanho das bolhas foi limitado para manter a grade dentro da zona segura.'],
     ] as const
   ).forEach(([field, message]) => {
@@ -402,7 +402,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'warning',
       code: 'IDENTIFICATION_DENSE',
       field: 'definition.identification.extraFields',
-      message: 'A identificacao esta ficando densa e pode competir visualmente com a grade de respostas.',
+      message: 'A identificação está ficando densa e pode competir visualmente com a grade de respostas.',
     })
   }
 
@@ -411,7 +411,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'warning',
       code: 'DENSITY_RISK',
       field: 'definition.rowsPerColumn',
-      message: 'A densidade visual esta alta. Revise o espacamento antes de imprimir em grande escala.',
+      message: 'A densidade visual está alta. Revise o espaçamento antes de imprimir em grande escala.',
     })
   }
 
@@ -420,7 +420,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       severity: 'warning',
       code: 'SENSITIVE_OMR',
       field: 'omrConfig.markThreshold',
-      message: 'O modo de leitura esta sensivel. Isso facilita captar marcas leves, mas aumenta risco de ambiguidades.',
+      message: 'O modo de leitura está sensível. Isso facilita captar marcas leves, mas aumenta o risco de ambiguidades.',
     })
   }
 

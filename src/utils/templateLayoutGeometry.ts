@@ -12,7 +12,11 @@ export function clampLayoutRatio(value: number, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value))
 }
 
-export function getTemplateLayoutMetrics(config: OMRTemplateConfig) {
+export function getTemplateLayoutMetrics(
+  config: OMRTemplateConfig,
+  questionNumberOffset = 0,
+  pageQuestionCount = config.totalQuestions,
+) {
   const contentX = TEMPLATE_PAGE_X
   const contentY = TEMPLATE_PAGE_Y
   const contentWidth = TEMPLATE_PAGE_WIDTH
@@ -30,8 +34,8 @@ export function getTemplateLayoutMetrics(config: OMRTemplateConfig) {
   const rowOffset = contentHeight * clampLayoutRatio(config.rowGapRatio, 0.012, 0.2)
   const headerY = questionStartY - rowOffset * 0.8
 
-  const questions = Array.from({ length: config.totalQuestions }, (_, index) => {
-    const questionNumber = index + 1
+  const questions = Array.from({ length: pageQuestionCount }, (_, index) => {
+    const questionNumber = questionNumberOffset + index + 1
     const columnIndex = Math.floor(index / config.rowsPerColumn)
     const rowIndex = index % config.rowsPerColumn
     const baseX = questionStartX + columnIndex * columnOffset

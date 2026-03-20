@@ -52,14 +52,14 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
       extraFields: input.identification?.extraFields ?? [],
     },
     header: {
-      institutionName: input.header?.institutionName ?? 'Instituicao',
-      examName: input.header?.examName ?? 'Cartao-resposta',
+      institutionName: input.header?.institutionName ?? 'Instituição',
+      examName: input.header?.examName ?? 'Cartão-resposta',
       subtitle: input.header?.subtitle ?? 'Preencha com caneta preta ou azul.',
       classroomLabel: input.header?.classroomLabel ?? 'Turma',
       instructions:
-        input.header?.instructions ?? 'Marque apenas uma alternativa por questao e preencha totalmente a bolha.',
+        input.header?.instructions ?? 'Marque apenas uma alternativa por questão e preencha totalmente a bolha.',
       omrGuidance:
-        input.header?.omrGuidance ?? 'Evite rasuras, marcas leves e dobras na area de respostas.',
+        input.header?.omrGuidance ?? 'Evite rasuras, marcas leves e dobras na área de respostas.',
       showInstitutionLogo: input.header?.showInstitutionLogo ?? false,
     },
   }
@@ -123,7 +123,7 @@ export const cardTemplatePresets: CardPreset[] = [
   createPreset(
     'enem-a4',
     'ENEM A4',
-    'Modelo equilibrado para provas longas com 45 questoes e 5 alternativas.',
+    'Modelo equilibrado para provas longas com 45 questões e 5 alternativas.',
     {
       totalQuestions: 45,
       choicesPerQuestion: 5,
@@ -140,11 +140,11 @@ export const cardTemplatePresets: CardPreset[] = [
         extraFields: [],
       },
       header: {
-        institutionName: 'Instituicao',
+        institutionName: 'Instituição',
         examName: 'Simulado ENEM',
-        subtitle: 'Cartao-resposta oficial',
+        subtitle: 'Cartão-resposta oficial',
         classroomLabel: 'Turma',
-        instructions: 'Marque apenas uma alternativa por questao e mantenha o cartao limpo.',
+        instructions: 'Marque apenas uma alternativa por questão e mantenha o cartão limpo.',
         omrGuidance: 'Use caneta escura e evite dobras na folha.',
         showInstitutionLogo: false,
       },
@@ -172,7 +172,7 @@ export const cardTemplatePresets: CardPreset[] = [
   createPreset(
     'school-a4',
     'Prova escolar A4',
-    'Modelo institucional para provas de escola com identificacao completa.',
+    'Modelo institucional para provas de escola com identificação completa.',
     {
       totalQuestions: 30,
       choicesPerQuestion: 5,
@@ -191,10 +191,10 @@ export const cardTemplatePresets: CardPreset[] = [
       header: {
         institutionName: 'Escola',
         examName: 'Avaliacao Bimestral',
-        subtitle: 'Cartao-resposta da turma',
+        subtitle: 'Cartão-resposta da turma',
         classroomLabel: 'Serie/Turma',
-        instructions: 'Confira seus dados e marque a alternativa escolhida com atencao.',
-        omrGuidance: 'Bolhas incompletas ou rasuradas podem prejudicar a leitura automatica.',
+        instructions: 'Confira seus dados e marque a alternativa escolhida com atenção.',
+        omrGuidance: 'Bolhas incompletas ou rasuradas podem prejudicar a leitura automática.',
         showInstitutionLogo: false,
       },
     },
@@ -216,7 +216,7 @@ export const cardTemplatePresets: CardPreset[] = [
       answerGridStyle: 'classic',
     },
   ),
-  createPreset('quiz-20', 'Simulado 20 questoes', 'Versao compacta para aplicacoes rapidas.', {
+  createPreset('quiz-20', 'Simulado 20 questões', 'Versão compacta para aplicações rápidas.', {
     totalQuestions: 20,
     choicesPerQuestion: 5,
     columns: 2,
@@ -232,7 +232,7 @@ export const cardTemplatePresets: CardPreset[] = [
     visualStyle: 'compact',
     density: 'compact',
   }),
-  createPreset('quiz-45', 'Simulado 45 questoes', 'Padrao intermediario para cursinhos e simulados extensos.', {
+  createPreset('quiz-45', 'Simulado 45 questões', 'Padrão intermediário para cursinhos e simulados extensos.', {
     totalQuestions: 45,
     choicesPerQuestion: 5,
     columns: 2,
@@ -243,7 +243,7 @@ export const cardTemplatePresets: CardPreset[] = [
     columns: 2,
     rowsPerColumn: 23,
   }),
-  createPreset('quiz-60', 'Simulado 60 questoes', 'Distribui 60 questoes com densidade controlada.', {
+  createPreset('quiz-60', 'Simulado 60 questões', 'Distribui 60 questões com densidade controlada.', {
     totalQuestions: 60,
     choicesPerQuestion: 5,
     columns: 3,
