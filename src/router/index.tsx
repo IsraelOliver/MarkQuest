@@ -1,0 +1,39 @@
+import { createBrowserRouter } from 'react-router-dom'
+import { MainLayout } from '../layouts/MainLayout'
+import { AnswerKeysPage } from '../pages/AnswerKeysPage'
+import { ClassroomDetailPage } from '../pages/ClassroomDetailPage'
+import { ClassroomExamsPage } from '../pages/ClassroomExamsPage'
+import { ClassroomStudentsPage } from '../pages/ClassroomStudentsPage'
+import { DashboardPage } from '../pages/DashboardPage'
+import { ExamDetailPage } from '../pages/ExamDetailPage'
+import { LandingPage } from '../pages/LandingPage'
+import { ResultsPage } from '../pages/ResultsPage'
+import { TemplatesPage } from '../pages/TemplatesPage'
+import { UnitDetailPage } from '../pages/UnitDetailPage'
+import { UnitsPage } from '../pages/UnitsPage'
+import { UploadsPage } from '../pages/UploadsPage'
+
+export const router = createBrowserRouter([
+  {
+    path: '/',
+    element: <LandingPage />,
+  },
+  {
+    path: '/app',
+    element: <MainLayout />,
+    children: [
+      { index: true, element: <DashboardPage /> },
+      { path: 'dashboard', element: <DashboardPage /> },
+      { path: 'units', element: <UnitsPage /> },
+      { path: 'units/:unitId', element: <UnitDetailPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId', element: <ClassroomDetailPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams', element: <ClassroomExamsPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/students', element: <ClassroomStudentsPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId', element: <ExamDetailPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/layout', element: <TemplatesPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/answer-key', element: <AnswerKeysPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/uploads', element: <UploadsPage /> },
+      { path: 'units/:unitId/classrooms/:classroomId/exams/:examId/results', element: <ResultsPage /> },
+    ],
+  },
+])

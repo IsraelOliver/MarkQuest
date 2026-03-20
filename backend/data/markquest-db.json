@@ -1,0 +1,87 @@
+{
+  "units": [
+    {
+      "id": "unt_b6507463-e52a-46e6-a996-c34b2b56f465",
+      "name": "MAG Educacional",
+      "kind": "course",
+      "createdAt": "2026-03-16T15:03:27.499Z"
+    },
+    {
+      "id": "unt_7002d951-aa9a-46f9-a75e-68cc9bbbf271",
+      "name": "Seleção",
+      "kind": "course",
+      "createdAt": "2026-03-16T15:03:42.263Z"
+    }
+  ],
+  "classrooms": [
+    {
+      "id": "cls_429c3a5a-f47d-4969-9a30-8739a6e62a85",
+      "unitId": "unt_7002d951-aa9a-46f9-a75e-68cc9bbbf271",
+      "name": "Turma 3A",
+      "year": "2026",
+      "createdAt": "2026-03-16T15:04:18.214Z"
+    },
+    {
+      "id": "cls_defb3f18-fca9-44fe-ad19-a72909086a0f",
+      "unitId": "unt_b6507463-e52a-46e6-a996-c34b2b56f465",
+      "name": "5º Turbo",
+      "year": "2026",
+      "createdAt": "2026-03-16T16:50:11.492Z"
+    },
+    {
+      "id": "cls_96b17968-ed77-4236-ba7d-6b2d1c01cf31",
+      "unitId": "unt_b6507463-e52a-46e6-a996-c34b2b56f465",
+      "name": "Turma 3A",
+      "year": "2026",
+      "createdAt": "2026-03-16T16:55:53.322Z"
+    }
+  ],
+  "exams": [
+    {
+      "id": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "classroomId": "cls_defb3f18-fca9-44fe-ad19-a72909086a0f",
+      "title": "Simulado 1",
+      "subject": "Matematica",
+      "totalQuestions": 45,
+      "createdAt": "2026-03-16T17:58:43.698Z"
+    }
+  ],
+  "students": [
+    {
+      "id": "std_89c9ab0e-a48d-46ec-885b-70b9e0842455",
+      "classroomId": "cls_defb3f18-fca9-44fe-ad19-a72909086a0f",
+      "firstName": "Ana",
+      "middleName": "Maria",
+      "lastName": "Souza",
+      "studentCode": "ST-1001",
+      "createdAt": "2026-03-16T16:58:44.132Z"
+    },
+    {
+      "id": "std_4c425298-b33f-4fa1-ac00-0b4aba1997cd",
+      "classroomId": "cls_defb3f18-fca9-44fe-ad19-a72909086a0f",
+      "firstName": "Eduardo",
+      "middleName": "Neves",
+      "lastName": "Silva ",
+      "studentCode": "ENS_5T26",
+      "createdAt": "2026-03-16T18:00:43.476Z"
+    }
+  ],
+  "uploads": [
+    {
+      "id": "upl_4fab91b9-8ddd-4677-9490-8009a76303c6",
+      "examId": "exam-2026-math-01",
+      "studentId": "Eduardo",
+      "originalName": "E-book - 7 soluções guiadas para sair da sobrecarga e liderar com leveza.pdf",
+      "storedName": "upload_fad31f9c-6a0a-420b-bcfd-290ce167883f.pdf",
+      "path": "C:\\Users\\Israel\\Desktop\\MarkQuest-codex-create-markquest-frontend-project\\backend\\uploads\\upload_fad31f9c-6a0a-420b-bcfd-290ce167883f.pdf",
+      "mimeType": "application/pdf",
+      "size": 1048576,
+      "createdAt": "2026-03-16T14:22:05.028Z"
+    }
+  ],
+  "jobs": [],
+  "results": [],
+  "studentResults": [],
+  "templates": [],
+  "answerKeys": []
+}
