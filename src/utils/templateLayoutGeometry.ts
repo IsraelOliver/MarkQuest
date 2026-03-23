@@ -1,12 +1,15 @@
 import type { OMRTemplateConfig } from '../types/omr'
 
 export const TEMPLATE_OPTIONS = ['A', 'B', 'C', 'D', 'E'] as const
-export const TEMPLATE_VIEWBOX_WIDTH = 860
-export const TEMPLATE_VIEWBOX_HEIGHT = 1216
-export const TEMPLATE_PAGE_X = 52
-export const TEMPLATE_PAGE_Y = 40
-export const TEMPLATE_PAGE_WIDTH = 756
-export const TEMPLATE_PAGE_HEIGHT = 1136
+export const TEMPLATE_VIEWBOX_WIDTH = 595.28
+export const TEMPLATE_VIEWBOX_HEIGHT = 841.89
+export const TEMPLATE_PAGE_X = 0
+export const TEMPLATE_PAGE_Y = 0
+export const TEMPLATE_PAGE_WIDTH = 595.28
+export const TEMPLATE_PAGE_HEIGHT = 841.89
+export const TEMPLATE_SAFE_MARGIN = 28.35
+export const TEMPLATE_TECHNICAL_FOOTER_HEIGHT = 96
+export const TEMPLATE_TECHNICAL_FOOTER_GAP = 20
 
 export function clampLayoutRatio(value: number, min = 0, max = 1) {
   return Math.min(max, Math.max(min, value))
@@ -26,8 +29,8 @@ export function getTemplateLayoutMetrics(
   const capacity = config.columns * config.rowsPerColumn
   const activeOptions = TEMPLATE_OPTIONS.slice(0, config.choicesPerQuestion)
   const answerBlockWidth = bubbleSpacing * (activeOptions.length - 1)
-  const questionLabelOffset = 48
-  const questionLabelWidth = 24
+  const questionLabelOffset = 56
+  const questionLabelWidth = 32
   const questionStartX = contentX + contentWidth * clampLayoutRatio(config.startXRatio, 0.08, 0.7)
   const questionStartY = contentY + contentHeight * clampLayoutRatio(config.startYRatio, 0.12, 0.75)
   const columnOffset = contentWidth * clampLayoutRatio(config.columnGapRatio, 0.1, 0.9)
@@ -44,6 +47,7 @@ export function getTemplateLayoutMetrics(
     return {
       questionNumber,
       columnIndex,
+      rowIndex,
       labelX: baseX - questionLabelOffset,
       labelY: baseY,
       optionStartX: baseX,

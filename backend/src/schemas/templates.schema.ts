@@ -33,6 +33,7 @@ const cardDefinitionSchema = z.object({
   columns: z.number().int().positive(),
   rowsPerColumn: z.number().int().positive(),
   numberingMode: z.enum(['continuous', 'by-block']),
+  numberingPattern: z.enum(['row-column', 'sequence-column']),
   groupByArea: z.boolean(),
   showBlockTitles: z.boolean(),
   identification: z.object({
@@ -52,7 +53,9 @@ const cardDefinitionSchema = z.object({
     classroomLabel: z.string(),
     instructions: z.string(),
     omrGuidance: z.string(),
+    footerMessage: z.string(),
     showInstitutionLogo: z.boolean(),
+    institutionLogoDataUrl: z.string(),
   }),
 })
 

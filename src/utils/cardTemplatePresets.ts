@@ -39,6 +39,7 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
     columns,
     rowsPerColumn: input.rowsPerColumn ?? getSuggestedRowsPerColumn(totalQuestions, columns),
     numberingMode: input.numberingMode ?? 'continuous',
+    numberingPattern: input.numberingPattern ?? 'row-column',
     groupByArea: input.groupByArea ?? false,
     showBlockTitles: input.showBlockTitles ?? false,
     identification: {
@@ -60,7 +61,9 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
         input.header?.instructions ?? 'Marque apenas uma alternativa por questão e preencha totalmente a bolha.',
       omrGuidance:
         input.header?.omrGuidance ?? 'Evite rasuras, marcas leves e dobras na área de respostas.',
+      footerMessage: input.header?.footerMessage ?? '',
       showInstitutionLogo: input.header?.showInstitutionLogo ?? false,
+      institutionLogoDataUrl: input.header?.institutionLogoDataUrl ?? '',
     },
   }
 }
@@ -146,7 +149,9 @@ export const cardTemplatePresets: CardPreset[] = [
         classroomLabel: 'Turma',
         instructions: 'Marque apenas uma alternativa por questão e mantenha o cartão limpo.',
         omrGuidance: 'Use caneta escura e evite dobras na folha.',
+        footerMessage: '',
         showInstitutionLogo: false,
+        institutionLogoDataUrl: '',
       },
     },
     {
@@ -195,7 +200,9 @@ export const cardTemplatePresets: CardPreset[] = [
         classroomLabel: 'Serie/Turma',
         instructions: 'Confira seus dados e marque a alternativa escolhida com atenção.',
         omrGuidance: 'Bolhas incompletas ou rasuradas podem prejudicar a leitura automática.',
+        footerMessage: '',
         showInstitutionLogo: false,
+        institutionLogoDataUrl: '',
       },
     },
     {
@@ -340,11 +347,12 @@ export function createEditorStateFromPreset(presetId: CardPresetId, name?: strin
 }
 
 export function createEditorStateFromTemplate(template: Template): CardTemplateEditorState {
-  return applySafeCardLayout({
+  return {
     name: template.name,
     presetId: template.presetId,
     definition: structuredClone(template.definition),
     visualTheme: structuredClone(template.visualTheme),
     omrConfig: structuredClone(template.omrConfig),
-  })
+  }
 }
+

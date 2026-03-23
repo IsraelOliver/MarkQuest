@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
+import type { Location } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
@@ -18,6 +19,7 @@ import {
   getCardPresetById,
   getSafeStructureForCard,
 } from '../utils/cardTemplatePresets'
+import { getTemplateLayoutBlueprint } from '../utils/templateLayoutBlueprint'
 import {
   getConfidenceLabel,
   getReadModeFromConfig,
@@ -36,12 +38,21 @@ type EditorSectionId =
 type EditorSectionsState = Record<EditorSectionId, boolean>
 
 type CollapsibleSectionProps = {
-  id: Exclude<EditorSectionId, 'savedTemplates'> | 'savedTemplates'
+  id: EditorSectionId
   title: string
   description: string
   isOpen: boolean
   onToggle: (sectionId: EditorSectionId) => void
   children: React.ReactNode
+}
+
+type PersistTemplateOptions = {
+  redirectOnCreate?: boolean
+  successMessage?: string
+}
+
+function getTemplateTimestamp(template: Pick<Template, 'createdAt' | 'updatedAt'>) {
+  return new Date(template.updatedAt ?? template.createdAt).getTime()
 }
 
 const defaultOpenSections: EditorSectionsState = {
@@ -70,12 +81,33 @@ function getIssueSummary(issues: CardTemplateValidationIssue[]) {
   }
 }
 
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('Não foi possível ler o arquivo da logo.'))
+    reader.readAsDataURL(file)
+  })
+}
+
 function getDistributionLabel(totalQuestions: number, choicesPerQuestion: 4 | 5, presetId: CardPresetId) {
   const safeStructure = getSafeStructureForCard(totalQuestions, choicesPerQuestion, presetId)
   const columnLabel = safeStructure.columns === 1 ? '1 coluna' : `${safeStructure.columns} colunas`
   const rowLabel = safeStructure.rowsPerColumn === 1 ? '1 linha por coluna' : `${safeStructure.rowsPerColumn} linhas por coluna`
 
   return `${columnLabel} | ${rowLabel}`
+}
+
+function getStateSnapshot(state: CardTemplateEditorState) {
+  return JSON.stringify(state)
+}
+
+function buildLocationPath(location: Location) {
+  return `${location.pathname}${location.search}${location.hash}`
+}
+
+function getPersistedSnapshot(state: CardTemplateEditorState) {
+  return getStateSnapshot(validateCardTemplateEditorState(state).sanitizedState)
 }
 
 function CollapsibleSection({ id, title, description, isOpen, onToggle, children }: CollapsibleSectionProps) {
@@ -99,19 +131,27 @@ export function TemplatesPage() {
   const navigate = useNavigate()
   const { selectedUnit, selectedClassroom, selectedExam } = useAcademicScope()
   const [templates, setTemplates] = useState<Template[]>([])
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(templateId ?? null)
   const [editorState, setEditorState] = useState<CardTemplateEditorState>(() => createEditorStateFromPreset('enem-a4'))
   const [openSections, setOpenSections] = useState<EditorSectionsState>(defaultOpenSections)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const lastValidStateRef = useRef<CardTemplateEditorState | null>(null)
+  const persistedStateSnapshotRef = useRef(getStateSnapshot(editorState))
+  const pendingLocationRef = useRef<Location | null>(null)
+  const shouldBypassBlockerRef = useRef(false)
 
   useEffect(() => {
     if (examId) setSelectedExamId(examId)
   }, [examId])
+
+  useEffect(() => {
+    setActiveTemplateId(templateId ?? null)
+  }, [templateId])
 
   useEffect(() => {
     if (!selectedExam) return
@@ -123,6 +163,7 @@ export function TemplatesPage() {
         const response = await omrService.getTemplates()
         const examTemplates = response.items.filter((item) => item.examId === selectedExam.id)
         setTemplates(examTemplates)
+        const latestTemplate = [...examTemplates].sort((left, right) => getTemplateTimestamp(right) - getTemplateTimestamp(left))[0]
 
         const context = {
           unitName: selectedUnit?.name ?? 'Instituição',
@@ -133,12 +174,27 @@ export function TemplatesPage() {
         if (templateId) {
           const currentTemplate = examTemplates.find((item) => item.id === templateId)
           if (currentTemplate) {
-            setEditorState(normalizeEditorState(createEditorStateFromTemplate(currentTemplate)))
+            const nextState = normalizeEditorState(createEditorStateFromTemplate(currentTemplate))
+            setEditorState(nextState)
+            persistedStateSnapshotRef.current = getPersistedSnapshot(nextState)
+            setActiveTemplateId(currentTemplate.id)
             setMessage(null)
             setError(null)
           }
+        } else if (latestTemplate) {
+          const nextState = normalizeEditorState(createEditorStateFromTemplate(latestTemplate))
+          setEditorState(nextState)
+          persistedStateSnapshotRef.current = getPersistedSnapshot(nextState)
+          setActiveTemplateId(latestTemplate.id)
+          setMessage(null)
+          setError(null)
         } else {
-          setEditorState((current) => applyExamContext(current, context))
+          setEditorState((current) => {
+            const nextState = applyExamContext(current, context)
+            persistedStateSnapshotRef.current = getPersistedSnapshot(nextState)
+            return nextState
+          })
+          setActiveTemplateId(null)
         }
       } catch (loadError) {
         setError(formatApiErrorMessage('Não foi possível carregar os templates da prova.', loadError))
@@ -152,10 +208,12 @@ export function TemplatesPage() {
 
   const validation = validateCardTemplateEditorState(editorState)
   const currentState = validation.sanitizedState
+  const hasUnsavedChanges = getStateSnapshot(currentState) !== persistedStateSnapshotRef.current
   const issueSummary = getIssueSummary(validation.issues)
   const currentPreset = getCardPresetById(currentState.presetId)
   const currentReadMode = getReadModeFromConfig(currentState.omrConfig)
   const confidenceLabel = getConfidenceLabel(currentState.omrConfig)
+  const blueprint = getTemplateLayoutBlueprint(currentState)
   const safeStructureLabel = getDistributionLabel(
     currentState.definition.totalQuestions,
     currentState.definition.choicesPerQuestion,
@@ -166,6 +224,39 @@ export function TemplatesPage() {
     if (validation.isValid) lastValidStateRef.current = structuredClone(currentState)
   }, [currentState, validation.isValid])
 
+  const navigationBlocker = useBlocker(({ currentLocation, nextLocation }) => {
+    const isSameLocation =
+      currentLocation.pathname === nextLocation.pathname &&
+      currentLocation.search === nextLocation.search &&
+      currentLocation.hash === nextLocation.hash
+
+    if (shouldBypassBlockerRef.current || !hasUnsavedChanges || isSameLocation) {
+      return false
+    }
+
+    pendingLocationRef.current = nextLocation
+    return true
+  })
+
+  useEffect(() => {
+    if (navigationBlocker.state === 'blocked') {
+      pendingLocationRef.current = navigationBlocker.location
+      setShowLeaveDialog(true)
+    }
+  }, [navigationBlocker.location, navigationBlocker.state])
+
+  useEffect(() => {
+    if (!hasUnsavedChanges) return
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault()
+      event.returnValue = ''
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [hasUnsavedChanges])
+
   const toggleSection = (sectionId: EditorSectionId) => {
     setOpenSections((current) => ({ ...current, [sectionId]: !current[sectionId] }))
   }
@@ -174,6 +265,13 @@ export function TemplatesPage() {
     setEditorState((current) => validateCardTemplateEditorState(updater(current)).sanitizedState)
     setError(null)
     setMessage(null)
+  }
+
+  const allowNextNavigation = () => {
+    shouldBypassBlockerRef.current = true
+    window.setTimeout(() => {
+      shouldBypassBlockerRef.current = false
+    }, 0)
   }
 
   const handlePresetChange = (presetId: CardPresetId) => {
@@ -219,6 +317,36 @@ export function TemplatesPage() {
     })
   }
 
+  const handleInstitutionLogoUpload = async (file: File | null) => {
+    if (!file) return
+
+    if (!file.type.startsWith('image/')) {
+      setError('Selecione um arquivo de imagem válido para a logo.')
+      return
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setError('A logo deve ter no máximo 2 MB.')
+      return
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file)
+      setError(null)
+      setMessage('Logo institucional carregada no layout atual.')
+      handleHeaderChange('institutionLogoDataUrl', dataUrl)
+      handleHeaderChange('showInstitutionLogo', true)
+    } catch (logoError) {
+      setError(formatApiErrorMessage('Não foi possível carregar a logo.', logoError))
+    }
+  }
+
+  const handleInstitutionLogoRemove = () => {
+    setError(null)
+    setMessage('Logo institucional removida do layout atual.')
+    handleHeaderChange('institutionLogoDataUrl', '')
+  }
+
   const handleExtraFieldsChange = (value: string) => {
     applyState((current) => {
       const nextState = structuredClone(current)
@@ -253,15 +381,10 @@ export function TemplatesPage() {
     setTemplates(response.items.filter((item) => item.examId === selectedExam.id))
   }
 
-  const persistTemplate = async (mode: 'create' | 'update' | 'duplicate') => {
+  const persistTemplate = async (mode: 'create' | 'update' | 'duplicate', options: PersistTemplateOptions = {}) => {
     if (!selectedExam) {
       setError('Selecione uma prova ativa antes de salvar o cartão.')
-      return
-    }
-
-    if (!validation.isValid) {
-      setError('Corrija os erros do layout antes de salvar o template.')
-      return
+      return null
     }
 
     const payload = {
@@ -276,68 +399,72 @@ export function TemplatesPage() {
 
     setIsSaving(true)
     setError(null)
-    setMessage(null)
+    setMessage('Salvando alterações...')
 
     try {
       const response =
-        mode === 'update' && templateId
-          ? await omrService.updateTemplate(templateId, payload)
+        mode === 'update' && activeTemplateId
+          ? await omrService.updateTemplate(activeTemplateId, payload)
           : await omrService.createTemplate(payload)
 
       await refreshTemplates()
-      setEditorState(createEditorStateFromTemplate(response.item))
+      const nextState = normalizeEditorState(createEditorStateFromTemplate(response.item))
+      setEditorState(nextState)
+      setActiveTemplateId(response.item.id)
+      persistedStateSnapshotRef.current = getPersistedSnapshot(nextState)
       setMessage(
-        mode === 'duplicate'
-          ? `Template ${response.item.name} duplicado com sucesso.`
-          : `Template ${response.item.name} salvo com sucesso.`,
+        options.successMessage ??
+          (mode === 'duplicate'
+            ? `Template ${response.item.name} duplicado com sucesso.`
+            : 'Alterações salvas com sucesso.'),
       )
 
-      if (mode !== 'update') {
+      if (mode !== 'update' && options.redirectOnCreate !== false) {
+        allowNextNavigation()
         navigate(`/app/units/${unitId}/classrooms/${classroomId}/exams/${examId}/layout/${response.item.id}/edit`, { replace: true })
       }
+
+      return response.item
     } catch (saveError) {
       setError(formatApiErrorMessage('Não foi possível salvar o template.', saveError))
+      return null
     } finally {
       setIsSaving(false)
     }
   }
 
-  const handleGeneratePdf = async () => {
-    if (!validation.isValid) {
-      setError('Corrija os erros do layout antes de gerar o PDF.')
-      return
-    }
+  const handleSaveChanges = async () => {
+    await persistTemplate(activeTemplateId ? 'update' : 'create', {
+      redirectOnCreate: false,
+      successMessage: 'Alterações salvas com sucesso.',
+    })
+  }
 
-    setIsGeneratingPdf(true)
-    setError(null)
-    setMessage(null)
+  const navigateToPendingLocation = () => {
+    const nextLocation = pendingLocationRef.current
+    setShowLeaveDialog(false)
+    navigationBlocker.reset?.()
 
-    try {
-      const { generateTemplateLayoutPdf } = await import('../utils/templateLayoutPdf')
-      const { pdfBytes, fileName } = await generateTemplateLayoutPdf({
-        title: currentState.name,
-        examName: currentState.definition.header.examName,
-        classroomName: selectedClassroom?.name ?? 'Turma',
-        unitName: selectedUnit?.name ?? 'Instituição',
-        state: currentState,
-      })
+    if (!nextLocation) return
 
-      const pdfBuffer = new Uint8Array(pdfBytes.byteLength)
-      pdfBuffer.set(pdfBytes)
-      const blob = new Blob([pdfBuffer], { type: 'application/pdf' })
-      const objectUrl = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = objectUrl
-      link.download = fileName
-      link.click()
-      URL.revokeObjectURL(objectUrl)
+    allowNextNavigation()
+    navigate(buildLocationPath(nextLocation))
+    pendingLocationRef.current = null
+  }
 
-      setMessage(`PDF ${fileName} gerado com sucesso.`)
-    } catch (generationError) {
-      setError(formatApiErrorMessage('Não foi possível gerar o PDF do cartão.', generationError))
-    } finally {
-      setIsGeneratingPdf(false)
-    }
+  const handleDiscardAndExit = () => {
+    navigateToPendingLocation()
+  }
+
+  const handleSaveAndExit = async () => {
+    const savedTemplate = await persistTemplate(activeTemplateId ? 'update' : 'create', {
+      redirectOnCreate: false,
+      successMessage: 'Alterações salvas com sucesso.',
+    })
+
+    if (!savedTemplate) return
+
+    navigateToPendingLocation()
   }
 
   return (
@@ -355,7 +482,7 @@ export function TemplatesPage() {
 
       <SectionTitle
         title={templateId ? 'Editar cartão-resposta' : 'Criar cartão-resposta'}
-        subtitle="Editor modular de cartões com seções recolhíveis, presets inteligentes e leitura OMR protegida."
+        subtitle="Ajuste o cartão-resposta, revise o preview e salve as alterações do layout."
       />
 
       <div className="card-editor-toolbar">
@@ -372,20 +499,22 @@ export function TemplatesPage() {
         </label>
 
         <div className="card-editor-toolbar__actions">
-          <Button variant="secondary" onClick={() => void persistTemplate(templateId ? 'update' : 'create')} disabled={isSaving || !validation.isValid}>
-            {isSaving ? 'Salvando...' : 'Salvar template'}
+          <Button
+            type="button"
+            onClick={() => void handleSaveChanges()}
+            disabled={isSaving || !hasUnsavedChanges}
+            variant={hasUnsavedChanges ? 'primary' : 'secondary'}
+          >
+            {isSaving ? 'Salvando...' : 'Salvar alterações'}
           </Button>
-          <Button variant="secondary" onClick={() => void persistTemplate('duplicate')} disabled={isSaving || isLoading}>
+          <Button type="button" variant="secondary" onClick={() => void persistTemplate('duplicate')} disabled={isSaving || isLoading}>
             Duplicar template
           </Button>
           <Button variant="ghost" type="button" onClick={() => toggleSection('savedTemplates')}>
             {openSections.savedTemplates ? 'Fechar templates salvos' : 'Usar templates salvos'}
           </Button>
-          <Button variant="ghost" onClick={handleRestorePreset}>Restaurar padrão</Button>
-          <Button variant="ghost" onClick={handleRestoreLastValid} disabled={!lastValidStateRef.current}>Último estado válido</Button>
-          <Button onClick={handleGeneratePdf} disabled={isGeneratingPdf || !validation.isValid}>
-            {isGeneratingPdf ? 'Gerando PDF...' : 'Gerar PDF'}
-          </Button>
+          <Button type="button" variant="ghost" onClick={handleRestorePreset}>Restaurar padrão</Button>
+          <Button type="button" variant="ghost" onClick={handleRestoreLastValid} disabled={!lastValidStateRef.current}>Último estado válido</Button>
         </div>
       </div>
 
@@ -429,6 +558,22 @@ export function TemplatesPage() {
                   <option value="by-block">Por bloco</option>
                 </select>
               </label>
+              {currentState.definition.numberingMode === 'by-block' ? (
+                <label className="field">
+                  <span>Padrão da numeração</span>
+                  <select value={currentState.definition.numberingPattern} onChange={(event) => handleFriendlyStructureChange('numberingPattern', event.target.value as 'row-column' | 'sequence-column')}>
+                    <option value="row-column">15A, 15B, 15C</option>
+                    <option value="sequence-column">1A, 2A, 3A</option>
+                  </select>
+                  <small>Escolha como o bloco deve aparecer visualmente ao lado das bolhas.</small>
+                </label>
+              ) : (
+                <div className="card-editor-insight">
+                  <span>Padrão da numeração</span>
+                  <strong>1, 2, 3...</strong>
+                  <small>Na numeração contínua, a sequência segue a ordem normal da prova.</small>
+                </div>
+              )}
               <div className="card-editor-toggle-group">
                 <label className="card-editor-toggle">
                   <input type="checkbox" checked={currentState.definition.groupByArea} onChange={(event) => handleFriendlyStructureChange('groupByArea', event.target.checked)} />
@@ -478,7 +623,36 @@ export function TemplatesPage() {
               <label className="field"><span>Label da turma</span><input value={currentState.definition.header.classroomLabel} onChange={(event) => handleHeaderChange('classroomLabel', event.target.value)} /></label>
               <label className="field card-editor-grid__full"><span>Instruções de preenchimento</span><textarea rows={3} value={currentState.definition.header.instructions} onChange={(event) => handleHeaderChange('instructions', event.target.value)} /></label>
               <label className="field card-editor-grid__full"><span>Texto de orientação OMR</span><textarea rows={2} value={currentState.definition.header.omrGuidance} onChange={(event) => handleHeaderChange('omrGuidance', event.target.value)} /></label>
-              <label className="card-editor-toggle"><input type="checkbox" checked={currentState.definition.header.showInstitutionLogo} onChange={(event) => handleHeaderChange('showInstitutionLogo', event.target.checked)} /><span>Reservar área para logo institucional</span></label>
+              <label className="field card-editor-grid__full"><span>Frase do rodapé</span><input value={currentState.definition.header.footerMessage} onChange={(event) => handleHeaderChange('footerMessage', event.target.value)} placeholder="Ex.: Simulado oficial - 1º dia" /><small>Esse texto aparece no espaço central do rodapé técnico do cartão.</small></label>
+              <div className="card-editor-grid__full card-editor-logo-field">
+                <label className="card-editor-toggle">
+                  <input type="checkbox" checked={currentState.definition.header.showInstitutionLogo} onChange={(event) => handleHeaderChange('showInstitutionLogo', event.target.checked)} />
+                  <span>Reservar área para logo institucional</span>
+                </label>
+                {currentState.definition.header.showInstitutionLogo ? (
+                  <div className="card-editor-logo-upload">
+                    {currentState.definition.header.institutionLogoDataUrl ? (
+                      <img
+                        src={currentState.definition.header.institutionLogoDataUrl}
+                        alt="Pré-visualização da logo institucional"
+                        className="card-editor-logo-upload__preview"
+                      />
+                    ) : (
+                      <div className="card-editor-logo-upload__placeholder">Nenhuma logo enviada ainda.</div>
+                    )}
+                    <label className="field card-editor-logo-upload__field">
+                      <span>Arquivo da logo</span>
+                      <input type="file" accept="image/png,image/jpeg,image/jpg" onChange={(event) => void handleInstitutionLogoUpload(event.target.files?.[0] ?? null)} />
+                      <small>Use PNG ou JPG com boa resolução. A imagem é salva junto com o layout.</small>
+                    </label>
+                    {currentState.definition.header.institutionLogoDataUrl ? (
+                      <Button type="button" variant="ghost" onClick={handleInstitutionLogoRemove}>
+                        Remover logo
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           </CollapsibleSection>
 
@@ -525,6 +699,12 @@ export function TemplatesPage() {
                   <div className="card-editor-readonly"><span>Raio da bolha</span><strong>{currentState.omrConfig.bubbleRadiusRatio.toFixed(3)}</strong></div>
                   <div className="card-editor-readonly"><span>Limiar de marcação</span><strong>{currentState.omrConfig.markThreshold.toFixed(2)}</strong></div>
                   <div className="card-editor-readonly"><span>Limiar de ambiguidade</span><strong>{currentState.omrConfig.ambiguityThreshold.toFixed(2)}</strong></div>
+                  <div className="card-editor-readonly"><span>Margem segura</span><strong>{blueprint.page.safeMargin.toFixed(2)} pt</strong><small>{(blueprint.page.safeMargin / 28.35).toFixed(2)} cm em cada lado.</small></div>
+                  <div className="card-editor-readonly"><span>Capacidade por página</span><strong>{blueprint.pagination.pageCapacity} questões</strong><small>{blueprint.pagination.rowsPerPage} linhas úteis por página.</small></div>
+                  <div className="card-editor-readonly"><span>Área útil da grade</span><strong>{blueprint.answerZone.width} x {blueprint.answerZone.height} pt</strong><small>Zona reservada para respostas dentro da folha A4.</small></div>
+                  <div className="card-editor-readonly"><span>Rodapé técnico</span><strong>{blueprint.footer.height} pt</strong><small>Logo, mensagem e QR em zonas fixas.</small></div>
+                  <div className="card-editor-readonly"><span>Zona do QR</span><strong>{blueprint.footer.qr.width} x {blueprint.footer.qr.height} pt</strong><small>Bloco estável para leitura e vínculo do cartão.</small></div>
+                  <div className="card-editor-readonly"><span>Âncora OMR</span><strong>{blueprint.omr.firstBubbleX}, {blueprint.omr.firstBubbleY}</strong><small>Primeira bolha da grade para futura calibração da API.</small></div>
                 </div>
               ) : null}
             </div>
@@ -557,11 +737,17 @@ export function TemplatesPage() {
           </CollapsibleSection>
 
           <footer className="card-editor-footer">
-            <Button variant="secondary" onClick={() => void persistTemplate(templateId ? 'update' : 'create')} disabled={isSaving || !validation.isValid}>{isSaving ? 'Salvando...' : 'Salvar template'}</Button>
-            <Button variant="secondary" onClick={() => void persistTemplate('duplicate')} disabled={isSaving || isLoading}>Duplicar</Button>
-            <Button variant="ghost" onClick={handleRestorePreset}>Restaurar padrão</Button>
-            <Button variant="ghost" onClick={handleRestoreLastValid} disabled={!lastValidStateRef.current}>Restaurar último válido</Button>
-            <Button onClick={handleGeneratePdf} disabled={isGeneratingPdf || !validation.isValid}>{isGeneratingPdf ? 'Gerando PDF...' : 'Gerar PDF'}</Button>
+            <Button
+              type="button"
+              onClick={() => void handleSaveChanges()}
+              disabled={isSaving || !hasUnsavedChanges}
+              variant={hasUnsavedChanges ? 'primary' : 'secondary'}
+            >
+              {isSaving ? 'Salvando...' : 'Salvar alterações'}
+            </Button>
+            <Button type="button" variant="secondary" onClick={() => void persistTemplate('duplicate')} disabled={isSaving || isLoading}>Duplicar</Button>
+            <Button type="button" variant="ghost" onClick={handleRestorePreset}>Restaurar padrão</Button>
+            <Button type="button" variant="ghost" onClick={handleRestoreLastValid} disabled={!lastValidStateRef.current}>Restaurar último válido</Button>
           </footer>
         </div>
 
@@ -599,6 +785,35 @@ export function TemplatesPage() {
           </Card>
         </aside>
       </div>
+
+      {showLeaveDialog ? (
+        <div className="dialog-backdrop" role="presentation">
+          <div className="dialog-card" role="dialog" aria-modal="true" aria-labelledby="leave-page-dialog-title">
+            <h3 id="leave-page-dialog-title">Você fez alterações nas configurações. Deseja salvar antes de sair desta página?</h3>
+            <p>Escolha se quer salvar as alterações atuais antes de navegar para outra área ou sair sem salvar.</p>
+            <div className="dialog-actions">
+              <Button type="button" variant="secondary" onClick={handleDiscardAndExit} disabled={isSaving}>
+                Sair sem salvar
+              </Button>
+              <Button type="button" onClick={() => void handleSaveAndExit()} disabled={isSaving}>
+                Salvar e sair
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setShowLeaveDialog(false)
+                  pendingLocationRef.current = null
+                  navigationBlocker.reset?.()
+                }}
+                disabled={isSaving}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   )
 }

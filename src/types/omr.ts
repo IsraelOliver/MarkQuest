@@ -85,6 +85,7 @@ export type CardPresetId =
 
 export type CardPageSize = 'A4'
 export type CardNumberingMode = 'continuous' | 'by-block'
+export type CardNumberingPattern = 'row-column' | 'sequence-column'
 export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
 export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
 export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
@@ -96,6 +97,7 @@ export type CardTemplateDefinition = {
   columns: number
   rowsPerColumn: number
   numberingMode: CardNumberingMode
+  numberingPattern: CardNumberingPattern
   groupByArea: boolean
   showBlockTitles: boolean
   identification: {
@@ -115,7 +117,9 @@ export type CardTemplateDefinition = {
     classroomLabel: string
     instructions: string
     omrGuidance: string
+    footerMessage: string
     showInstitutionLogo: boolean
+    institutionLogoDataUrl: string
   }
 }
 
@@ -170,6 +174,7 @@ export type Template = {
   omrConfig: OMRTemplateConfig
   version: string
   createdAt: string
+  updatedAt?: string
 }
 
 export type AnswerKey = {

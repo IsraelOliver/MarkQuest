@@ -83,6 +83,7 @@ export type CardTemplateDefinition = {
   columns: number
   rowsPerColumn: number
   numberingMode: 'continuous' | 'by-block'
+  numberingPattern: 'row-column' | 'sequence-column'
   groupByArea: boolean
   showBlockTitles: boolean
   identification: {
@@ -102,7 +103,9 @@ export type CardTemplateDefinition = {
     classroomLabel: string
     instructions: string
     omrGuidance: string
+    footerMessage: string
     showInstitutionLogo: boolean
+    institutionLogoDataUrl: string
   }
 }
 
@@ -141,6 +144,7 @@ export type Template = {
   visualTheme: CardVisualTheme
   omrConfig: OMRTemplateConfig
   createdAt: string
+  updatedAt?: string
 }
 
 export type AnswerKey = {

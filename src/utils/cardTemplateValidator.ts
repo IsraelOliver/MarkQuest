@@ -7,6 +7,7 @@ import type {
 import { getCardTemplateZones } from './cardTemplateZones'
 import { createTemplateLayoutConfig, getSuggestedRowsPerColumn } from './templateLayout'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH } from './templateLayoutGeometry'
+import { getPaginatedTemplatePages } from './templatePageLayout'
 
 type ValidationResult = {
   sanitizedState: CardTemplateEditorState
@@ -72,6 +73,8 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
   nextState.definition.totalQuestions = totalQuestions
   nextState.definition.columns = columns
   nextState.definition.choicesPerQuestion = choicesPerQuestion
+  nextState.definition.numberingPattern =
+    nextState.definition.numberingPattern === 'sequence-column' ? 'sequence-column' : 'row-column'
   nextState.definition.rowsPerColumn = Math.max(getSuggestedRowsPerColumn(totalQuestions, columns), rowsPerColumn)
   nextState.omrConfig = createTemplateLayoutConfig(totalQuestions, {
     ...nextState.omrConfig,
@@ -83,6 +86,8 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
 
   nextState.definition.header.examName = nextState.definition.header.examName.trim() || nextState.name.trim() || 'Cartão-resposta'
   nextState.definition.header.institutionName = nextState.definition.header.institutionName.trim() || 'Instituição'
+  nextState.definition.header.footerMessage = nextState.definition.header.footerMessage?.trim() ?? ''
+  nextState.definition.header.institutionLogoDataUrl = nextState.definition.header.institutionLogoDataUrl?.trim() ?? ''
   nextState.name = nextState.name.trim() || nextState.definition.header.examName
 
   const safeZones = getCardTemplateZones(nextState)
@@ -220,6 +225,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   const minOptionGap = definition.choicesPerQuestion === 4 ? SAFE_LIMITS.minOptionGap4 : SAFE_LIMITS.minOptionGap5
   const zones = getCardTemplateZones(sanitizedState)
   const metrics = zones.metrics
+  const pages = getPaginatedTemplatePages(sanitizedState)
   const gridLeft = metrics.questionStartX - metrics.questionLabelOffset - metrics.questionLabelWidth
   const gridRight =
     metrics.questionStartX + (definition.columns - 1) * metrics.columnOffset + metrics.answerBlockWidth + metrics.bubbleRadius
@@ -241,6 +247,23 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     (definition.header.subtitle.trim() ? 1 : 0) +
     identificationWeight * 0.25
   const estimatedHeaderBottom = omrConfig.startYRatio - headerLoad * 0.01
+  const qrQuietZonePadding = 12
+  const footerSegmentsAreOrdered =
+    zones.footer.logoX + zones.footer.logoWidth <= zones.footer.centerX &&
+    zones.footer.centerX + zones.footer.centerWidth <= zones.footer.rightX
+  const qrFitsSafely =
+    zones.footer.codeBoxX - qrQuietZonePadding >= zones.footer.rightX &&
+    zones.footer.codeBoxX + zones.footer.codeBoxWidth + qrQuietZonePadding <= zones.footer.right
+  const allPagesFitAnswerZone = pages.every(({ metrics: pageMetrics }) => {
+    if (!pageMetrics.questions.length) return true
+    const pageGridBottom =
+      pageMetrics.questionStartY +
+      (Math.ceil(pageMetrics.questions.length / definition.columns) - 1) * pageMetrics.rowOffset +
+      pageMetrics.bubbleRadius +
+      VISUAL_LIMITS.optionLabelOffsetPx
+
+    return pageGridBottom <= zones.answers.bottom
+  })
 
   if (capacity < definition.totalQuestions) {
     issues.push({
@@ -350,6 +373,15 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     })
   }
 
+  if (!allPagesFitAnswerZone) {
+    issues.push({
+      severity: 'error',
+      code: 'PAGE_LAYOUT_OVERFLOWS',
+      field: 'definition.totalQuestions',
+      message: 'A paginação técnica não fechou corretamente e uma das páginas invade a área inferior segura.',
+    })
+  }
+
   if (horizontalClearance < VISUAL_LIMITS.minHorizontalClearancePx) {
     issues.push({
       severity: 'error',
@@ -365,6 +397,24 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       code: 'BUBBLES_OVERLAP_VERTICAL',
       field: 'omrConfig.rowGapRatio',
       message: 'As linhas da grade ficaram comprimidas demais e podem colidir visualmente.',
+    })
+  }
+
+  if (!footerSegmentsAreOrdered) {
+    issues.push({
+      severity: 'error',
+      code: 'FOOTER_SEGMENTS_COLLIDE',
+      field: 'definition.header.footerMessage',
+      message: 'As zonas do rodapé técnico se sobrepõem e precisam ser reorganizadas.',
+    })
+  }
+
+  if (!qrFitsSafely) {
+    issues.push({
+      severity: 'error',
+      code: 'QR_ZONE_UNSAFE',
+      field: 'definition.identification.showExamCode',
+      message: 'A área do QR code perdeu a folga mínima de respiro dentro do rodapé técnico.',
     })
   }
 
@@ -429,6 +479,13 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     code: 'EXPECTED_CONFIDENCE',
     field: 'omrConfig.markThreshold',
     message: `Nivel de confianca esperado: ${getConfidenceLabel(omrConfig)}.`,
+  })
+
+  issues.push({
+    severity: 'info',
+    code: 'LAYOUT_BLUEPRINT_READY',
+    field: 'definition.pageSize',
+    message: `Blueprint técnico pronto: ${pages.length} página(s), ${pages[0]?.rowsPerPage ?? 0} linhas úteis por página e QR em zona fixa.`,
   })
 
   return {

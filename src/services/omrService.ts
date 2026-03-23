@@ -72,6 +72,7 @@ type BackendTemplate = {
   visualTheme?: CardVisualTheme
   omrConfig?: Partial<OMRTemplateConfig>
   createdAt: string
+  updatedAt?: string
 }
 
 type BackendAnswerKey = {
@@ -156,6 +157,7 @@ function mapTemplate(template: BackendTemplate): Template {
     omrConfig: createTemplateLayoutConfig(template.totalQuestions, template.omrConfig),
     version: 'API',
     createdAt: template.createdAt,
+    updatedAt: template.updatedAt,
   }
 }
 

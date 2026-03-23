@@ -1,12 +1,8 @@
-﻿import type { CardTemplateEditorState } from '../types/omr'
+import type { CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from '../utils/cardTemplateZones'
-import {
-  getTemplateLayoutMetrics,
-  TEMPLATE_PAGE_HEIGHT,
-  TEMPLATE_PAGE_WIDTH,
-  TEMPLATE_PAGE_X,
-  TEMPLATE_PAGE_Y,
-} from '../utils/templateLayoutGeometry'
+import { formatQuestionLabel } from '../utils/questionNumbering'
+import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from '../utils/templateLayoutGeometry'
+import { getPaginatedTemplatePages } from '../utils/templatePageLayout'
 
 type CardTemplatePreviewProps = {
   state: CardTemplateEditorState
@@ -22,7 +18,6 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
     case 'vestibular':
       return {
         accent: '#0f766e',
-        accentSoft: '#ccfbf1',
         title: '#042f2e',
         stroke: '#99f6e4',
         text: '#134e4a',
@@ -30,7 +25,6 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
     case 'compact':
       return {
         accent: '#334155',
-        accentSoft: '#e2e8f0',
         title: '#0f172a',
         stroke: '#cbd5e1',
         text: '#334155',
@@ -38,7 +32,6 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
     default:
       return {
         accent: '#0f766e',
-        accentSoft: '#ccfbf1',
         title: '#0f172a',
         stroke: '#99f6e4',
         text: '#134e4a',
@@ -46,42 +39,26 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
   }
 }
 
-export function CardTemplatePreview({ state, unitName, classroomName, examName }: CardTemplatePreviewProps) {
+export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
   const { definition, visualTheme } = state
   const zones = getCardTemplateZones(state)
-  const baseMetrics = getTemplateLayoutMetrics(state.omrConfig)
   const palette = getThemePalette(visualTheme.visualStyle)
   const sectionStroke = visualTheme.showSectionSeparators ? palette.stroke : '#d6dbe4'
-  const guideLineStroke = visualTheme.answerGridStyle === 'minimal' ? '#e2e8f0' : '#d9e2ec'
-  const headerTitle = definition.header.examName || examName
   const topInstruction =
-    definition.header.instructions || 'Marque assim: bolha totalmente preenchida. Não marque assim: X, círculo parcial ou check.'
-  const footerCode = `COD-${definition.totalQuestions}`
-  const availableAnswerHeight = zones.answers.bottom - baseMetrics.questionStartY
-  const fittedRowsPerColumn = Math.max(1, Math.floor(availableAnswerHeight / baseMetrics.rowOffset) + 1)
-  const fittedCapacity = Math.max(1, fittedRowsPerColumn * definition.columns)
-  const totalPages = Math.max(1, Math.ceil(definition.totalQuestions / fittedCapacity))
+    definition.header.instructions || 'Marque apenas uma alternativa por questão e mantenha o cartão limpo.'
+  const previewStudentCode = 'ST-001'
+  const pages = getPaginatedTemplatePages(state)
+  const totalPages = pages.length
   const previewViewBox = [
     TEMPLATE_PAGE_X - PREVIEW_MARGIN,
     TEMPLATE_PAGE_Y - PREVIEW_MARGIN,
     TEMPLATE_PAGE_WIDTH + PREVIEW_MARGIN * 2,
     TEMPLATE_PAGE_HEIGHT + PREVIEW_MARGIN * 2,
   ].join(' ')
-
-  const pages = Array.from({ length: totalPages }, (_, pageIndex) => {
-    const offset = pageIndex * fittedCapacity
-    const pageQuestionCount = Math.min(fittedCapacity, definition.totalQuestions - offset)
-    const metrics = getTemplateLayoutMetrics(
-      {
-        ...state.omrConfig,
-        rowsPerColumn: fittedRowsPerColumn,
-        totalQuestions: pageQuestionCount,
-      },
-      offset,
-      pageQuestionCount,
-    )
-    return { pageIndex, metrics }
-  })
+  const logoBoxX = zones.footer.logoX
+  const logoBoxY = zones.footer.top + 16
+  const logoBoxWidth = zones.footer.logoWidth
+  const logoBoxHeight = 38
 
   return (
     <div className="card-editor-preview">
@@ -91,7 +68,9 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
           <span>{definition.totalQuestions} questões</span>
           <span>{definition.choicesPerQuestion} alternativas</span>
           <span>{definition.columns} colunas</span>
-          <span>{totalPages} {totalPages === 1 ? 'página' : 'páginas'}</span>
+          <span>
+            {totalPages} {totalPages === 1 ? 'página' : 'páginas'}
+          </span>
         </div>
       </div>
 
@@ -116,64 +95,26 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
                   strokeWidth="1"
                 />
 
-                <rect
-                  x={zones.header.x}
-                  y={zones.header.y}
-                  width={zones.header.width}
-                  height={zones.header.height}
-                  rx={18}
-                  fill={palette.accentSoft}
-                />
-                <text x={zones.header.x + 18} y={zones.header.y + 18} className="card-editor-preview__eyebrow" fill={palette.text}>
-                  {unitName}
-                </text>
-                <text x={zones.header.x + 18} y={zones.header.y + 48} className="card-editor-preview__title" fill={palette.title}>
-                  {headerTitle}
-                </text>
-
-                <rect
-                  x={zones.header.x + zones.header.width - 104}
-                  y={zones.header.y + 10}
-                  width="88"
-                  height="52"
-                  rx="14"
-                  fill="#ffffff"
-                  stroke={palette.stroke}
-                />
-                <text x={zones.header.x + zones.header.width - 84} y={zones.header.y + 30} className="card-editor-preview__meta" fill={palette.title}>
-                  {definition.pageSize}
-                </text>
-                <text x={zones.header.x + zones.header.width - 84} y={zones.header.y + 46} className="card-editor-preview__tiny" fill="#64748b">
-                  Página {pageIndex + 1}/{totalPages}
-                </text>
-
                 <g>
                   {zones.identificationFields.map((field, index) => {
                     const columnIndex = index % zones.info.columns
                     const rowIndex = Math.floor(index / zones.info.columns)
                     const cellWidth = zones.info.width / zones.info.columns
-                    const fieldX = zones.info.x + columnIndex * cellWidth + 10
-                    const fieldY = zones.info.y + 12 + rowIndex * 20
+                    const fieldX = zones.info.x + columnIndex * cellWidth + 4
+                    const fieldY = zones.info.y + 14 + rowIndex * 20
+
                     return (
                       <g key={`${field}-${index}`}>
                         <text x={fieldX} y={fieldY} className="card-editor-preview__field-label" fill={palette.title}>
                           {field}:
                         </text>
-                        <line
-                          x1={fieldX + 54}
-                          y1={fieldY - 3}
-                          x2={fieldX + cellWidth - 22}
-                          y2={fieldY - 3}
-                          stroke="#cbd5e1"
-                          strokeWidth="1.2"
-                        />
                       </g>
                     )
                   })}
                 </g>
 
                 <text
-                  x={TEMPLATE_PAGE_X + TEMPLATE_PAGE_WIDTH / 2}
+                  x={zones.instructions.x + zones.instructions.width / 2}
                   y={zones.instructions.y + 14}
                   textAnchor="middle"
                   className="card-editor-preview__body"
@@ -181,20 +122,6 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
                 >
                   {topInstruction}
                 </text>
-
-                {definition.showBlockTitles
-                  ? Array.from({ length: definition.columns }, (_, columnIndex) => {
-                      const titleX = metrics.questionStartX + columnIndex * metrics.columnOffset - 40
-                      const blockTitle = definition.groupByArea ? `Parte ${columnIndex + 1}` : `Bloco ${columnIndex + 1}`
-                      return (
-                        <g key={`block-${pageIndex}-${columnIndex}`}>
-                          <text x={titleX} y={zones.answers.top + 6} className="card-editor-preview__section" fill={palette.title}>
-                            {blockTitle}
-                          </text>
-                        </g>
-                      )
-                    })
-                  : null}
 
                 {Array.from({ length: definition.columns }, (_, columnIndex) => {
                   const headerX = metrics.questionStartX + columnIndex * metrics.columnOffset
@@ -220,22 +147,13 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
                   <g key={`question-${pageIndex}-${question.questionNumber}`}>
                     <text
                       x={question.labelX}
-                      y={question.labelY + 4}
+                      y={question.labelY + 3}
                       textAnchor="end"
                       className="card-editor-preview__question"
-                      fill={palette.title}
+                      fill="#475569"
                     >
-                      {question.questionNumber}
+                      {formatQuestionLabel(definition.numberingMode, definition.numberingPattern, question)}
                     </text>
-
-                    <line
-                      x1={question.labelX - metrics.questionLabelWidth}
-                      y1={question.optionY}
-                      x2={question.optionStartX + metrics.answerBlockWidth + metrics.bubbleRadius}
-                      y2={question.optionY}
-                      stroke={guideLineStroke}
-                      strokeWidth={visualTheme.answerGridStyle === 'minimal' ? 0.7 : 1}
-                    />
 
                     {metrics.activeOptions.map((option, optionIndex) => (
                       <g key={`${pageIndex}-${question.questionNumber}-${option}`}>
@@ -262,6 +180,77 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
                 ))}
 
                 <line
+                  x1={zones.footer.left}
+                  y1={zones.footer.top}
+                  x2={zones.footer.right}
+                  y2={zones.footer.top}
+                  stroke={sectionStroke}
+                  strokeWidth="1"
+                />
+
+                <line
+                  x1={zones.footer.centerX - 14}
+                  y1={zones.footer.top + 10}
+                  x2={zones.footer.centerX - 14}
+                  y2={zones.footer.bottom - 14}
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                />
+                <line
+                  x1={zones.footer.rightX - 14}
+                  y1={zones.footer.top + 10}
+                  x2={zones.footer.rightX - 14}
+                  y2={zones.footer.bottom - 14}
+                  stroke="#e2e8f0"
+                  strokeWidth="1"
+                />
+
+                {definition.header.showInstitutionLogo ? (
+                  definition.header.institutionLogoDataUrl ? (
+                    <image
+                      href={definition.header.institutionLogoDataUrl}
+                      x={logoBoxX}
+                      y={logoBoxY}
+                      width={logoBoxWidth}
+                      height={logoBoxHeight}
+                      preserveAspectRatio="xMidYMid meet"
+                    />
+                  ) : (
+                    <rect
+                      x={logoBoxX}
+                      y={logoBoxY}
+                      width={logoBoxWidth}
+                      height="38"
+                      rx="8"
+                      fill="#ffffff"
+                      stroke="#dbe2ea"
+                      strokeDasharray="6 4"
+                    />
+                  )
+                ) : null}
+
+                {definition.header.footerMessage ? (
+                  <text
+                    x={zones.footer.centerX + zones.footer.centerWidth / 2}
+                    y={zones.footer.top + 34}
+                    textAnchor="middle"
+                    className="card-editor-preview__tiny"
+                    fill="#475569"
+                  >
+                    {definition.header.footerMessage}
+                  </text>
+                ) : null}
+                <text
+                  x={zones.footer.centerX + zones.footer.centerWidth / 2}
+                  y={zones.footer.bottom - 8}
+                  textAnchor="middle"
+                  className="card-editor-preview__tiny"
+                  fill="#64748b"
+                >
+                  Página {pageIndex + 1}/{totalPages}
+                </text>
+
+                <line
                   x1={zones.footer.signatureX}
                   y1={zones.footer.top + 34}
                   x2={zones.footer.signatureX + zones.footer.signatureWidth}
@@ -283,45 +272,35 @@ export function CardTemplatePreview({ state, unitName, classroomName, examName }
 
                 {definition.identification.showExamCode ? (
                   <g>
+                    <text
+                      x={zones.footer.codeBoxX + zones.footer.codeBoxWidth / 2}
+                      y={zones.footer.top + 22}
+                      textAnchor="middle"
+                      className="card-editor-preview__meta"
+                      fill={palette.title}
+                    >
+                      {previewStudentCode}
+                    </text>
                     <rect
-                      x={zones.footer.codeBoxX}
-                      y={zones.footer.top + 10}
-                      width={zones.footer.codeBoxWidth}
-                      height={zones.footer.codeBoxHeight}
-                      rx="16"
-                      fill="#f8fafc"
-                      stroke={sectionStroke}
+                      x={zones.footer.codeBoxX + 32}
+                      y={zones.footer.top + 28}
+                      width="76"
+                      height="76"
+                      rx="8"
+                      fill="#ffffff"
+                      stroke="#e2e8f0"
                     />
-                    <text x={zones.footer.codeBoxX + 14} y={zones.footer.top + 38} className="card-editor-preview__meta" fill={palette.title}>
-                      {footerCode}
-                    </text>
-                    <text x={zones.footer.codeBoxX + 14} y={zones.footer.top + 55} className="card-editor-preview__tiny" fill="#64748b">
-                      Código da prova
-                    </text>
+                    <path
+                      d={`M ${zones.footer.codeBoxX + 42} ${zones.footer.top + 38} h 16 v 16 h -16 z
+                          M ${zones.footer.codeBoxX + 84} ${zones.footer.top + 38} h 16 v 16 h -16 z
+                          M ${zones.footer.codeBoxX + 42} ${zones.footer.top + 80} h 16 v 16 h -16 z
+                          M ${zones.footer.codeBoxX + 66} ${zones.footer.top + 52} h 8 v 8 h -8 z
+                          M ${zones.footer.codeBoxX + 82} ${zones.footer.top + 64} h 8 v 8 h -8 z
+                          M ${zones.footer.codeBoxX + 70} ${zones.footer.top + 82} h 10 v 10 h -10 z`}
+                      fill={palette.title}
+                    />
                   </g>
                 ) : null}
-
-                <text x={TEMPLATE_PAGE_X + 26} y={TEMPLATE_PAGE_Y + TEMPLATE_PAGE_HEIGHT - 22} className="card-editor-preview__brand" fill={palette.accent}>
-                  MarkQuest
-                </text>
-                <text
-                  x={TEMPLATE_PAGE_X + TEMPLATE_PAGE_WIDTH / 2}
-                  y={TEMPLATE_PAGE_Y + TEMPLATE_PAGE_HEIGHT - 22}
-                  textAnchor="middle"
-                  className="card-editor-preview__tiny"
-                  fill="#64748b"
-                >
-                  {unitName}
-                </text>
-                <text
-                  x={TEMPLATE_PAGE_X + TEMPLATE_PAGE_WIDTH - 26}
-                  y={TEMPLATE_PAGE_Y + TEMPLATE_PAGE_HEIGHT - 22}
-                  textAnchor="end"
-                  className="card-editor-preview__tiny"
-                  fill="#64748b"
-                >
-                  {classroomName}
-                </text>
               </svg>
             </div>
           ))}

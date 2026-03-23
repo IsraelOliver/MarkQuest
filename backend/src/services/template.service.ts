@@ -33,6 +33,7 @@ export class TemplateService {
         ...input.omrConfig,
       },
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     db.templates.push(template)
@@ -75,6 +76,7 @@ export class TemplateService {
     }
 
     const currentTemplate = db.templates[templateIndex]
+    const now = new Date().toISOString()
     const updatedTemplate: Template = {
       ...currentTemplate,
       name: input.name,
@@ -89,6 +91,7 @@ export class TemplateService {
         totalQuestions: input.totalQuestions,
         ...input.omrConfig,
       },
+      updatedAt: now,
     }
 
     db.templates[templateIndex] = updatedTemplate
