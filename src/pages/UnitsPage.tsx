@@ -3,8 +3,8 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
+import { Cabecalho } from '../components/Cabecalho'
 import { Card } from '../components/Card'
-import { SectionTitle } from '../components/SectionTitle'
 import { academicService } from '../services/academicService'
 import type { Classroom, Unit, UnitKind } from '../types/omr'
 import { formatApiErrorMessage } from '../utils/display'
@@ -60,14 +60,13 @@ export function UnitsPage() {
   }
 
   return (
-    <section>
-      <Breadcrumbs items={[{ label: 'Unidades' }]} />
-
-      <SectionTitle title="Unidades" subtitle="Escolha uma unidade para navegar pelas turmas e provas que pertencem a ela." />
-
-      <div className="inline-actions page-actions">
-        {!showCreateForm ? <Button onClick={() => setShowCreateForm(true)}>+ Criar Nova Unidade</Button> : null}
-      </div>
+    <section className="page-shell">
+      <Cabecalho
+        breadcrumb={<Breadcrumbs items={[{ label: 'Unidades' }]} />}
+        title="Unidades"
+        subtitle="Escolha uma unidade para navegar pelas turmas e provas que pertencem a ela."
+        actions={!showCreateForm ? <Button onClick={() => setShowCreateForm(true)}>+ Criar Nova Unidade</Button> : undefined}
+      />
 
       {showCreateForm ? (
         <Card>

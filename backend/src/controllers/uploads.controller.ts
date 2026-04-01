@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { uploadBodySchema } from '../schemas/uploads.schema.js'
+import { uploadBodySchema, uploadListQuerySchema } from '../schemas/uploads.schema.js'
 import { UploadService } from '../services/upload.service.js'
 import { saveMultipartFile } from '../utils/file-storage.js'
 import { ok } from '../utils/http-response.js'
@@ -33,7 +33,8 @@ export class UploadsController {
     return ok(reply, upload, 201)
   }
 
-  async list(_request: FastifyRequest, reply: FastifyReply) {
-    return ok(reply, uploadService.listUploads())
+  async list(request: FastifyRequest, reply: FastifyReply) {
+    const query = uploadListQuerySchema.parse(request.query)
+    return ok(reply, uploadService.listUploads(query))
   }
 }

@@ -1,12 +1,30 @@
 import { db } from '../repositories/in-memory.repository.js'
 
+type ResultFilters = {
+  examId?: string
+  jobId?: string
+}
+
 export class ResultsService {
-  listAll() {
+  listAll(filters?: ResultFilters) {
+    const jobs = db.jobs.filter((item) => {
+      if (filters?.examId && item.examId !== filters.examId) return false
+      if (filters?.jobId && item.id !== filters.jobId) return false
+      return true
+    })
+
+    const activeJobIds = new Set(jobs.map((item) => item.id))
+    const omrResults = db.results.filter((item) => activeJobIds.has(item.jobId))
+    const studentResults = db.studentResults.filter((item) => {
+      if (filters?.examId && item.examId !== filters.examId) return false
+      return omrResults.some((result) => result.id === item.omrResultId)
+    })
+
     return {
-      jobs: db.jobs,
-      omrResults: db.results,
-      studentResults: db.studentResults,
-      totalProcessedCards: db.results.length,
+      jobs,
+      omrResults,
+      studentResults,
+      totalProcessedCards: omrResults.length,
     }
   }
 
@@ -15,7 +33,7 @@ export class ResultsService {
     if (!job) return null
 
     const omrResults = db.results.filter((item) => item.jobId === id)
-    const studentResults = db.studentResults.filter((item) => omrResults.some((res) => res.id === item.omrResultId))
+    const studentResults = db.studentResults.filter((item) => omrResults.some((result) => result.id === item.omrResultId))
 
     return { job, omrResults, studentResults }
   }

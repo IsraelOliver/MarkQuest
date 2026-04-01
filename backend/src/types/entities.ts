@@ -61,7 +61,9 @@ export type ProcessingJob = {
   examId: string
   uploadIds: string[]
   templateId: string
+  templateVersion: string
   answerKeyId: string
+  answerKeyVersion: string
   status: ProcessingJobStatus
   createdAt: string
   finishedAt?: string
@@ -79,13 +81,26 @@ export type CardPresetId =
 export type CardTemplateDefinition = {
   pageSize: 'A4'
   totalQuestions: number
-  choicesPerQuestion: 4 | 5
+  choicesPerQuestion: 2 | 3 | 4 | 5
+  optionLabels: string[]
   columns: number
   rowsPerColumn: number
-  numberingMode: 'continuous' | 'by-block'
-  numberingPattern: 'row-column' | 'sequence-column'
-  groupByArea: boolean
-  showBlockTitles: boolean
+  numberingFormat: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+  bubbleSize: 'large' | 'medium' | 'small'
+  rowSpacing: 'compact' | 'uniform'
+  columnLayoutMode: 'left' | 'distributed'
+  columnGap: number
+  optionAlignment: 'auto' | 'left' | 'right' | 'center' | 'justify'
+  enableQuestionBlocks: boolean
+  showQuestionBlockTitles: boolean
+  questionBlocks: Array<{
+    startQuestion: number
+    endQuestion: number
+    title: string
+    choicesPerQuestion: 2 | 3 | 4 | 5
+    optionLabels: string[]
+    questionStyle: 'classic' | 'lined' | 'minimal'
+  }>
   identification: {
     showStudentName: boolean
     showStudentCode: boolean
@@ -102,10 +117,19 @@ export type CardTemplateDefinition = {
     subtitle: string
     classroomLabel: string
     instructions: string
+    showInstructions: boolean
     omrGuidance: string
     footerMessage: string
+    footerMessageAlignment: 'left' | 'center' | 'right'
+    footerMessageWeight: 'regular' | 'semibold'
+    footerMessageFontSize: number
+    footerPagePosition: 'top' | 'bottom'
+    footerPageTone: 'subtle' | 'standard'
     showInstitutionLogo: boolean
     institutionLogoDataUrl: string
+    logoAlignment: 'left' | 'center' | 'right'
+    logoScale: number
+    logoMonochrome: boolean
   }
 }
 
@@ -121,7 +145,7 @@ export type CardVisualTheme = {
 
 export type OMRTemplateConfig = {
   totalQuestions: number
-  choicesPerQuestion: 4 | 5
+  choicesPerQuestion: 2 | 3 | 4 | 5
   columns: number
   rowsPerColumn: number
   startXRatio: number
@@ -140,6 +164,7 @@ export type Template = {
   examId: string
   totalQuestions: number
   presetId: CardPresetId
+  version: string
   definition: CardTemplateDefinition
   visualTheme: CardVisualTheme
   omrConfig: OMRTemplateConfig
@@ -195,6 +220,7 @@ export type StudentResult = {
   id: string
   examId: string
   studentId: string
+  studentName: string
   score: number
   correctAnswers: number
   incorrectAnswers: number

@@ -1,12 +1,14 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { resultsListQuerySchema } from '../schemas/results.schema.js'
 import { ResultsService } from '../services/results.service.js'
 import { ok } from '../utils/http-response.js'
 
 const resultsService = new ResultsService()
 
 export class ResultsController {
-  async list(_request: FastifyRequest, reply: FastifyReply) {
-    return ok(reply, resultsService.listAll())
+  async list(request: FastifyRequest, reply: FastifyReply) {
+    const query = resultsListQuerySchema.parse(request.query)
+    return ok(reply, resultsService.listAll(query))
   }
 
   async getById(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {

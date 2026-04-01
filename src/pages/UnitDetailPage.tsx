@@ -3,8 +3,8 @@ import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
+import { Cabecalho } from '../components/Cabecalho'
 import { Card } from '../components/Card'
-import { SectionTitle } from '../components/SectionTitle'
 import { useAcademicScope } from '../hooks/useAcademicScope'
 import { academicService } from '../services/academicService'
 import { formatApiErrorMessage } from '../utils/display'
@@ -96,28 +96,30 @@ export function UnitDetailPage() {
   }
 
   return (
-    <section>
-      <Breadcrumbs
-        items={[
-          { label: 'Unidades', to: '/app/units' },
-          { label: unit?.name ?? 'Turmas' },
-        ]}
-      />
-
-      <SectionTitle
+    <section className="page-shell">
+      <Cabecalho
+        breadcrumb={
+          <Breadcrumbs
+            items={[
+              { label: 'Unidades', to: '/app/units' },
+              { label: unit?.name ?? 'Turmas' },
+            ]}
+          />
+        }
         title={unit ? unit.name : 'Unidade'}
         subtitle="Gerencie as turmas da unidade e entre em uma delas para seguir para as provas."
+        actions={
+          <>
+            <Link to="/app/units">
+              <Button variant="secondary">Voltar para unidades</Button>
+            </Link>
+            {unitId && getSelectedUnitId() !== unitId ? <Button onClick={handleActivateUnit}>Definir como unidade ativa</Button> : null}
+            <Button onClick={() => setShowClassroomForm((current) => !current)}>
+              {showClassroomForm ? 'Fechar criacao' : '+ Nova turma'}
+            </Button>
+          </>
+        }
       />
-
-      <div className="inline-actions page-actions">
-        <Link to="/app/units">
-          <Button variant="secondary">Voltar para unidades</Button>
-        </Link>
-        {unitId && getSelectedUnitId() !== unitId ? <Button onClick={handleActivateUnit}>Definir como unidade ativa</Button> : null}
-        <Button onClick={() => setShowClassroomForm((current) => !current)}>
-          {showClassroomForm ? 'Fechar criacao' : '+ Nova turma'}
-        </Button>
-      </div>
 
       <div className="detail-layout">
         <div className="detail-layout__main">

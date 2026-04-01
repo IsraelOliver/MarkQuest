@@ -4,6 +4,7 @@ import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { SectionTitle } from '../components/SectionTitle'
 import { academicService } from '../services/academicService'
+import { MAX_QUESTIONS } from '../utils/questionLimits'
 import type { Classroom, Exam } from '../types/omr'
 import { formatApiErrorMessage } from '../utils/display'
 import { getSelectedClassroomId, getSelectedExamId, setSelectedExamId } from '../utils/domainSelection'
@@ -107,7 +108,7 @@ export function ExamsPage() {
 
           <label className="field">
             <span>Total de questões</span>
-            <input value={totalQuestions} type="number" min="1" onChange={(event) => setTotalQuestions(event.target.value)} />
+              <input value={totalQuestions} type="number" min="1" max={MAX_QUESTIONS} onChange={(event) => setTotalQuestions(event.target.value)} />
           </label>
 
           <div className="inline-actions">

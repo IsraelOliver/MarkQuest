@@ -7,6 +7,9 @@ import type {
   Template,
 } from '../types/omr'
 import { createTemplateLayoutConfig, getSuggestedRowsPerColumn } from './templateLayout'
+import { normalizeOptionLabels } from './optionLabels'
+import { clampQuestionTotal, getResolvedTotalQuestions } from './questionLimits'
+import { getMaxQuestionBlockChoices, normalizeQuestionBlocks } from './questionBlocks'
 
 type CardPreset = {
   id: CardPresetId
@@ -28,20 +31,31 @@ const defaultTheme: CardVisualTheme = {
 }
 
 function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemplateDefinition {
-  const totalQuestions = input.totalQuestions ?? 45
+  const totalQuestions = clampQuestionTotal(input.totalQuestions ?? 45)
   const columns = input.columns ?? 2
   const choicesPerQuestion = input.choicesPerQuestion ?? 5
+  const questionStyle = input.questionBlocks?.[0]?.questionStyle ?? 'classic'
 
   return {
     pageSize: 'A4',
     totalQuestions,
     choicesPerQuestion,
+    optionLabels: normalizeOptionLabels(input.optionLabels, choicesPerQuestion),
     columns,
     rowsPerColumn: input.rowsPerColumn ?? getSuggestedRowsPerColumn(totalQuestions, columns),
-    numberingMode: input.numberingMode ?? 'continuous',
-    numberingPattern: input.numberingPattern ?? 'row-column',
-    groupByArea: input.groupByArea ?? false,
-    showBlockTitles: input.showBlockTitles ?? false,
+    numberingFormat: input.numberingFormat ?? 'numeric',
+    bubbleSize: input.bubbleSize ?? 'large',
+    rowSpacing: input.rowSpacing ?? 'compact',
+    columnLayoutMode: input.columnLayoutMode ?? 'left',
+    columnGap: input.columnGap ?? 8,
+    optionAlignment: input.optionAlignment ?? 'auto',
+    enableQuestionBlocks: input.enableQuestionBlocks ?? false,
+    showQuestionBlockTitles: input.showQuestionBlockTitles ?? true,
+    questionBlocks: normalizeQuestionBlocks(input.questionBlocks ?? [], totalQuestions, {
+      choicesPerQuestion,
+      optionLabels: normalizeOptionLabels(input.optionLabels, choicesPerQuestion),
+      questionStyle,
+    }),
     identification: {
       showStudentName: input.identification?.showStudentName ?? true,
       showStudentCode: input.identification?.showStudentCode ?? true,
@@ -58,12 +72,21 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
       subtitle: input.header?.subtitle ?? 'Preencha com caneta preta ou azul.',
       classroomLabel: input.header?.classroomLabel ?? 'Turma',
       instructions:
-        input.header?.instructions ?? 'Marque apenas uma alternativa por questão e preencha totalmente a bolha.',
+        input.header?.instructions ?? 'Marque apenas uma alternativa e preencha todo o campo da bolinha',
+      showInstructions: input.header?.showInstructions ?? true,
       omrGuidance:
         input.header?.omrGuidance ?? 'Evite rasuras, marcas leves e dobras na área de respostas.',
       footerMessage: input.header?.footerMessage ?? '',
+      footerMessageAlignment: input.header?.footerMessageAlignment ?? 'center',
+      footerMessageWeight: input.header?.footerMessageWeight ?? 'regular',
+      footerMessageFontSize: input.header?.footerMessageFontSize ?? 7.5,
+      footerPagePosition: input.header?.footerPagePosition ?? 'bottom',
+      footerPageTone: input.header?.footerPageTone ?? 'subtle',
       showInstitutionLogo: input.header?.showInstitutionLogo ?? false,
       institutionLogoDataUrl: input.header?.institutionLogoDataUrl ?? '',
+      logoAlignment: input.header?.logoAlignment ?? 'center',
+      logoScale: input.header?.logoScale ?? 1,
+      logoMonochrome: input.header?.logoMonochrome ?? false,
     },
   }
 }
@@ -97,15 +120,16 @@ function createPreset(
   }
 }
 
-function getMaxSafeColumns(choicesPerQuestion: 4 | 5) {
-  return choicesPerQuestion === 4 ? 3 : 3
+function getMaxSafeColumns(_choicesPerQuestion: 2 | 3 | 4 | 5, bubbleSize: CardTemplateDefinition['bubbleSize']) {
+  if (bubbleSize === 'small') return 4
+  return 3
 }
 
-function getPreferredColumns(totalQuestions: number, choicesPerQuestion: 4 | 5, presetId: CardPresetId) {
+function getPreferredColumns(totalQuestions: number, choicesPerQuestion: 2 | 3 | 4 | 5, presetId: CardPresetId) {
   if (presetId === 'quiz-20') return 2
   if (presetId === 'quiz-60') return 3
 
-  if (choicesPerQuestion === 4) {
+  if (choicesPerQuestion <= 4) {
     if (totalQuestions <= 24) return 2
     if (totalQuestions <= 60) return 3
     return 3
@@ -147,11 +171,20 @@ export const cardTemplatePresets: CardPreset[] = [
         examName: 'Simulado ENEM',
         subtitle: 'Cartão-resposta oficial',
         classroomLabel: 'Turma',
-        instructions: 'Marque apenas uma alternativa por questão e mantenha o cartão limpo.',
+        instructions: 'Marque apenas uma alternativa e preencha todo o campo da bolinha',
+        showInstructions: true,
         omrGuidance: 'Use caneta escura e evite dobras na folha.',
         footerMessage: '',
+        footerMessageAlignment: 'center',
+        footerMessageWeight: 'regular',
+        footerMessageFontSize: 7.5,
+        footerPagePosition: 'bottom',
+        footerPageTone: 'subtle',
         showInstitutionLogo: false,
         institutionLogoDataUrl: '',
+        logoAlignment: 'center',
+        logoScale: 1,
+        logoMonochrome: false,
       },
     },
     {
@@ -198,11 +231,20 @@ export const cardTemplatePresets: CardPreset[] = [
         examName: 'Avaliacao Bimestral',
         subtitle: 'Cartão-resposta da turma',
         classroomLabel: 'Serie/Turma',
-        instructions: 'Confira seus dados e marque a alternativa escolhida com atenção.',
+        instructions: 'Marque apenas uma alternativa e preencha todo o campo da bolinha',
+        showInstructions: true,
         omrGuidance: 'Bolhas incompletas ou rasuradas podem prejudicar a leitura automática.',
         footerMessage: '',
+        footerMessageAlignment: 'center',
+        footerMessageWeight: 'regular',
+        footerMessageFontSize: 7.5,
+        footerPagePosition: 'bottom',
+        footerPageTone: 'subtle',
         showInstitutionLogo: false,
         institutionLogoDataUrl: '',
+        logoAlignment: 'center',
+        logoScale: 1,
+        logoMonochrome: false,
       },
     },
     {
@@ -296,11 +338,12 @@ export function getCardPresetById(presetId: CardPresetId) {
 
 export function getSafeStructureForCard(
   totalQuestions: number,
-  choicesPerQuestion: 4 | 5,
+  choicesPerQuestion: 2 | 3 | 4 | 5,
   presetId: CardPresetId,
+  bubbleSize: CardTemplateDefinition['bubbleSize'] = 'large',
 ) {
   const preferredColumns = getPreferredColumns(totalQuestions, choicesPerQuestion, presetId)
-  const columns = Math.min(getMaxSafeColumns(choicesPerQuestion), Math.max(1, preferredColumns))
+  const columns = Math.min(getMaxSafeColumns(choicesPerQuestion, bubbleSize), Math.max(1, preferredColumns))
 
   return {
     columns,
@@ -311,23 +354,32 @@ export function getSafeStructureForCard(
 export function applySafeCardLayout(state: CardTemplateEditorState) {
   const preset = getCardPresetById(state.presetId)
   const nextState = structuredClone(state)
-  const safeStructure = getSafeStructureForCard(
-    nextState.definition.totalQuestions,
-    nextState.definition.choicesPerQuestion,
-    nextState.presetId,
-  )
+  nextState.definition.totalQuestions = getResolvedTotalQuestions(nextState.definition)
+  const effectiveChoicesPerQuestion = getMaxQuestionBlockChoices(nextState.definition)
+  const maxSafeColumns = getMaxSafeColumns(effectiveChoicesPerQuestion, nextState.definition.bubbleSize)
+  const manualColumns = Math.min(maxSafeColumns, Math.max(1, Math.round(nextState.definition.columns || 1)))
+  const safeRowsPerColumn = getSuggestedRowsPerColumn(nextState.definition.totalQuestions, manualColumns)
 
   nextState.definition.pageSize = 'A4'
-  nextState.definition.columns = safeStructure.columns
-  nextState.definition.rowsPerColumn = safeStructure.rowsPerColumn
+  nextState.definition.optionLabels = normalizeOptionLabels(
+    nextState.definition.optionLabels,
+    nextState.definition.choicesPerQuestion,
+  )
+  nextState.definition.questionBlocks = normalizeQuestionBlocks(nextState.definition.questionBlocks, nextState.definition.totalQuestions, {
+    choicesPerQuestion: nextState.definition.choicesPerQuestion,
+    optionLabels: nextState.definition.optionLabels,
+    questionStyle: nextState.visualTheme.answerGridStyle,
+  })
+  nextState.definition.columns = manualColumns
+  nextState.definition.rowsPerColumn = safeRowsPerColumn
 
   nextState.omrConfig = createTemplateLayoutConfig(nextState.definition.totalQuestions, {
     ...preset.omrConfig,
     markThreshold: nextState.omrConfig.markThreshold,
     ambiguityThreshold: nextState.omrConfig.ambiguityThreshold,
-    choicesPerQuestion: nextState.definition.choicesPerQuestion,
-    columns: safeStructure.columns,
-    rowsPerColumn: safeStructure.rowsPerColumn,
+    choicesPerQuestion: effectiveChoicesPerQuestion,
+    columns: manualColumns,
+    rowsPerColumn: safeRowsPerColumn,
     rowGapRatio: getDensityAdjustedRowGap(preset.omrConfig.rowGapRatio, nextState.visualTheme.density),
   })
 
@@ -347,12 +399,22 @@ export function createEditorStateFromPreset(presetId: CardPresetId, name?: strin
 }
 
 export function createEditorStateFromTemplate(template: Template): CardTemplateEditorState {
+  const definition = structuredClone(template.definition)
+  definition.totalQuestions = getResolvedTotalQuestions(definition)
+  definition.optionLabels = normalizeOptionLabels(definition.optionLabels, definition.choicesPerQuestion)
+  definition.questionBlocks = normalizeQuestionBlocks(definition.questionBlocks, definition.totalQuestions, {
+    choicesPerQuestion: definition.choicesPerQuestion,
+    optionLabels: definition.optionLabels,
+    questionStyle: template.visualTheme.answerGridStyle,
+  })
+
   return {
     name: template.name,
     presetId: template.presetId,
-    definition: structuredClone(template.definition),
+    definition,
     visualTheme: structuredClone(template.visualTheme),
     omrConfig: structuredClone(template.omrConfig),
   }
 }
+
 

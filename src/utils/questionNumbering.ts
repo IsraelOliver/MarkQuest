@@ -1,4 +1,4 @@
-import type { CardNumberingMode, CardNumberingPattern } from '../types/omr'
+import type { CardNumberingFormat, CardTemplateDefinition } from '../types/omr'
 
 type QuestionLabelInput = {
   questionNumber: number
@@ -7,19 +7,32 @@ type QuestionLabelInput = {
 }
 
 export function formatQuestionLabel(
-  numberingMode: CardNumberingMode,
-  numberingPattern: CardNumberingPattern,
+  numberingFormat: CardNumberingFormat,
   question: QuestionLabelInput,
+  definition?: Pick<CardTemplateDefinition, 'choicesPerQuestion'>,
 ) {
-  if (numberingMode === 'by-block') {
-    const suffix = String.fromCharCode(65 + question.columnIndex)
+  const choicesPerQuestion =
+    definition?.choicesPerQuestion === 2 ||
+    definition?.choicesPerQuestion === 3 ||
+    definition?.choicesPerQuestion === 4
+      ? definition.choicesPerQuestion
+      : 5
+  const sequenceIndex = Math.max(0, question.questionNumber - 1)
+  const sequenceNumber = Math.floor(sequenceIndex / choicesPerQuestion) + 1
+  const optionIndex = sequenceIndex % choicesPerQuestion
+  const upperSuffix = String.fromCharCode(65 + optionIndex)
+  const lowerSuffix = upperSuffix.toLowerCase()
 
-    if (numberingPattern === 'sequence-column') {
-      return `${question.questionNumber}${suffix}`
-    }
-
-    return `${question.rowIndex + 1}${suffix}`
+  switch (numberingFormat) {
+    case 'numericAlpha':
+      return `${sequenceNumber}${upperSuffix}`
+    case 'alphaNumeric':
+      return `${question.questionNumber}A`
+    case 'numericLower':
+      return `${sequenceNumber}${lowerSuffix}`
+    case 'numericDash':
+      return `${sequenceNumber}-${lowerSuffix}`
+    default:
+      return String(question.questionNumber)
   }
-
-  return String(question.questionNumber)
 }

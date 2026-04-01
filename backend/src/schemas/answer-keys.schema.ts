@@ -6,3 +6,8 @@ export const createAnswerKeySchema = z.object({
   templateId: z.string().min(1),
   answers: z.array(z.enum(['A', 'B', 'C', 'D', 'E'])).min(1),
 })
+
+export const answerKeyListQuerySchema = z.object({
+  examId: z.string().min(1).optional(),
+  templateId: z.string().min(1).optional(),
+})

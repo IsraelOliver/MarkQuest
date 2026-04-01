@@ -1,6 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
 import { MainLayout } from '../layouts/MainLayout'
 import { AnswerKeysPage } from '../pages/AnswerKeysPage'
+import { AccountSettingsPage } from '../pages/AccountSettingsPage'
 import { ClassroomDetailPage } from '../pages/ClassroomDetailPage'
 import { ClassroomExamsPage } from '../pages/ClassroomExamsPage'
 import { ClassroomStudentsPage } from '../pages/ClassroomStudentsPage'
@@ -25,6 +26,7 @@ export const router = createBrowserRouter([
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'units', element: <UnitsPage /> },
+      { path: 'account-settings', element: <AccountSettingsPage /> },
       { path: 'units/:unitId', element: <UnitDetailPage /> },
       { path: 'units/:unitId/classrooms/:classroomId', element: <ClassroomDetailPage /> },
       { path: 'units/:unitId/classrooms/:classroomId/exams', element: <ClassroomExamsPage /> },

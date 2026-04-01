@@ -3,12 +3,13 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
+import { Cabecalho } from '../components/Cabecalho'
 import { Card } from '../components/Card'
-import { SectionTitle } from '../components/SectionTitle'
 import { useAcademicScope } from '../hooks/useAcademicScope'
 import { academicService } from '../services/academicService'
 import { formatApiErrorMessage } from '../utils/display'
 import { setSelectedExamId } from '../utils/domainSelection'
+import { MAX_QUESTIONS } from '../utils/questionLimits'
 
 export function ClassroomExamsPage() {
   const navigate = useNavigate()
@@ -107,24 +108,29 @@ export function ClassroomExamsPage() {
   }
 
   return (
-    <section>
-      <Breadcrumbs
-        items={[
-          { label: 'Unidades', to: '/app/units' },
-          { label: unit?.name ?? 'Turmas', to: `/app/units/${unitId}` },
-          { label: classroom?.name ?? 'Turma', to: `/app/units/${unitId}/classrooms/${classroomId}` },
-          { label: 'Provas' },
-        ]}
+    <section className="page-shell">
+      <Cabecalho
+        breadcrumb={
+          <Breadcrumbs
+            items={[
+              { label: 'Unidades', to: '/app/units' },
+              { label: unit?.name ?? 'Turmas', to: `/app/units/${unitId}` },
+              { label: classroom?.name ?? 'Turma', to: `/app/units/${unitId}/classrooms/${classroomId}` },
+              { label: 'Provas' },
+            ]}
+          />
+        }
+        title="Provas"
+        subtitle="Cadastre e organize as provas desta turma. O foco central desta tela é a grade de provas."
+        actions={
+          <>
+            <Link to={`/app/units/${unitId}/classrooms/${classroomId}`}>
+              <Button variant="secondary">Voltar para a turma</Button>
+            </Link>
+            <Button onClick={() => setShowExamForm((current) => !current)}>{showExamForm ? 'Fechar criacao' : '+ Nova prova'}</Button>
+          </>
+        }
       />
-
-      <SectionTitle title="Provas" subtitle="Cadastre e organize as provas desta turma. O foco central desta tela e a grade de provas." />
-
-      <div className="inline-actions page-actions">
-        <Link to={`/app/units/${unitId}/classrooms/${classroomId}`}>
-          <Button variant="secondary">Voltar para a turma</Button>
-        </Link>
-        <Button onClick={() => setShowExamForm((current) => !current)}>{showExamForm ? 'Fechar criacao' : '+ Nova prova'}</Button>
-      </div>
 
       {showExamForm ? (
         <Card>
@@ -143,7 +149,7 @@ export function ClassroomExamsPage() {
 
             <label className="field">
               <span>Total de questões</span>
-              <input value={totalQuestions} type="number" min="1" onChange={(event) => setTotalQuestions(event.target.value)} />
+                <input value={totalQuestions} type="number" min="1" max={MAX_QUESTIONS} onChange={(event) => setTotalQuestions(event.target.value)} />
             </label>
 
             <div className="inline-actions">

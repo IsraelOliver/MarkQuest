@@ -1,8 +1,8 @@
 import { Link, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
+import { Cabecalho } from '../components/Cabecalho'
 import { Card } from '../components/Card'
-import { SectionTitle } from '../components/SectionTitle'
 import { useAcademicScope } from '../hooks/useAcademicScope'
 import { setSelectedClassroomId, setSelectedExamId, setSelectedUnitId } from '../utils/domainSelection'
 
@@ -23,26 +23,28 @@ export function ClassroomDetailPage() {
   }
 
   return (
-    <section>
-      <Breadcrumbs
-        items={[
-          { label: 'Unidades', to: '/app/units' },
-          { label: unit?.name ?? 'Turmas', to: `/app/units/${unitId}` },
-          { label: classroom?.name ?? 'Turma' },
-        ]}
-      />
-
-      <SectionTitle
+    <section className="page-shell">
+      <Cabecalho
+        breadcrumb={
+          <Breadcrumbs
+            items={[
+              { label: 'Unidades', to: '/app/units' },
+              { label: unit?.name ?? 'Turmas', to: `/app/units/${unitId}` },
+              { label: classroom?.name ?? 'Turma' },
+            ]}
+          />
+        }
         title={classroom ? classroom.name : 'Turma'}
         subtitle="Entre no fluxo de provas da turma. A lista de alunos fica fixada na lateral para consulta rápida."
+        actions={
+          <>
+            <Link to={`/app/units/${unitId}`}>
+              <Button variant="secondary">Voltar para a unidade</Button>
+            </Link>
+            <Button onClick={handleActivateClassroom}>Definir turma ativa</Button>
+          </>
+        }
       />
-
-      <div className="inline-actions page-actions">
-        <Link to={`/app/units/${unitId}`}>
-          <Button variant="secondary">Voltar para a unidade</Button>
-        </Link>
-        <Button onClick={handleActivateClassroom}>Definir turma ativa</Button>
-      </div>
 
       <div className="detail-layout detail-layout--classroom">
         <div className="detail-layout__main">

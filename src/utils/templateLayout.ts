@@ -1,4 +1,5 @@
 import type { OMRTemplateConfig } from '../types/omr'
+import { clampQuestionTotal } from './questionLimits'
 
 export const DEFAULT_TEMPLATE_LAYOUT: OMRTemplateConfig = {
   totalQuestions: 20,
@@ -27,7 +28,7 @@ function clampRatio(value: number, fallback: number, min = 0, max = 1) {
 
 export function getSuggestedRowsPerColumn(totalQuestions: number, columns: number) {
   const safeColumns = clampPositiveInteger(columns, DEFAULT_TEMPLATE_LAYOUT.columns)
-  const safeTotalQuestions = clampPositiveInteger(totalQuestions, DEFAULT_TEMPLATE_LAYOUT.totalQuestions)
+  const safeTotalQuestions = clampQuestionTotal(totalQuestions)
   return Math.max(1, Math.ceil(safeTotalQuestions / safeColumns))
 }
 
@@ -36,11 +37,17 @@ export function createTemplateLayoutConfig(
   overrides: Partial<OMRTemplateConfig> = {},
 ): OMRTemplateConfig {
   const columns = clampPositiveInteger(overrides.columns ?? DEFAULT_TEMPLATE_LAYOUT.columns, DEFAULT_TEMPLATE_LAYOUT.columns)
-  const normalizedTotalQuestions = clampPositiveInteger(totalQuestions, DEFAULT_TEMPLATE_LAYOUT.totalQuestions)
+  const normalizedTotalQuestions = clampQuestionTotal(totalQuestions)
+  const safeChoicesPerQuestion =
+    overrides.choicesPerQuestion === 2 ||
+    overrides.choicesPerQuestion === 3 ||
+    overrides.choicesPerQuestion === 4
+      ? overrides.choicesPerQuestion
+      : 5
 
   return {
     totalQuestions: normalizedTotalQuestions,
-    choicesPerQuestion: overrides.choicesPerQuestion === 4 ? 4 : 5,
+    choicesPerQuestion: safeChoicesPerQuestion,
     columns,
     rowsPerColumn: clampPositiveInteger(
       overrides.rowsPerColumn ?? getSuggestedRowsPerColumn(normalizedTotalQuestions, columns),

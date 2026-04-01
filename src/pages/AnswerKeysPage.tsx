@@ -34,18 +34,15 @@ export function AnswerKeysPage() {
     const loadData = async () => {
       try {
         const [templatesResponse, answerKeysResponse] = await Promise.all([
-          omrService.getTemplates(),
-          omrService.getAnswerKeys(),
+          omrService.getTemplates({ examId: selectedExam?.id }),
+          omrService.getAnswerKeys({ examId: selectedExam?.id }),
         ])
 
-        const filteredTemplates = templatesResponse.items.filter((item) => item.examId === selectedExam?.id)
-        const filteredAnswerKeys = answerKeysResponse.items.filter((item) => item.examId === selectedExam?.id)
-
-        setTemplates(filteredTemplates)
-        setAnswerKeys(filteredAnswerKeys)
-        setSelectedTemplateId((current) => current || filteredTemplates[0]?.id || '')
+        setTemplates(templatesResponse.items)
+        setAnswerKeys(answerKeysResponse.items)
+        setSelectedTemplateId((current) => current || templatesResponse.items[0]?.id || '')
       } catch (loadError) {
-        setError(formatApiErrorMessage('Não foi possível carregar os gabaritos.', loadError))
+        setError(formatApiErrorMessage('Nao foi possivel carregar os gabaritos.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -65,13 +62,19 @@ export function AnswerKeysPage() {
 
     if (answerCount === selectedTemplate.totalQuestions) return
 
-    setAnswers(Array.from({ length: selectedTemplate.totalQuestions }, () => 'A').join(','))
+    const fallbackOption = selectedTemplate.definition.optionLabels[0] ?? 'A'
+    setAnswers(Array.from({ length: selectedTemplate.totalQuestions }, () => fallbackOption).join(','))
   }, [answers, selectedTemplateId, templates])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!selectedExam) {
       setError('Selecione uma prova ativa antes de criar o gabarito.')
+      return
+    }
+
+    if (!selectedTemplateId) {
+      setError('Selecione um template da prova antes de criar o gabarito.')
       return
     }
 
@@ -95,7 +98,7 @@ export function AnswerKeysPage() {
       setAnswerKeys((current) => [response.item, ...current])
       setMessage(`Gabarito ${response.item.version} criado e vinculado ao template selecionado.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Não foi possível criar o gabarito.', submitError))
+      setError(formatApiErrorMessage('Nao foi possivel criar o gabarito.', submitError))
     } finally {
       setIsSubmitting(false)
     }
@@ -114,7 +117,7 @@ export function AnswerKeysPage() {
         ]}
       />
 
-      <SectionTitle title="Gabaritos" subtitle="Monte a sequência correta de respostas para cada template cadastrado." />
+      <SectionTitle title="Gabaritos" subtitle="Monte a sequencia correta de respostas para cada template cadastrado." />
 
       <div className="inline-actions page-actions">
         <Link to={`/app/units/${unitId}/classrooms/${classroomId}/exams/${examId}`}>
@@ -142,7 +145,7 @@ export function AnswerKeysPage() {
               <option value="">Selecione um template</option>
               {templates.map((template) => (
                 <option key={template.id} value={template.id}>
-                  {template.name} - {template.totalQuestions} questões
+                  {template.name} - {template.version} - {template.totalQuestions} questoes
                 </option>
               ))}
             </select>

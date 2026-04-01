@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
@@ -13,8 +13,9 @@ import { setSelectedExamId } from '../utils/domainSelection'
 
 export function UploadsPage() {
   const { unitId, classroomId, examId } = useParams()
-  const { selectedUnit, selectedClassroom, selectedExam } = useAcademicScope()
-  const [studentId, setStudentId] = useState('student-001')
+  const { selectedUnit, selectedClassroom, selectedExam, students } = useAcademicScope()
+  const filteredStudents = students.filter((student) => student.classroomId === selectedClassroom?.id)
+  const [studentId, setStudentId] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [uploads, setUploads] = useState<AnswerSheet[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,10 +32,10 @@ export function UploadsPage() {
   useEffect(() => {
     const loadUploads = async () => {
       try {
-        const response = await omrService.getUploads()
-        setUploads(response.items.filter((item) => item.examId === selectedExam?.id))
+        const response = await omrService.getUploads({ examId: selectedExam?.id })
+        setUploads(response.items)
       } catch (loadError) {
-        setError(formatApiErrorMessage('Não foi possível carregar os uploads.', loadError))
+        setError(formatApiErrorMessage('Nao foi possivel carregar os uploads.', loadError))
       } finally {
         setIsLoading(false)
       }
@@ -42,6 +43,25 @@ export function UploadsPage() {
 
     void loadUploads()
   }, [selectedExam?.id])
+
+  useEffect(() => {
+    if (!filteredStudents.length) {
+      setStudentId('')
+      return
+    }
+
+    setStudentId((current) => (filteredStudents.some((student) => student.id === current) ? current : filteredStudents[0].id))
+  }, [filteredStudents])
+
+  const selectedStudent = filteredStudents.find((student) => student.id === studentId)
+  const uploadsForSelectedStudent = useMemo(
+    () => uploads.filter((upload) => upload.studentId === studentId),
+    [studentId, uploads],
+  )
+
+  const totalUploadsLabel = uploads.length === 1 ? '1 cartao enviado' : `${uploads.length} cartoes enviados`
+  const studentUploadsLabel =
+    uploadsForSelectedStudent.length === 1 ? '1 arquivo deste aluno' : `${uploadsForSelectedStudent.length} arquivos deste aluno`
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -53,6 +73,11 @@ export function UploadsPage() {
 
     if (!selectedExam) {
       setError('Selecione uma prova ativa antes de enviar os arquivos.')
+      return
+    }
+
+    if (!studentId) {
+      setError('Selecione um aluno da turma ativa antes de enviar os arquivos.')
       return
     }
 
@@ -69,16 +94,16 @@ export function UploadsPage() {
 
       setUploads((current) => [...response.items, ...current])
       setFiles([])
-      setMessage(`${response.totalFiles} arquivo(s) enviado(s) com sucesso para processamento.`)
+      setMessage(`${response.totalFiles} arquivo(s) enviado(s) com sucesso para ${selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}`.trim() : 'o aluno selecionado'}.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Não foi possível enviar os arquivos.', submitError))
+      setError(formatApiErrorMessage('Nao foi possivel enviar os arquivos.', submitError))
     } finally {
       setIsSubmitting(false)
     }
   }
 
   return (
-    <section>
+    <section className="page-shell">
       <Breadcrumbs
         items={[
           { label: 'Unidades', to: '/app/units' },
@@ -91,8 +116,8 @@ export function UploadsPage() {
       />
 
       <SectionTitle
-        title="Upload de cartões-resposta"
-        subtitle="Envie os arquivos do lote e acompanhe imediatamente o que entrou na fila de leitura."
+        title="Upload de cartoes-resposta"
+        subtitle="Trabalhe por aluno: selecione quem vai receber o lote, envie os arquivos e acompanhe o historico sem sair da prova."
       />
 
       <div className="inline-actions page-actions">
@@ -101,66 +126,129 @@ export function UploadsPage() {
         </Link>
       </div>
 
-      <Card>
-        <h3>Contexto ativo</h3>
+      <Card className="upload-context-card">
+        <div className="upload-context-card__header">
+          <div>
+            <p className="upload-context-card__eyebrow">Contexto ativo</p>
+            <h3>{selectedExam?.name ?? 'Prova'}</h3>
+          </div>
+          <div className="upload-context-card__stats">
+            <span>{filteredStudents.length} alunos</span>
+            <span>{totalUploadsLabel}</span>
+          </div>
+        </div>
         <p>
           {selectedUnit?.name ?? 'Sem unidade'} / {selectedClassroom?.name ?? 'Sem turma'} / {selectedExam?.name ?? 'Sem prova'}
         </p>
       </Card>
 
-      <Card>
-        <form className="stack-form" onSubmit={handleSubmit}>
-          <label className="field">
-            <span>Exame</span>
-            <input value={selectedExam?.name ?? 'Selecione uma prova em Provas'} disabled />
-          </label>
+      <div className="uploads-layout">
+        <aside className="uploads-layout__students">
+          <Card className="uploads-students-card">
+            <div className="uploads-students-card__header">
+              <div>
+                <p className="uploads-students-card__eyebrow">Turma ativa</p>
+                <h3>Selecionar aluno</h3>
+              </div>
+              <strong>{filteredStudents.length}</strong>
+            </div>
 
-          <label className="field">
-            <span>Aluno</span>
-            <input value={studentId} onChange={(event) => setStudentId(event.target.value)} placeholder="student-001" />
-          </label>
+            {!filteredStudents.length ? <p className="feedback feedback--error">Cadastre alunos na turma antes de enviar uploads.</p> : null}
 
-          <label className="field">
-            <span>Arquivos</span>
-            <input
-              type="file"
-              multiple
-              accept=".jpg,.jpeg,.png,.pdf"
-              onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
-            />
-          </label>
+            <div className="uploads-student-list">
+              {filteredStudents.map((student) => {
+                const studentUploads = uploads.filter((upload) => upload.studentId === student.id)
+                const studentUploadsCount = studentUploads.length
 
-          <div className="inline-actions">
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Enviando...' : 'Enviar arquivos'}
-            </Button>
-            <span className="muted-text">{files.length ? `${files.length} arquivo(s) selecionado(s)` : 'Nenhum arquivo selecionado'}</span>
-          </div>
+                return (
+                  <button
+                    key={student.id}
+                    type="button"
+                    className={`uploads-student-item${student.id === studentId ? ' uploads-student-item--active' : ''}`}
+                    onClick={() => setStudentId(student.id)}
+                  >
+                    <div>
+                      <strong>{`${student.firstName} ${student.lastName}`.trim()}</strong>
+                      <span>{student.studentCode}</span>
+                    </div>
+                    <small>{studentUploadsCount === 1 ? '1 arquivo' : `${studentUploadsCount} arquivos`}</small>
+                  </button>
+                )
+              })}
+            </div>
+          </Card>
+        </aside>
 
-          {message ? <p className="feedback feedback--success">{message}</p> : null}
-          {error ? <p className="feedback feedback--error">{error}</p> : null}
-        </form>
-      </Card>
+        <div className="uploads-layout__content">
+          <Card className="uploads-batch-card">
+            <div className="uploads-batch-card__header">
+              <div>
+                <p className="uploads-batch-card__eyebrow">Lote do aluno</p>
+                <h3>{selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}`.trim() : 'Selecione um aluno'}</h3>
+              </div>
+              <span className="uploads-batch-card__meta">{selectedStudent ? studentUploadsLabel : 'Nenhum aluno selecionado'}</span>
+            </div>
 
-      <Card>
-        <h3>Exame selecionado</h3>
-        <p>{selectedExam?.name ?? 'Nenhuma prova selecionada'}</p>
-      </Card>
+            <form className="stack-form" onSubmit={handleSubmit}>
+              <label className="field">
+                <span>Exame</span>
+                <input value={selectedExam?.name ?? 'Selecione uma prova em Provas'} disabled />
+              </label>
 
-      <Card>
-        <h3>Últimos arquivos no lote</h3>
-        {isLoading ? <p>Carregando uploads...</p> : null}
-        {!isLoading && !uploads.length ? <p>Nenhum upload enviado ainda.</p> : null}
-        {!!uploads.length ? (
-          <ul>
-            {uploads.map((sheet) => (
-              <li key={sheet.id}>
-                {sheet.fileName} - {sheet.studentName}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-      </Card>
+              <label className="field">
+                <span>Aluno selecionado</span>
+                <input value={selectedStudent ? `${selectedStudent.firstName} ${selectedStudent.lastName}`.trim() : 'Nenhum aluno selecionado'} disabled />
+              </label>
+
+              <label className="field">
+                <span>Arquivos do lote</span>
+                <input
+                  type="file"
+                  multiple
+                  accept=".jpg,.jpeg,.png,.pdf"
+                  onChange={(event) => setFiles(Array.from(event.target.files ?? []))}
+                />
+              </label>
+
+              <div className="inline-actions">
+                <Button type="submit" disabled={isSubmitting || !filteredStudents.length || !studentId}>
+                  {isSubmitting ? 'Enviando...' : 'Enviar lote para o aluno'}
+                </Button>
+                <span className="muted-text">{files.length ? `${files.length} arquivo(s) selecionado(s)` : 'Nenhum arquivo selecionado'}</span>
+              </div>
+
+              {message ? <p className="feedback feedback--success">{message}</p> : null}
+              {error ? <p className="feedback feedback--error">{error}</p> : null}
+            </form>
+          </Card>
+
+          <Card className="uploads-history-card">
+            <div className="uploads-history-card__header">
+              <div>
+                <p className="uploads-history-card__eyebrow">Historico do aluno</p>
+                <h3>{selectedStudent ? `Arquivos de ${selectedStudent.firstName}` : 'Uploads recentes'}</h3>
+              </div>
+              <span className="uploads-history-card__meta">{selectedStudent ? studentUploadsLabel : totalUploadsLabel}</span>
+            </div>
+
+            {isLoading ? <p>Carregando uploads...</p> : null}
+            {!isLoading && selectedStudent && !uploadsForSelectedStudent.length ? <p>Nenhum arquivo enviado para este aluno ainda.</p> : null}
+            {!isLoading && !selectedStudent && !uploads.length ? <p>Nenhum upload enviado ainda.</p> : null}
+
+            <div className="uploads-history-list">
+              {(selectedStudent ? uploadsForSelectedStudent : uploads).map((sheet) => (
+                <div key={sheet.id} className="uploads-history-item">
+                  <div>
+                    <strong>{sheet.fileName}</strong>
+                    <span>{sheet.studentName}</span>
+                  </div>
+                  <small>{new Date(sheet.uploadedAt).toLocaleString('pt-BR')}</small>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
     </section>
   )
 }

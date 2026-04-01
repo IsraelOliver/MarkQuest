@@ -5,6 +5,9 @@ import type {
   OMRTemplateConfig,
 } from '../types/omr'
 import { getCardTemplateZones } from './cardTemplateZones'
+import { buildNormalizedRenderModel, getMaxQuestionBlockChoices, normalizeQuestionBlocks, validateQuestionBlocks } from './questionBlocks'
+import { isValidOptionLabel, normalizeOptionLabels } from './optionLabels'
+import { clampQuestionTotal, getResolvedTotalQuestions, MAX_QUESTIONS } from './questionLimits'
 import { createTemplateLayoutConfig, getSuggestedRowsPerColumn } from './templateLayout'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH } from './templateLayoutGeometry'
 import { getPaginatedTemplatePages } from './templatePageLayout'
@@ -17,6 +20,8 @@ type ValidationResult = {
 
 const SAFE_LIMITS = {
   minRowGap: 0.04,
+  minOptionGap2: 0.036,
+  minOptionGap3: 0.04,
   minOptionGap4: 0.044,
   minOptionGap5: 0.048,
   minBubbleRadius: 0.01,
@@ -37,6 +42,74 @@ const VISUAL_LIMITS = {
 
 function cloneState(state: CardTemplateEditorState): CardTemplateEditorState {
   return structuredClone(state)
+}
+
+function getLegacyNumberingFormat(definition: Record<string, unknown>) {
+  const numberingMode = definition.numberingMode
+  const numberingPattern = definition.numberingPattern
+
+  if (numberingMode === 'by-block' && numberingPattern === 'sequence-column') return 'alphaNumeric'
+  if (numberingMode === 'by-block' && numberingPattern === 'row-column') return 'numericAlpha'
+  return 'numeric'
+}
+
+function getSafeChoicesPerQuestion(value: number) {
+  return value === 2 || value === 3 || value === 4 ? value : 5
+}
+
+function getMinOptionGap(choicesPerQuestion: 2 | 3 | 4 | 5) {
+  if (choicesPerQuestion === 2) return SAFE_LIMITS.minOptionGap2
+  if (choicesPerQuestion === 3) return SAFE_LIMITS.minOptionGap3
+  if (choicesPerQuestion === 4) return SAFE_LIMITS.minOptionGap4
+  return SAFE_LIMITS.minOptionGap5
+}
+
+function getQuestionBlockGapDetails(blocks: CardTemplateEditorState['definition']['questionBlocks']) {
+  const gapDetails: Array<{ previousBlockNumber: number | null; nextBlockNumber: number; startQuestion: number; endQuestion: number }> = []
+  if (!blocks.length) return gapDetails
+
+  if (blocks[0].startQuestion > 1) {
+    gapDetails.push({
+      previousBlockNumber: null,
+      nextBlockNumber: 1,
+      startQuestion: 1,
+      endQuestion: blocks[0].startQuestion - 1,
+    })
+  }
+
+  for (let index = 1; index < blocks.length; index += 1) {
+    const previousBlock = blocks[index - 1]
+    const currentBlock = blocks[index]
+    if (previousBlock.endQuestion + 1 < currentBlock.startQuestion) {
+      gapDetails.push({
+        previousBlockNumber: index,
+        nextBlockNumber: index + 1,
+        startQuestion: previousBlock.endQuestion + 1,
+        endQuestion: currentBlock.startQuestion - 1,
+      })
+    }
+  }
+
+  return gapDetails
+}
+
+function getQuestionBlockOverlapDetails(blocks: CardTemplateEditorState['definition']['questionBlocks']) {
+  const overlapDetails: Array<{ previousBlockNumber: number; nextBlockNumber: number; startQuestion: number; endQuestion: number }> = []
+
+  for (let index = 1; index < blocks.length; index += 1) {
+    const previousBlock = blocks[index - 1]
+    const currentBlock = blocks[index]
+    if (previousBlock.endQuestion >= currentBlock.startQuestion) {
+      overlapDetails.push({
+        previousBlockNumber: index,
+        nextBlockNumber: index + 1,
+        startQuestion: currentBlock.startQuestion,
+        endQuestion: Math.min(previousBlock.endQuestion, currentBlock.endQuestion),
+      })
+    }
+  }
+
+  return overlapDetails
 }
 
 export function getReadModeFromConfig(config: OMRTemplateConfig): OMRReadMode {
@@ -64,66 +137,97 @@ export function getFriendlyOmrModeValues(mode: OMRReadMode) {
 
 export function normalizeEditorState(state: CardTemplateEditorState): CardTemplateEditorState {
   const nextState = cloneState(state)
-  const totalQuestions = Math.max(1, Math.round(nextState.definition.totalQuestions))
-  const columns = Math.min(4, Math.max(1, Math.round(nextState.definition.columns)))
-  const choicesPerQuestion = nextState.definition.choicesPerQuestion === 4 ? 4 : 5
+  const definitionWithLegacy = nextState.definition as typeof nextState.definition & {
+    numberingMode?: 'continuous' | 'by-block'
+    numberingPattern?: 'row-column' | 'sequence-column'
+    numberingFormat?: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+    columnLayoutMode?: 'left' | 'distributed'
+  }
+  const totalQuestions = clampQuestionTotal(getResolvedTotalQuestions(nextState.definition))
+  const requestedColumns = Math.max(1, Math.round(nextState.definition.columns))
+  const choicesPerQuestion = getSafeChoicesPerQuestion(nextState.definition.choicesPerQuestion)
   const rowsPerColumn = Math.max(1, Math.round(nextState.definition.rowsPerColumn))
 
   nextState.definition.pageSize = 'A4'
   nextState.definition.totalQuestions = totalQuestions
-  nextState.definition.columns = columns
   nextState.definition.choicesPerQuestion = choicesPerQuestion
-  nextState.definition.numberingPattern =
-    nextState.definition.numberingPattern === 'sequence-column' ? 'sequence-column' : 'row-column'
+  nextState.definition.optionLabels = normalizeOptionLabels(nextState.definition.optionLabels, choicesPerQuestion)
+  nextState.definition.numberingFormat =
+    definitionWithLegacy.numberingFormat === 'numericAlpha' ||
+    definitionWithLegacy.numberingFormat === 'alphaNumeric' ||
+    definitionWithLegacy.numberingFormat === 'numericLower' ||
+    definitionWithLegacy.numberingFormat === 'numericDash'
+      ? definitionWithLegacy.numberingFormat
+      : getLegacyNumberingFormat(definitionWithLegacy)
+  nextState.definition.bubbleSize =
+    nextState.definition.bubbleSize === 'medium' || nextState.definition.bubbleSize === 'small'
+      ? nextState.definition.bubbleSize
+      : 'large'
+  const columns = Math.min(nextState.definition.bubbleSize === 'small' ? 4 : 3, requestedColumns)
+  nextState.definition.columns = columns
+  nextState.definition.rowSpacing = nextState.definition.rowSpacing === 'uniform' ? 'uniform' : 'compact'
+  nextState.definition.columnLayoutMode =
+    definitionWithLegacy.columnLayoutMode === 'distributed' ? 'distributed' : 'left'
+  nextState.definition.columnGap = Math.min(40, Math.max(0, nextState.definition.columnGap ?? 8))
+  nextState.definition.optionAlignment =
+    nextState.definition.optionAlignment === 'left' ||
+    nextState.definition.optionAlignment === 'right' ||
+    nextState.definition.optionAlignment === 'center' ||
+    nextState.definition.optionAlignment === 'justify'
+      ? nextState.definition.optionAlignment
+      : 'auto'
+  nextState.definition.enableQuestionBlocks = Boolean(nextState.definition.enableQuestionBlocks)
+  nextState.definition.showQuestionBlockTitles = Boolean(nextState.definition.showQuestionBlockTitles)
+  nextState.definition.questionBlocks = normalizeQuestionBlocks(nextState.definition.questionBlocks, totalQuestions, {
+    choicesPerQuestion,
+    optionLabels: nextState.definition.optionLabels,
+    questionStyle: nextState.visualTheme.answerGridStyle,
+  })
+  const effectiveChoicesPerQuestion = getMaxQuestionBlockChoices(nextState.definition)
   nextState.definition.rowsPerColumn = Math.max(getSuggestedRowsPerColumn(totalQuestions, columns), rowsPerColumn)
   nextState.omrConfig = createTemplateLayoutConfig(totalQuestions, {
     ...nextState.omrConfig,
     totalQuestions,
-    choicesPerQuestion,
+    choicesPerQuestion: effectiveChoicesPerQuestion,
     columns,
     rowsPerColumn: nextState.definition.rowsPerColumn,
   })
 
   nextState.definition.header.examName = nextState.definition.header.examName.trim() || nextState.name.trim() || 'Cartão-resposta'
   nextState.definition.header.institutionName = nextState.definition.header.institutionName.trim() || 'Instituição'
+  nextState.definition.header.instructions =
+    nextState.definition.header.instructions?.trim() || 'Marque apenas uma alternativa e preencha todo o campo da bolinha'
+  nextState.definition.header.showInstructions = Boolean(nextState.definition.header.showInstructions)
   nextState.definition.header.footerMessage = nextState.definition.header.footerMessage?.trim() ?? ''
+  nextState.definition.header.footerMessageAlignment =
+    nextState.definition.header.footerMessageAlignment === 'left' || nextState.definition.header.footerMessageAlignment === 'right'
+      ? nextState.definition.header.footerMessageAlignment
+      : 'center'
+  nextState.definition.header.footerMessageWeight =
+    nextState.definition.header.footerMessageWeight === 'semibold' ? 'semibold' : 'regular'
+  nextState.definition.header.footerMessageFontSize = Math.min(11, Math.max(7, nextState.definition.header.footerMessageFontSize ?? 7.5))
+  nextState.definition.header.footerPagePosition =
+    nextState.definition.header.footerPagePosition === 'top' ? 'top' : 'bottom'
+  nextState.definition.header.footerPageTone =
+    nextState.definition.header.footerPageTone === 'standard' ? 'standard' : 'subtle'
   nextState.definition.header.institutionLogoDataUrl = nextState.definition.header.institutionLogoDataUrl?.trim() ?? ''
+  nextState.definition.header.logoAlignment =
+    nextState.definition.header.logoAlignment === 'left' || nextState.definition.header.logoAlignment === 'right'
+      ? nextState.definition.header.logoAlignment
+      : 'center'
+  nextState.definition.header.logoScale = Math.min(1.2, Math.max(0.6, nextState.definition.header.logoScale ?? 1))
+  nextState.definition.header.logoMonochrome = Boolean(nextState.definition.header.logoMonochrome)
   nextState.name = nextState.name.trim() || nextState.definition.header.examName
 
   const safeZones = getCardTemplateZones(nextState)
   let currentMetrics = safeZones.metrics
   let safeWidth = safeZones.answers.right - safeZones.answers.left
-  let minStartX = (safeZones.answers.left + currentMetrics.questionLabelOffset + currentMetrics.questionLabelWidth) / TEMPLATE_PAGE_WIDTH
+  let minStartX = safeZones.answers.left / TEMPLATE_PAGE_WIDTH
   let maxStartX =
     (safeZones.answers.right -
       (nextState.definition.columns - 1) * currentMetrics.columnOffset -
-      currentMetrics.answerBlockWidth -
-      currentMetrics.bubbleRadius) /
+      currentMetrics.rowWidth) /
     TEMPLATE_PAGE_WIDTH
-
-  while (nextState.definition.columns > 1 && maxStartX < minStartX) {
-    nextState.definition.columns -= 1
-    nextState.definition.rowsPerColumn = Math.max(
-      nextState.definition.rowsPerColumn,
-      getSuggestedRowsPerColumn(nextState.definition.totalQuestions, nextState.definition.columns),
-    )
-    nextState.omrConfig = createTemplateLayoutConfig(nextState.definition.totalQuestions, {
-      ...nextState.omrConfig,
-      totalQuestions: nextState.definition.totalQuestions,
-      choicesPerQuestion: nextState.definition.choicesPerQuestion,
-      columns: nextState.definition.columns,
-      rowsPerColumn: nextState.definition.rowsPerColumn,
-    })
-    currentMetrics = getCardTemplateZones(nextState).metrics
-    safeWidth = getCardTemplateZones(nextState).answers.right - getCardTemplateZones(nextState).answers.left
-    minStartX = (getCardTemplateZones(nextState).answers.left + currentMetrics.questionLabelOffset + currentMetrics.questionLabelWidth) / TEMPLATE_PAGE_WIDTH
-    maxStartX =
-      (getCardTemplateZones(nextState).answers.right -
-        (nextState.definition.columns - 1) * currentMetrics.columnOffset -
-        currentMetrics.answerBlockWidth -
-        currentMetrics.bubbleRadius) /
-      TEMPLATE_PAGE_WIDTH
-  }
 
   const maxOptionGapRatio =
     nextState.definition.choicesPerQuestion > 1
@@ -139,7 +243,7 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
       : nextState.omrConfig.optionGapRatio
 
   nextState.omrConfig.optionGapRatio = Math.max(
-    nextState.definition.choicesPerQuestion === 4 ? SAFE_LIMITS.minOptionGap4 : SAFE_LIMITS.minOptionGap5,
+    getMinOptionGap(nextState.definition.choicesPerQuestion),
     Math.min(nextState.omrConfig.optionGapRatio, maxOptionGapRatio),
   )
 
@@ -157,11 +261,7 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
           Math.min(
             SAFE_LIMITS.maxColumnGap,
             (refreshedZones.answers.right -
-              (refreshedZones.answers.left +
-                currentMetrics.questionLabelOffset +
-                currentMetrics.questionLabelWidth +
-                currentMetrics.answerBlockWidth +
-                currentMetrics.bubbleRadius)) /
+              (refreshedZones.answers.left + currentMetrics.rowWidth)) /
               (TEMPLATE_PAGE_WIDTH * (nextState.definition.columns - 1)),
           ),
         )
@@ -174,12 +274,11 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
 
   currentMetrics = getCardTemplateZones(nextState).metrics
   const clampedZones = getCardTemplateZones(nextState)
-  minStartX = (clampedZones.answers.left + currentMetrics.questionLabelOffset + currentMetrics.questionLabelWidth) / TEMPLATE_PAGE_WIDTH
+  minStartX = clampedZones.answers.left / TEMPLATE_PAGE_WIDTH
   maxStartX =
     (clampedZones.answers.right -
       (nextState.definition.columns - 1) * currentMetrics.columnOffset -
-      currentMetrics.answerBlockWidth -
-      currentMetrics.bubbleRadius) /
+      currentMetrics.rowWidth) /
     TEMPLATE_PAGE_WIDTH
   nextState.omrConfig.startXRatio = Math.min(
     Math.max(minStartX, SAFE_LIMITS.minStartX),
@@ -191,7 +290,6 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
   const minStartY = Math.max(SAFE_LIMITS.minStartY, verticalZones.answers.top / TEMPLATE_PAGE_HEIGHT)
   const maxStartY =
     (verticalZones.answers.bottom -
-      (nextState.definition.rowsPerColumn - 1) * currentMetrics.rowOffset -
       currentMetrics.bubbleRadius -
       VISUAL_LIMITS.optionLabelOffsetPx) /
     TEMPLATE_PAGE_HEIGHT
@@ -200,19 +298,7 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
     Math.max(minStartY, Math.min(maxStartY, nextState.omrConfig.startYRatio)),
   )
 
-  currentMetrics = getCardTemplateZones(nextState).metrics
-  const maxRowGapRatio =
-    nextState.definition.rowsPerColumn > 1
-      ? (verticalZones.answers.bottom -
-          currentMetrics.questionStartY -
-          currentMetrics.bubbleRadius -
-          VISUAL_LIMITS.optionLabelOffsetPx) /
-        (TEMPLATE_PAGE_HEIGHT * (nextState.definition.rowsPerColumn - 1))
-      : SAFE_LIMITS.maxColumnGap
-  nextState.omrConfig.rowGapRatio = Math.min(
-    Math.max(SAFE_LIMITS.minRowGap, maxRowGapRatio),
-    Math.max(SAFE_LIMITS.minRowGap, nextState.omrConfig.rowGapRatio),
-  )
+  nextState.omrConfig.rowGapRatio = Math.min(0.08, Math.max(SAFE_LIMITS.minRowGap, nextState.omrConfig.rowGapRatio))
 
   return nextState
 }
@@ -221,16 +307,34 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   const sanitizedState = normalizeEditorState(state)
   const issues: CardTemplateValidationIssue[] = []
   const { definition, omrConfig, visualTheme } = sanitizedState
+  const renderModel = buildNormalizedRenderModel(definition, visualTheme.answerGridStyle)
+  const renderedQuestionTotal = renderModel.totalRenderedQuestions
   const capacity = definition.columns * definition.rowsPerColumn
-  const minOptionGap = definition.choicesPerQuestion === 4 ? SAFE_LIMITS.minOptionGap4 : SAFE_LIMITS.minOptionGap5
+  const effectiveChoicesPerQuestion = getMaxQuestionBlockChoices(definition)
+  const minOptionGap = getMinOptionGap(effectiveChoicesPerQuestion)
   const zones = getCardTemplateZones(sanitizedState)
   const metrics = zones.metrics
   const pages = getPaginatedTemplatePages(sanitizedState)
-  const gridLeft = metrics.questionStartX - metrics.questionLabelOffset - metrics.questionLabelWidth
-  const gridRight =
-    metrics.questionStartX + (definition.columns - 1) * metrics.columnOffset + metrics.answerBlockWidth + metrics.bubbleRadius
+  const questionBlockIssues = validateQuestionBlocks(definition.questionBlocks, definition.totalQuestions, {
+    choicesPerQuestion: definition.choicesPerQuestion,
+    optionLabels: definition.optionLabels,
+    questionStyle: visualTheme.answerGridStyle,
+  })
+  const invalidOptionLabels = definition.optionLabels.filter((label) => !isValidOptionLabel(label))
+  const duplicatedOptionLabels = new Set(
+    definition.optionLabels.filter((label, index) => definition.optionLabels.indexOf(label) !== index),
+  )
+  const gridLeft = metrics.questions.length
+    ? Math.min(...metrics.questions.map((question) => question.rowStartX))
+    : metrics.columnRowStartXs[0] ?? metrics.questionStartX - metrics.questionLabelOffset - metrics.questionLabelWidth
+  const gridRight = metrics.questions.length
+    ? Math.max(...metrics.questions.map((question) => question.optionStartX + question.optionGroupWidth + metrics.bubbleRadius))
+    : (metrics.columnRowStartXs[definition.columns - 1] ?? metrics.questionStartX + (definition.columns - 1) * metrics.columnOffset) +
+        metrics.rowWidth
   const gridTop = metrics.headerY - 12
-  const gridBottom = metrics.questionStartY + (definition.rowsPerColumn - 1) * metrics.rowOffset + metrics.bubbleRadius + VISUAL_LIMITS.optionLabelOffsetPx
+  const gridBottom = metrics.questions.length
+    ? Math.max(...metrics.questions.map((question) => question.optionY)) + metrics.bubbleRadius + VISUAL_LIMITS.optionLabelOffsetPx
+    : metrics.questionStartY + metrics.bubbleRadius + VISUAL_LIMITS.optionLabelOffsetPx
   const horizontalClearance = metrics.bubbleSpacing - metrics.bubbleRadius * 2
   const verticalClearance = metrics.rowOffset - metrics.bubbleRadius * 2
   const identificationWeight =
@@ -257,15 +361,14 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   const allPagesFitAnswerZone = pages.every(({ metrics: pageMetrics }) => {
     if (!pageMetrics.questions.length) return true
     const pageGridBottom =
-      pageMetrics.questionStartY +
-      (Math.ceil(pageMetrics.questions.length / definition.columns) - 1) * pageMetrics.rowOffset +
+      Math.max(...pageMetrics.questions.map((question) => question.optionY)) +
       pageMetrics.bubbleRadius +
       VISUAL_LIMITS.optionLabelOffsetPx
 
     return pageGridBottom <= zones.answers.bottom
   })
 
-  if (capacity < definition.totalQuestions) {
+  if (capacity < renderedQuestionTotal) {
     issues.push({
       severity: 'error',
       code: 'INSUFFICIENT_CAPACITY',
@@ -328,15 +431,6 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     })
   }
 
-  if (definition.columns >= 4 && definition.choicesPerQuestion === 5) {
-    issues.push({
-      severity: 'error',
-      code: 'COLUMN_WIDTH_OVERFLOW',
-      field: 'definition.columns',
-      message: 'Quatro colunas com cinco alternativas deixam a área útil apertada demais em A4.',
-    })
-  }
-
   if (estimatedHeaderBottom < 0.1) {
     issues.push({
       severity: 'error',
@@ -370,6 +464,42 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
       code: 'GRID_HITS_FOOTER_ZONE',
       field: 'omrConfig.rowGapRatio',
       message: 'A grade de respostas desceu demais e invadiu o rodapé técnico da folha.',
+    })
+  }
+
+  if (definition.optionLabels.length !== definition.choicesPerQuestion) {
+    issues.push({
+      severity: 'error',
+      code: 'OPTION_LABEL_COUNT_MISMATCH',
+      field: 'definition.optionLabels',
+      message: 'A quantidade de caracteres das alternativas deve ser igual à quantidade de alternativas por questão.',
+    })
+  }
+
+  if (invalidOptionLabels.length) {
+    issues.push({
+      severity: 'error',
+      code: 'OPTION_LABEL_INVALID',
+      field: 'definition.optionLabels',
+      message: 'Use apenas letras de A a Z ou números de 0 a 9 nas alternativas.',
+    })
+  }
+
+  if (duplicatedOptionLabels.size > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'OPTION_LABEL_DUPLICATE',
+      field: 'definition.optionLabels',
+      message: 'Os caracteres das alternativas não podem se repetir na mesma questão.',
+    })
+  }
+
+  if (definition.totalQuestions > MAX_QUESTIONS) {
+    issues.push({
+      severity: 'error',
+      code: 'TOTAL_QUESTIONS_LIMIT',
+      field: 'definition.totalQuestions',
+      message: `O cartão suporta no máximo ${MAX_QUESTIONS} questões.`,
     })
   }
 
@@ -418,15 +548,6 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     })
   }
 
-  if (state.definition.columns !== sanitizedState.definition.columns) {
-    issues.push({
-      severity: 'warning',
-      code: 'COLUMNS_LIMITED_TO_A4',
-      field: 'definition.columns',
-      message: 'A quantidade de colunas foi reduzida para manter a grade dentro da folha A4.',
-    })
-  }
-
   ;(
     [
       ['startXRatio', 'O deslocamento horizontal foi limitado para manter a grade dentro da área segura.'],
@@ -456,12 +577,95 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     })
   }
 
-  if (definition.rowsPerColumn > 24 || (definition.totalQuestions >= 60 && visualTheme.density === 'compact')) {
+  if (definition.rowsPerColumn > 24 || (renderedQuestionTotal >= 60 && visualTheme.density === 'compact')) {
     issues.push({
       severity: 'warning',
       code: 'DENSITY_RISK',
       field: 'definition.rowsPerColumn',
       message: 'A densidade visual está alta. Revise o espaçamento antes de imprimir em grande escala.',
+    })
+  }
+
+  questionBlockIssues.forEach((issue) => {
+    issues.push({
+      severity: issue.code === 'QUESTION_BLOCKS_WITH_GAPS' ? 'warning' : 'error',
+      code: issue.code,
+      field: 'definition.questionBlocks',
+      message: issue.message,
+    })
+  })
+
+  if (definition.enableQuestionBlocks) {
+    issues.push({
+      severity: 'info',
+      code: 'QUESTION_BLOCK_RENDER_LIMIT',
+      field: 'definition.questionBlocks',
+      message: `O último bloco configurado termina na questão ${renderModel.lastRenderedQuestion || 0}. O preview e o PDF renderizam ${renderedQuestionTotal} questões efetivas.`,
+    })
+
+    if (renderModel.hasGaps) {
+      const gapSummary = renderModel.gapRanges
+        .map((range) => (range.startQuestion === range.endQuestion ? `${range.startQuestion}` : `${range.startQuestion}-${range.endQuestion}`))
+        .join(', ')
+      issues.push({
+        severity: 'warning',
+        code: 'QUESTION_BLOCK_RENDER_GAPS',
+        field: 'definition.questionBlocks',
+        message: `Há lacunas entre os blocos: ${gapSummary}. Essas questões não entram no preview nem no PDF.`,
+      })
+    }
+
+    if (renderModel.hasOverlap) {
+      issues.push({
+        severity: 'warning',
+        code: 'QUESTION_BLOCK_RENDER_OVERLAP',
+        field: 'definition.questionBlocks',
+        message: `Há sobreposição entre blocos nas questões ${renderModel.overlappingQuestions.join(', ')}. O renderer mantém apenas a primeira ocorrência de cada questão.`,
+      })
+    }
+
+    if (renderModel.outOfRangeQuestions.length) {
+      issues.push({
+        severity: 'warning',
+        code: 'QUESTION_BLOCK_RENDER_OUT_OF_RANGE',
+        field: 'definition.questionBlocks',
+        message: `Questões acima do limite do sistema foram ignoradas: ${renderModel.outOfRangeQuestions.join(', ')}.`,
+      })
+    }
+  }
+
+  if (definition.enableQuestionBlocks) {
+    const gapDetails = getQuestionBlockGapDetails(definition.questionBlocks)
+    const overlapDetails = getQuestionBlockOverlapDetails(definition.questionBlocks)
+
+    gapDetails.forEach((gap, detailIndex) => {
+      const gapRange =
+        gap.startQuestion === gap.endQuestion ? `${gap.startQuestion}` : `${gap.startQuestion}-${gap.endQuestion}`
+      const relationLabel =
+        gap.previousBlockNumber === null
+          ? `antes do bloco ${gap.nextBlockNumber}`
+          : `entre os blocos ${gap.previousBlockNumber} e ${gap.nextBlockNumber}`
+
+      issues.push({
+        severity: 'warning',
+        code: `QUESTION_BLOCK_RENDER_GAP_DETAIL_${detailIndex}`,
+        field: 'definition.questionBlocks',
+        message: `HÃ¡ lacuna ${relationLabel}: questÃµes ${gapRange}. Essas questÃµes nÃ£o entram no preview nem no PDF.`,
+      })
+    })
+
+    overlapDetails.forEach((overlap, detailIndex) => {
+      const overlapRange =
+        overlap.startQuestion === overlap.endQuestion
+          ? `${overlap.startQuestion}`
+          : `${overlap.startQuestion}-${overlap.endQuestion}`
+
+      issues.push({
+        severity: 'warning',
+        code: `QUESTION_BLOCK_RENDER_OVERLAP_DETAIL_${detailIndex}`,
+        field: 'definition.questionBlocks',
+        message: `Existe sobreposiÃ§Ã£o entre os blocos ${overlap.previousBlockNumber} e ${overlap.nextBlockNumber} nas questÃµes ${overlapRange}. O renderer mantÃ©m apenas a primeira ocorrÃªncia de cada questÃ£o.`,
+      })
     })
   }
 
@@ -494,3 +698,9 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
     isValid: !issues.some((issue) => issue.severity === 'error'),
   }
 }
+
+
+
+
+
+

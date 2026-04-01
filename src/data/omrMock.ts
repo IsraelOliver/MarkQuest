@@ -46,6 +46,10 @@ export const processingJobsMock: ProcessingJob[] = [
     id: 'job-omr-0001',
     examId: 'exam-2026-math-01',
     sheetIds: ['sheet-001', 'sheet-002'],
+    templateId: 'template-01',
+    templateVersion: 'v1',
+    answerKeyId: 'key-01',
+    answerKeyVersion: 'v1',
     status: 'completed',
     createdAt: '2026-03-10T12:02:00Z',
     finishedAt: '2026-03-10T12:02:35Z',
@@ -113,6 +117,7 @@ export const answerKeysMock: AnswerKey[] = [
   {
     id: 'key-01',
     examId: 'exam-2026-math-01',
+    templateId: 'template-01',
     version: 'v1',
     answers: ['A', 'C', 'D', 'B', 'E'],
     createdAt: '2026-03-01T07:30:00Z',

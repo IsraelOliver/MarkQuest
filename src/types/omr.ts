@@ -49,6 +49,10 @@ export type ProcessingJob = {
   id: string
   examId: string
   sheetIds: string[]
+  templateId: string
+  templateVersion: string
+  answerKeyId: string
+  answerKeyVersion: string
   status: ProcessingJobStatus
   createdAt: string
   finishedAt?: string
@@ -84,22 +88,40 @@ export type CardPresetId =
   | 'answer-sheet-5'
 
 export type CardPageSize = 'A4'
-export type CardNumberingMode = 'continuous' | 'by-block'
-export type CardNumberingPattern = 'row-column' | 'sequence-column'
+export type CardNumberingFormat = 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+export type CardBubbleSize = 'large' | 'medium' | 'small'
+export type CardRowSpacing = 'compact' | 'uniform'
+export type CardOptionAlignment = 'auto' | 'left' | 'right' | 'center' | 'justify'
+export type CardColumnLayoutMode = 'left' | 'distributed'
 export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
 export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
+export type CardQuestionStyle = 'classic' | 'lined' | 'minimal'
 export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
+export type CardQuestionBlock = {
+  startQuestion: number
+  endQuestion: number
+  title: string
+  choicesPerQuestion: 2 | 3 | 4 | 5
+  optionLabels: string[]
+  questionStyle: CardQuestionStyle
+}
 
 export type CardTemplateDefinition = {
   pageSize: CardPageSize
   totalQuestions: number
-  choicesPerQuestion: 4 | 5
+  choicesPerQuestion: 2 | 3 | 4 | 5
+  optionLabels: string[]
   columns: number
   rowsPerColumn: number
-  numberingMode: CardNumberingMode
-  numberingPattern: CardNumberingPattern
-  groupByArea: boolean
-  showBlockTitles: boolean
+  numberingFormat: CardNumberingFormat
+  bubbleSize: CardBubbleSize
+  rowSpacing: CardRowSpacing
+  columnLayoutMode: CardColumnLayoutMode
+  columnGap: number
+  optionAlignment: CardOptionAlignment
+  enableQuestionBlocks: boolean
+  showQuestionBlockTitles: boolean
+  questionBlocks: CardQuestionBlock[]
   identification: {
     showStudentName: boolean
     showStudentCode: boolean
@@ -116,10 +138,19 @@ export type CardTemplateDefinition = {
     subtitle: string
     classroomLabel: string
     instructions: string
+    showInstructions: boolean
     omrGuidance: string
     footerMessage: string
+    footerMessageAlignment: 'left' | 'center' | 'right'
+    footerMessageWeight: 'regular' | 'semibold'
+    footerMessageFontSize: number
+    footerPagePosition: 'top' | 'bottom'
+    footerPageTone: 'subtle' | 'standard'
     showInstitutionLogo: boolean
     institutionLogoDataUrl: string
+    logoAlignment: 'left' | 'center' | 'right'
+    logoScale: number
+    logoMonochrome: boolean
   }
 }
 
@@ -130,12 +161,12 @@ export type CardVisualTheme = {
   showSectionSeparators: boolean
   refinedAlignment: boolean
   highlightHeader: boolean
-  answerGridStyle: 'classic' | 'lined' | 'minimal'
+  answerGridStyle: CardQuestionStyle
 }
 
 export type OMRTemplateConfig = {
   totalQuestions: number
-  choicesPerQuestion: 4 | 5
+  choicesPerQuestion: 2 | 3 | 4 | 5
   columns: number
   rowsPerColumn: number
   startXRatio: number
@@ -180,7 +211,7 @@ export type Template = {
 export type AnswerKey = {
   id: string
   examId: string
-  templateId?: string
+  templateId: string
   version: string
   answers: string[]
   createdAt: string

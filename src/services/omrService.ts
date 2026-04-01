@@ -13,12 +13,12 @@ import type {
 import { createEditorStateFromPreset } from '../utils/cardTemplatePresets'
 import { createTemplateLayoutConfig } from '../utils/templateLayout'
 import { API_ENDPOINTS, request } from './apiClient'
-import { formatStudentLabel } from '../utils/display'
 
 type BackendUpload = {
   id: string
   examId: string
   studentId: string
+  studentName: string
   originalName: string
   createdAt: string
 }
@@ -27,6 +27,10 @@ type BackendProcessingJob = {
   id: string
   examId: string
   uploadIds: string[]
+  templateId: string
+  templateVersion: string
+  answerKeyId: string
+  answerKeyVersion: string
   status: ProcessingJob['status']
   createdAt: string
   finishedAt?: string
@@ -36,6 +40,7 @@ type BackendStudentResult = {
   id: string
   examId: string
   studentId: string
+  studentName: string
   score: number
   correctAnswers: number
   incorrectAnswers: number
@@ -68,6 +73,7 @@ type BackendTemplate = {
   examId: string
   totalQuestions: number
   presetId?: CardPresetId
+  version?: string
   definition?: CardTemplateDefinition
   visualTheme?: CardVisualTheme
   omrConfig?: Partial<OMRTemplateConfig>
@@ -84,11 +90,23 @@ type BackendAnswerKey = {
   createdAt: string
 }
 
+function withQuery(path: string, query?: Record<string, string | undefined>) {
+  if (!query) return path
+  const params = new URLSearchParams()
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value) params.set(key, value)
+  })
+
+  const serialized = params.toString()
+  return serialized ? `${path}?${serialized}` : path
+}
+
 function mapUpload(upload: BackendUpload): AnswerSheet {
   return {
     id: upload.id,
     studentId: upload.studentId,
-    studentName: formatStudentLabel(upload.studentId),
+    studentName: upload.studentName,
     examId: upload.examId,
     fileName: upload.originalName,
     uploadedAt: upload.createdAt,
@@ -100,6 +118,10 @@ function mapJob(job: BackendProcessingJob): ProcessingJob {
     id: job.id,
     examId: job.examId,
     sheetIds: job.uploadIds,
+    templateId: job.templateId,
+    templateVersion: job.templateVersion,
+    answerKeyId: job.answerKeyId,
+    answerKeyVersion: job.answerKeyVersion,
     status: job.status,
     createdAt: job.createdAt,
     finishedAt: job.finishedAt,
@@ -111,7 +133,7 @@ function mapStudentResult(result: BackendStudentResult): StudentResult {
     id: result.id,
     examId: result.examId,
     studentId: result.studentId,
-    studentName: formatStudentLabel(result.studentId),
+    studentName: result.studentName,
     score: result.score,
     correctAnswers: result.correctAnswers,
     incorrectAnswers: result.incorrectAnswers,
@@ -121,8 +143,8 @@ function mapStudentResult(result: BackendStudentResult): StudentResult {
 
 function mapOmrResult(result: BackendOMRResult): OMRResult {
   const warnings = [
-    ...result.blankQuestions.map((questionNumber) => `Questão ${questionNumber} em branco.`),
-    ...result.multipleMarkedQuestions.map((questionNumber) => `Questão ${questionNumber} com marcação múltipla.`),
+    ...result.blankQuestions.map((questionNumber) => `Questao ${questionNumber} em branco.`),
+    ...result.multipleMarkedQuestions.map((questionNumber) => `Questao ${questionNumber} com marcacao multipla.`),
   ]
 
   return {
@@ -155,7 +177,7 @@ function mapTemplate(template: BackendTemplate): Template {
         },
     visualTheme: template.visualTheme ?? fallbackState.visualTheme,
     omrConfig: createTemplateLayoutConfig(template.totalQuestions, template.omrConfig),
-    version: 'API',
+    version: template.version ?? 'v1',
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,
   }
@@ -199,11 +221,12 @@ export const omrService = {
     }
   },
 
-  async getUploads(): Promise<{ endpoint: string; items: AnswerSheet[] }> {
-    const uploads = await request<BackendUpload[]>(API_ENDPOINTS.uploads, { method: 'GET' })
+  async getUploads(filters?: { examId?: string; studentId?: string }): Promise<{ endpoint: string; items: AnswerSheet[] }> {
+    const endpoint = withQuery(API_ENDPOINTS.uploads, filters)
+    const uploads = await request<BackendUpload[]>(endpoint, { method: 'GET' })
 
     return {
-      endpoint: API_ENDPOINTS.uploads,
+      endpoint,
       items: uploads.map(mapUpload),
     }
   },
@@ -211,8 +234,8 @@ export const omrService = {
   async processUpload(payload: {
     examId: string
     sheetIds: string[]
-    templateId?: string
-    answerKeyId?: string
+    templateId: string
+    answerKeyId: string
   }): Promise<{ endpoint: string; job: ProcessingJob }> {
     const job = await request<BackendProcessingJob>(API_ENDPOINTS.processOMR, {
       method: 'POST',
@@ -227,11 +250,12 @@ export const omrService = {
     return { endpoint: API_ENDPOINTS.processOMR, job: mapJob(job) }
   },
 
-  async getResults(): Promise<{ endpoint: string; jobs: ProcessingJob[]; omr: OMRResult[]; students: StudentResult[] }> {
-    const results = await request<BackendResultsPayload>(API_ENDPOINTS.results, { method: 'GET' })
+  async getResults(filters?: { examId?: string; jobId?: string }): Promise<{ endpoint: string; jobs: ProcessingJob[]; omr: OMRResult[]; students: StudentResult[] }> {
+    const endpoint = withQuery(API_ENDPOINTS.results, filters)
+    const results = await request<BackendResultsPayload>(endpoint, { method: 'GET' })
 
     return {
-      endpoint: API_ENDPOINTS.results,
+      endpoint,
       jobs: results.jobs.map(mapJob),
       omr: results.omrResults.map(mapOmrResult),
       students: results.studentResults.map(mapStudentResult),
@@ -255,11 +279,12 @@ export const omrService = {
     return { endpoint: API_ENDPOINTS.templates, item: mapTemplate(template) }
   },
 
-  async getTemplates(): Promise<{ endpoint: string; items: Template[] }> {
-    const templates = await request<BackendTemplate[]>(API_ENDPOINTS.templates, { method: 'GET' })
+  async getTemplates(filters?: { examId?: string }): Promise<{ endpoint: string; items: Template[] }> {
+    const endpoint = withQuery(API_ENDPOINTS.templates, filters)
+    const templates = await request<BackendTemplate[]>(endpoint, { method: 'GET' })
 
     return {
-      endpoint: API_ENDPOINTS.templates,
+      endpoint,
       items: templates.map(mapTemplate),
     }
   },
@@ -298,11 +323,12 @@ export const omrService = {
     return { endpoint: API_ENDPOINTS.answerKeys, item: mapAnswerKey(answerKey) }
   },
 
-  async getAnswerKeys(): Promise<{ endpoint: string; items: AnswerKey[] }> {
-    const answerKeys = await request<BackendAnswerKey[]>(API_ENDPOINTS.answerKeys, { method: 'GET' })
+  async getAnswerKeys(filters?: { examId?: string; templateId?: string }): Promise<{ endpoint: string; items: AnswerKey[] }> {
+    const endpoint = withQuery(API_ENDPOINTS.answerKeys, filters)
+    const answerKeys = await request<BackendAnswerKey[]>(endpoint, { method: 'GET' })
 
     return {
-      endpoint: API_ENDPOINTS.answerKeys,
+      endpoint,
       items: answerKeys.map(mapAnswerKey),
     }
   },

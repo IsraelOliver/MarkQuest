@@ -9,6 +9,7 @@ import {
   TEMPLATE_TECHNICAL_FOOTER_GAP,
   TEMPLATE_TECHNICAL_FOOTER_HEIGHT,
 } from './templateLayoutGeometry'
+import { clampLogoScale } from './logoLayout'
 
 export function getCardIdentificationFields(state: CardTemplateEditorState) {
   const { definition } = state
@@ -25,7 +26,7 @@ export function getCardIdentificationFields(state: CardTemplateEditorState) {
 }
 
 export function getCardTemplateZones(state: CardTemplateEditorState) {
-  const metrics = getTemplateLayoutMetrics(state.omrConfig)
+  const { definition } = state
   const identificationFields = getCardIdentificationFields(state)
   const safeLeft = TEMPLATE_PAGE_X + TEMPLATE_SAFE_MARGIN
   const safeTop = TEMPLATE_PAGE_Y + TEMPLATE_SAFE_MARGIN
@@ -47,12 +48,25 @@ export function getCardTemplateZones(state: CardTemplateEditorState) {
     columns: infoColumns,
     rows: infoRows,
   }
+  const instructionHeight = definition.header.showInstructions ? 24 : 0
   const instructions = {
     x: safeLeft,
     y: info.y + info.height + 14,
     width: safeRight - safeLeft,
-    height: 24,
+    height: instructionHeight,
   }
+  const footerGap = 16
+  const qrBlockWidth = 136
+  const logoBlockWidth = definition.header.showInstitutionLogo
+    ? Math.round(92 + clampLogoScale(definition.header.logoScale) * 54)
+    : 92
+  const centerLeft = safeLeft + logoBlockWidth + footerGap
+  const centerRight = safeRight - qrBlockWidth - footerGap
+  const centerWidth = Math.max(140, centerRight - centerLeft)
+  const codeBoxWidth = 108
+  const codeBoxHeight = 84
+  const codeBlockX = safeRight - qrBlockWidth
+  const codeBoxX = codeBlockX + (qrBlockWidth - codeBoxWidth) / 2
   const footer = {
     top: safeBottom - TEMPLATE_TECHNICAL_FOOTER_HEIGHT,
     bottom: safeBottom,
@@ -60,24 +74,27 @@ export function getCardTemplateZones(state: CardTemplateEditorState) {
     right: safeRight,
     width: safeRight - safeLeft,
     height: TEMPLATE_TECHNICAL_FOOTER_HEIGHT,
+    gap: footerGap,
     logoX: safeLeft,
-    logoWidth: 124,
-    centerX: safeLeft + 140,
-    centerWidth: 154,
-    rightX: safeRight - 176,
-    rightWidth: 176,
-    codeBoxX: safeRight - 160,
-    codeBoxWidth: 160,
-    codeBoxHeight: 84,
-    signatureX: safeLeft + 96,
-    signatureWidth: 280,
+    logoWidth: logoBlockWidth,
+    centerX: centerLeft,
+    centerWidth,
+    centerAnchorX: safeLeft + (safeRight - safeLeft) / 2,
+    rightX: codeBlockX,
+    rightWidth: qrBlockWidth,
+    codeBoxX,
+    codeBoxWidth,
+    codeBoxHeight,
+    signatureX: safeLeft,
+    signatureWidth: Math.max(96, centerLeft - safeLeft - 18),
   }
   const answers = {
-    top: instructions.y + instructions.height + 24,
+    top: instructions.y + instructions.height + (definition.header.showInstructions ? 24 : 14),
     bottom: footer.top - TEMPLATE_TECHNICAL_FOOTER_GAP,
-    left: safeLeft + 34,
-    right: safeRight - 8,
+    left: safeLeft + 2,
+    right: safeRight - 2,
   }
+  const metrics = getTemplateLayoutMetrics(state.omrConfig, definition, { left: answers.left, right: answers.right })
 
   return {
     metrics,

@@ -1,6 +1,10 @@
 import type { CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from '../utils/cardTemplateZones'
+import { getFooterMessageAnchor, wrapFooterMessage } from '../utils/footerMessageLayout'
+import { getLogoBoxPlacement } from '../utils/logoLayout'
+import { buildNormalizedRenderModel, getQuestionBlockQuestionConfig } from '../utils/questionBlocks'
 import { formatQuestionLabel } from '../utils/questionNumbering'
+import { estimateTextWidth, getTemplateRenderMetrics } from '../utils/templateRenderMetrics'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from '../utils/templateLayoutGeometry'
 import { getPaginatedTemplatePages } from '../utils/templatePageLayout'
 
@@ -12,6 +16,18 @@ type CardTemplatePreviewProps = {
 }
 
 const PREVIEW_MARGIN = 3
+
+function getQuestionStyleStrokeWidth(style: 'classic' | 'lined' | 'minimal', baseWidth: number) {
+  if (style === 'minimal') return Math.max(0.6, baseWidth - 0.35)
+  if (style === 'lined') return baseWidth + 0.15
+  return baseWidth
+}
+
+function getQuestionStyleLabelColor(style: 'classic' | 'lined' | 'minimal') {
+  if (style === 'minimal') return '#94a3b8'
+  if (style === 'lined') return '#475569'
+  return '#64748b'
+}
 
 function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualStyle']) {
   switch (style) {
@@ -39,13 +55,14 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
   }
 }
 
-export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
+export function CardTemplatePreview({ state, classroomName, examName }: CardTemplatePreviewProps) {
   const { definition, visualTheme } = state
+  const renderModel = buildNormalizedRenderModel(definition, visualTheme.answerGridStyle)
   const zones = getCardTemplateZones(state)
   const palette = getThemePalette(visualTheme.visualStyle)
   const sectionStroke = visualTheme.showSectionSeparators ? palette.stroke : '#d6dbe4'
   const topInstruction =
-    definition.header.instructions || 'Marque apenas uma alternativa por questão e mantenha o cartão limpo.'
+    definition.header.instructions || 'Marque apenas uma alternativa e preencha todo o campo da bolinha'
   const previewStudentCode = 'ST-001'
   const pages = getPaginatedTemplatePages(state)
   const totalPages = pages.length
@@ -59,14 +76,33 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
   const logoBoxY = zones.footer.top + 16
   const logoBoxWidth = zones.footer.logoWidth
   const logoBoxHeight = 38
+  const logoPlacement = getLogoBoxPlacement(definition.header, {
+    x: logoBoxX,
+    y: logoBoxY,
+    width: logoBoxWidth,
+    height: logoBoxHeight,
+  })
+  const footerFontSize = definition.header.footerMessageFontSize
+  const footerLineGap = footerFontSize + 1.5
+  const footerMaxChars = Math.max(16, Math.round(32 - (footerFontSize - 7) * 3))
+  const footerLines = wrapFooterMessage(definition.header.footerMessage, { maxCharsPerLine: footerMaxChars, maxLines: 2 })
+  const footerTextAnchor = getFooterMessageAnchor(definition.header.footerMessageAlignment)
+  const footerTextX =
+    definition.header.footerMessageAlignment === 'left'
+      ? zones.footer.centerX + 8
+      : definition.header.footerMessageAlignment === 'right'
+        ? zones.footer.centerX + zones.footer.centerWidth - 8
+        : zones.footer.centerAnchorX
+  const pageTextY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 22 : zones.footer.bottom - 8
+  const footerMessageStartY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 42 : zones.footer.top + 30
 
   return (
     <div className="card-editor-preview">
       <div className="card-editor-preview__header">
         <h3>Preview do cartão</h3>
         <div className="card-editor-preview__chips">
-          <span>{definition.totalQuestions} questões</span>
-          <span>{definition.choicesPerQuestion} alternativas</span>
+          <span>{renderModel.totalRenderedQuestions} questões</span>
+          <span>{definition.enableQuestionBlocks ? 'alternativas por bloco' : `${definition.choicesPerQuestion} alternativas`}</span>
           <span>{definition.columns} colunas</span>
           <span>
             {totalPages} {totalPages === 1 ? 'página' : 'páginas'}
@@ -76,7 +112,12 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
 
       <div className="card-editor-preview__frame">
         <div className="card-editor-preview__pages">
-          {pages.map(({ pageIndex, metrics }) => (
+          {pages.map(({ pageIndex, metrics, questions, blockTitles }) => {
+            const renderMetrics = getTemplateRenderMetrics(metrics)
+            const previewQrSize = renderMetrics.previewQrSize
+            const previewQrX = zones.footer.codeBoxX + (zones.footer.codeBoxWidth - previewQrSize) / 2
+
+            return (
             <div className="card-editor-preview__page-sheet" key={`page-${pageIndex}`}>
               <svg
                 className="card-editor-preview__svg"
@@ -84,6 +125,20 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                 role="img"
                 aria-label={`Preview do template ${state.name} - página ${pageIndex + 1}`}
               >
+                <defs>
+                  <filter id={`preview-logo-mono-${pageIndex}`}>
+                    <feColorMatrix
+                      type="matrix"
+                      values="0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0.299 0.587 0.114 0 0 0 0 0 1 0"
+                    />
+                    <feComponentTransfer>
+                      <feFuncR type="discrete" tableValues="0 1" />
+                      <feFuncG type="discrete" tableValues="0 1" />
+                      <feFuncB type="discrete" tableValues="0 1" />
+                    </feComponentTransfer>
+                  </filter>
+                </defs>
+
                 <rect
                   x={TEMPLATE_PAGE_X}
                   y={TEMPLATE_PAGE_Y}
@@ -96,7 +151,12 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                 />
 
                 <g>
-                  {zones.identificationFields.map((field, index) => {
+                  {[
+                    ['Aluno', 'Aluno'],
+                    ['Teste', examName || 'Prova'],
+                    ['Classe', classroomName || 'Turma'],
+                    ['Código', previewStudentCode],
+                  ].map(([field, value], index) => {
                     const columnIndex = index % zones.info.columns
                     const rowIndex = Math.floor(index / zones.info.columns)
                     const cellWidth = zones.info.width / zones.info.columns
@@ -108,74 +168,105 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                         <text x={fieldX} y={fieldY} className="card-editor-preview__field-label" fill={palette.title}>
                           {field}:
                         </text>
+                        <text
+                          x={fieldX + renderMetrics.fieldValueOffsetX}
+                          y={fieldY}
+                          className="card-editor-preview__body"
+                          fill="#475569"
+                          style={{ fontSize: `${renderMetrics.fieldValueFontSize}px` }}
+                        >
+                          {value}
+                        </text>
                       </g>
                     )
                   })}
                 </g>
 
-                <text
-                  x={zones.instructions.x + zones.instructions.width / 2}
-                  y={zones.instructions.y + 14}
-                  textAnchor="middle"
-                  className="card-editor-preview__body"
-                  fill="#334155"
-                >
-                  {topInstruction}
-                </text>
+                {definition.header.showInstructions ? (
+                  <text
+                    x={zones.instructions.x + zones.instructions.width / 2}
+                    y={zones.instructions.y + renderMetrics.instructionOffsetY}
+                    textAnchor="middle"
+                    className="card-editor-preview__body"
+                    fill="#334155"
+                    style={{ fontSize: `${renderMetrics.instructionFontSize}px` }}
+                  >
+                    {topInstruction}
+                  </text>
+                ) : null}
 
-                {Array.from({ length: definition.columns }, (_, columnIndex) => {
-                  const headerX = metrics.questionStartX + columnIndex * metrics.columnOffset
+                {blockTitles.map((blockTitle) => {
+                  const titleWidth = estimateTextWidth(blockTitle.title, renderMetrics.blockTitleFontSize, 'bold')
+                  const titleX = blockTitle.x + renderMetrics.blockTitlePaddingX
                   return (
-                    <g key={`header-${pageIndex}-${columnIndex}`}>
-                      {metrics.activeOptions.map((option, optionIndex) => (
-                        <text
-                          key={`${pageIndex}-${columnIndex}-${option}`}
-                          x={headerX + optionIndex * metrics.bubbleSpacing}
-                          y={metrics.headerY}
-                          textAnchor="middle"
-                          className="card-editor-preview__label"
-                          fill={palette.text}
-                        >
-                          {option}
-                        </text>
-                      ))}
+                    <g key={`block-title-${pageIndex}-${blockTitle.startQuestion}`}>
+                      <rect
+                        x={titleX - 4}
+                        y={blockTitle.y}
+                        width={titleWidth + 8}
+                        height={blockTitle.sectionHeight}
+                        fill="#ffffff"
+                      />
+                      <text
+                        x={titleX}
+                        y={blockTitle.textY}
+                        textAnchor="start"
+                        className="card-editor-preview__question"
+                        fill={palette.title}
+                        style={{ fontSize: `${renderMetrics.blockTitleFontSize}px`, fontWeight: 700 }}
+                      >
+                        {blockTitle.title}
+                      </text>
                     </g>
                   )
                 })}
 
-                {metrics.questions.map((question) => (
+                {questions.map((question) => (
                   <g key={`question-${pageIndex}-${question.questionNumber}`}>
+                    {(() => {
+                      const blockConfig = getQuestionBlockQuestionConfig(definition, visualTheme.answerGridStyle, question.questionNumber)
+                      const questionLabel = formatQuestionLabel(definition.numberingFormat, question, {
+                        choicesPerQuestion: blockConfig.choicesPerQuestion,
+                      })
+                      const questionLabelWidth = estimateTextWidth(questionLabel, renderMetrics.questionFontSize)
+                      return (
                     <text
-                      x={question.labelX}
-                      y={question.labelY + 3}
-                      textAnchor="end"
+                      x={question.labelX - questionLabelWidth}
+                      y={question.labelY + renderMetrics.questionOffsetY}
                       className="card-editor-preview__question"
                       fill="#475569"
+                      style={{ fontSize: `${renderMetrics.questionFontSize}px` }}
                     >
-                      {formatQuestionLabel(definition.numberingMode, definition.numberingPattern, question)}
+                      {questionLabel}
                     </text>
+                      )
+                    })()}
 
-                    {metrics.activeOptions.map((option, optionIndex) => (
-                      <g key={`${pageIndex}-${question.questionNumber}-${option}`}>
-                        <circle
-                          cx={question.optionStartX + optionIndex * metrics.bubbleSpacing}
-                          cy={question.optionY}
-                          r={metrics.bubbleRadius}
-                          fill="#ffffff"
-                          stroke={palette.title}
-                          strokeWidth={1.8}
-                        />
-                        <text
-                          x={question.optionStartX + optionIndex * metrics.bubbleSpacing}
-                          y={question.optionY + metrics.bubbleRadius + 14}
-                          textAnchor="middle"
-                          className="card-editor-preview__tiny"
-                          fill="#64748b"
-                        >
-                          {option}
-                        </text>
-                      </g>
-                    ))}
+                    {(() => {
+                      const blockConfig = getQuestionBlockQuestionConfig(definition, visualTheme.answerGridStyle, question.questionNumber)
+                      return blockConfig.optionLabels.map((option, optionIndex) => (
+                        <g key={`${pageIndex}-${question.questionNumber}-${option}`}>
+                          <circle
+                            cx={question.optionStartX + optionIndex * question.optionSpacing}
+                            cy={question.optionY}
+                            r={metrics.bubbleRadius}
+                            fill="#ffffff"
+                            stroke={palette.title}
+                            strokeWidth={getQuestionStyleStrokeWidth(blockConfig.questionStyle, renderMetrics.bubbleStrokeWidthPreview)}
+                          />
+                          <text
+                            x={question.optionStartX + optionIndex * question.optionSpacing}
+                            y={question.optionY + renderMetrics.bubbleLabelOffsetY}
+                            textAnchor="middle"
+                            className="card-editor-preview__question"
+                            fill={getQuestionStyleLabelColor(blockConfig.questionStyle)}
+                            style={{ fontSize: `${renderMetrics.bubbleLabelFontSize}px` }}
+                          >
+                            {option}
+                          </text>
+                        </g>
+                      ))
+                    })()}
                   </g>
                 ))}
 
@@ -188,32 +279,16 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                   strokeWidth="1"
                 />
 
-                <line
-                  x1={zones.footer.centerX - 14}
-                  y1={zones.footer.top + 10}
-                  x2={zones.footer.centerX - 14}
-                  y2={zones.footer.bottom - 14}
-                  stroke="#e2e8f0"
-                  strokeWidth="1"
-                />
-                <line
-                  x1={zones.footer.rightX - 14}
-                  y1={zones.footer.top + 10}
-                  x2={zones.footer.rightX - 14}
-                  y2={zones.footer.bottom - 14}
-                  stroke="#e2e8f0"
-                  strokeWidth="1"
-                />
-
                 {definition.header.showInstitutionLogo ? (
                   definition.header.institutionLogoDataUrl ? (
                     <image
                       href={definition.header.institutionLogoDataUrl}
-                      x={logoBoxX}
-                      y={logoBoxY}
-                      width={logoBoxWidth}
-                      height={logoBoxHeight}
+                      x={logoPlacement.x}
+                      y={logoPlacement.y}
+                      width={logoPlacement.width}
+                      height={logoPlacement.height}
                       preserveAspectRatio="xMidYMid meet"
+                      filter={definition.header.logoMonochrome ? `url(#preview-logo-mono-${pageIndex})` : undefined}
                     />
                   ) : (
                     <rect
@@ -229,23 +304,28 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                   )
                 ) : null}
 
-                {definition.header.footerMessage ? (
+                {footerLines.length ? (
                   <text
-                    x={zones.footer.centerX + zones.footer.centerWidth / 2}
-                    y={zones.footer.top + 34}
-                    textAnchor="middle"
-                    className="card-editor-preview__tiny"
+                    x={footerTextX}
+                    y={footerMessageStartY}
+                    textAnchor={footerTextAnchor}
+                    className={`card-editor-preview__tiny${definition.header.footerMessageWeight === 'semibold' ? ' card-editor-preview__tiny--strong' : ''}`}
                     fill="#475569"
+                    style={{ fontSize: `${footerFontSize}px` }}
                   >
-                    {definition.header.footerMessage}
+                    {footerLines.map((line, index) => (
+                      <tspan key={`${line}-${index}`} x={footerTextX} dy={index === 0 ? 0 : footerLineGap}>
+                        {line}
+                      </tspan>
+                    ))}
                   </text>
                 ) : null}
                 <text
-                  x={zones.footer.centerX + zones.footer.centerWidth / 2}
-                  y={zones.footer.bottom - 8}
+                  x={zones.footer.centerAnchorX}
+                  y={pageTextY}
                   textAnchor="middle"
-                  className="card-editor-preview__tiny"
-                  fill="#64748b"
+                  className={`card-editor-preview__tiny${definition.header.footerPageTone === 'standard' ? ' card-editor-preview__tiny--strong' : ''}`}
+                  fill={definition.header.footerPageTone === 'standard' ? '#475569' : '#64748b'}
                 >
                   Página {pageIndex + 1}/{totalPages}
                 </text>
@@ -260,11 +340,11 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
                 />
                 {definition.identification.showSignature ? (
                   <text
-                    x={zones.footer.signatureX + zones.footer.signatureWidth / 2}
+                    x={zones.footer.signatureX + 70}
                     y={zones.footer.top + 54}
-                    textAnchor="middle"
                     className="card-editor-preview__meta"
                     fill={palette.title}
+                    style={{ fontSize: `${renderMetrics.signatureLabelFontSize}px` }}
                   >
                     Assinatura do aluno
                   </text>
@@ -272,40 +352,46 @@ export function CardTemplatePreview({ state }: CardTemplatePreviewProps) {
 
                 {definition.identification.showExamCode ? (
                   <g>
+                    {(() => {
+                      const cardIdWidth = estimateTextWidth(previewStudentCode, renderMetrics.cardIdFontSize, 'bold')
+                      const qrCenterX = previewQrX + previewQrSize / 2
+                      return (
                     <text
-                      x={zones.footer.codeBoxX + zones.footer.codeBoxWidth / 2}
+                      x={qrCenterX - cardIdWidth / 2}
                       y={zones.footer.top + 22}
-                      textAnchor="middle"
                       className="card-editor-preview__meta"
                       fill={palette.title}
+                      style={{ fontSize: `${renderMetrics.cardIdFontSize}px`, fontWeight: 700 }}
                     >
                       {previewStudentCode}
                     </text>
+                      )
+                    })()}
                     <rect
-                      x={zones.footer.codeBoxX + 32}
-                      y={zones.footer.top + 28}
-                      width="76"
-                      height="76"
-                      rx="8"
+                      x={previewQrX}
+                      y={zones.footer.top + renderMetrics.previewQrTop}
+                      width={previewQrSize}
+                      height={previewQrSize}
                       fill="#ffffff"
-                      stroke="#e2e8f0"
                     />
                     <path
-                      d={`M ${zones.footer.codeBoxX + 42} ${zones.footer.top + 38} h 16 v 16 h -16 z
-                          M ${zones.footer.codeBoxX + 84} ${zones.footer.top + 38} h 16 v 16 h -16 z
-                          M ${zones.footer.codeBoxX + 42} ${zones.footer.top + 80} h 16 v 16 h -16 z
-                          M ${zones.footer.codeBoxX + 66} ${zones.footer.top + 52} h 8 v 8 h -8 z
-                          M ${zones.footer.codeBoxX + 82} ${zones.footer.top + 64} h 8 v 8 h -8 z
-                          M ${zones.footer.codeBoxX + 70} ${zones.footer.top + 82} h 10 v 10 h -10 z`}
+                      d={`M ${previewQrX + 11} ${zones.footer.top + 37} h 14 v 14 h -14 z
+                          M ${previewQrX + 53} ${zones.footer.top + 37} h 14 v 14 h -14 z
+                          M ${previewQrX + 11} ${zones.footer.top + 79} h 14 v 14 h -14 z
+                          M ${previewQrX + 34} ${zones.footer.top + 51} h 8 v 8 h -8 z
+                          M ${previewQrX + 50} ${zones.footer.top + 63} h 8 v 8 h -8 z
+                          M ${previewQrX + 38} ${zones.footer.top + 81} h 10 v 10 h -10 z`}
                       fill={palette.title}
                     />
                   </g>
                 ) : null}
               </svg>
             </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </div>
   )
 }
+
