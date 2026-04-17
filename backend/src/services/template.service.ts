@@ -6,7 +6,8 @@ import { generateId } from '../utils/id.js'
 
 function getMaxQuestionBlockChoices(definition: CardTemplateDefinition) {
   return definition.questionBlocks.reduce<2 | 3 | 4 | 5>(
-    (maxChoices, block) => (block.choicesPerQuestion > maxChoices ? block.choicesPerQuestion : maxChoices),
+    (maxChoices, block) =>
+      block.sectionType === 'objective' && block.choicesPerQuestion > maxChoices ? block.choicesPerQuestion : maxChoices,
     definition.choicesPerQuestion,
   )
 }
@@ -84,6 +85,8 @@ export class TemplateService {
     })
 
     for (const block of input.definition.questionBlocks) {
+      if (block.sectionType !== 'objective') continue
+
       if (block.startQuestion > block.endQuestion) {
         throw new AppError('QUESTION_BLOCK_INVALID_RANGE', 'Um bloco de questoes possui intervalo invalido.', 400)
       }

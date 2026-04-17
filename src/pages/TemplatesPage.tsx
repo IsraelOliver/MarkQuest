@@ -10,9 +10,13 @@ import { useAcademicScope } from '../hooks/useAcademicScope'
 import { academicService } from '../services/academicService'
 import { omrService } from '../services/omrService'
 import type {
+  CardLabelSection,
   CardNumberingFormat,
+  CardObjectiveSection,
   CardPresetId,
-  CardQuestionBlock,
+  CardSpacerSection,
+  CardTemplateSectionType,
+  CardTemplateSection,
   CardTemplateEditorState,
   Template,
 } from '../types/omr'
@@ -32,7 +36,17 @@ import {
 } from '../utils/cardTemplateValidator'
 import { getDefaultOptionLabels, isValidOptionLabel } from '../utils/optionLabels'
 import { MAX_QUESTIONS } from '../utils/questionLimits'
-import { appendQuestionBlockWithDistribution, applyQuestionBlockBoundaryChange, buildNormalizedRenderModel, duplicateQuestionBlockAtIndex } from '../utils/questionBlocks'
+import {
+  appendLabelSection,
+  appendQuestionBlockWithDistribution,
+  appendSpacerSection,
+  applyQuestionBlockBoundaryChange,
+  buildNormalizedRenderModel,
+  duplicateQuestionBlockAtIndex,
+  isLabelSection,
+  isObjectiveSection,
+  isSpacerSection,
+} from '../utils/questionBlocks'
 
 type EditorSectionId =
   | 'savedTemplates'
@@ -50,14 +64,49 @@ type PersistTemplateOptions = {
   successMessage?: string
 }
 
+type SectionMenuOption = {
+  id: CardTemplateSectionType
+  label: string
+  description: string
+  disabled?: boolean
+  badge?: string
+}
+
+function getSectionTypeLabel(sectionType: CardTemplateSectionType) {
+  switch (sectionType) {
+    case 'mathematics':
+      return 'Matemática'
+    case 'open':
+      return 'Aberta'
+    case 'label':
+      return 'Rótulo'
+    case 'spacer':
+      return 'Espaçamento'
+    default:
+      return 'Objetiva'
+  }
+}
+
+function getSectionDisplayLabel(index: number, sectionType: CardTemplateSectionType) {
+  return `Seção ${index + 1} · ${getSectionTypeLabel(sectionType)}`
+}
+
 const editorSections: Array<{ id: EditorSectionId; title: string; description: string }> = [
-  { id: 'structure', title: 'Estrutura da prova', description: 'Defina a base do cartão: nome, número de questões, alternativas e distribuição.' },
-  { id: 'questionBlocks', title: 'Blocos de questões', description: 'Agrupe intervalos de questões e defina títulos para aparecer antes de cada bloco.' },
+  { id: 'structure', title: 'Configurações do teste', description: 'Defina a base do cartão: nome, número de questões, alternativas e distribuição.' },
+  { id: 'questionBlocks', title: 'Estrutura da prova', description: 'Organize a prova em seções e defina títulos, alternativas e numeração local quando necessário.' },
   { id: 'studentIdentification', title: 'Identificação do aluno', description: 'Escolha os campos de identificação que realmente precisam aparecer no cartão.' },
   { id: 'header', title: 'Cabeçalho e informações', description: 'Ajuste o conteúdo institucional e os textos visíveis do topo do cartão.' },
   { id: 'appearance', title: 'Aparência', description: 'Controle o estilo visual do cartão sem tirar o preview do lugar.' },
   { id: 'omr', title: 'Leitura OMR', description: 'Veja o perfil de leitura e abra os diagnósticos técnicos quando precisar.' },
   { id: 'savedTemplates', title: 'Templates salvos', description: 'Abra para escolher rapidamente um template já salvo nesta prova.' },
+]
+
+const sectionMenuOptions: SectionMenuOption[] = [
+  { id: 'objective', label: 'Questões objetivas', description: 'Usa a lógica atual de intervalos, alternativas e preview.' },
+  { id: 'mathematics', label: 'Questão matemática', description: 'Preparação para futuras seções matemáticas.', disabled: true, badge: 'Em breve' },
+  { id: 'open', label: 'Questão aberta', description: 'Preparação para futuras questões discursivas.', disabled: true, badge: 'Em breve' },
+  { id: 'label', label: 'Rótulo', description: 'Insere um texto livre para separar ou sinalizar partes da prova.' },
+  { id: 'spacer', label: 'Quebra de linha', description: 'Adiciona um espaçamento vertical controlado entre as seções da prova.' },
 ]
 
 const readingSectionIds: EditorSectionId[] = ['structure', 'questionBlocks', 'omr']
@@ -69,10 +118,10 @@ const numberingFormatOptions: Array<{
   example: string
 }> = [
   { value: 'numeric', label: 'Numérica', example: '1, 2, 3' },
-  { value: 'numericAlpha', label: 'Numérica + letra do bloco', example: '1A, 1B, 1C' },
-  { value: 'alphaNumeric', label: 'Sequência + letra da coluna', example: '1A, 2A, 3A' },
-  { value: 'numericLower', label: 'Numérica + letra minúscula', example: '1a, 1b, 1c' },
-  { value: 'numericDash', label: 'Numérica com hífen', example: '1-a, 1-b, 1-c' },
+  { value: 'numericAlpha', label: 'Número base + sufixo', example: '1A, 1B, 1C' },
+  { value: 'alphaNumeric', label: 'Sequência real + sufixo fixo', example: '1A, 2A, 3A' },
+  { value: 'numericLower', label: 'Número base + sufixo minúsculo', example: '1a, 1b, 1c' },
+  { value: 'numericDash', label: 'Número base com hífen', example: '1-a, 1-b, 1-c' },
 ]
 
 function getTemplateTimestamp(template: Pick<Template, 'createdAt' | 'updatedAt'>) {
@@ -104,6 +153,20 @@ function getDistributionLabel(totalQuestions: number, _choicesPerQuestion: 2 | 3
   const rowLabel = rowsPerColumn === 1 ? '1 linha por coluna' : `${rowsPerColumn} linhas por coluna`
 
   return `${columnLabel} | ${rowLabel}`
+}
+
+function getSectionSummaryLabel(index: number, section: CardTemplateSection) {
+  if (isLabelSection(section)) {
+    const previewText = section.text.trim()
+    return previewText ? `${getSectionDisplayLabel(index, section.sectionType)} — ${previewText}` : getSectionDisplayLabel(index, section.sectionType)
+  }
+
+  if (isSpacerSection(section)) {
+    const sizeLabel = section.size === 'sm' ? 'Pequeno' : section.size === 'lg' ? 'Grande' : 'Médio'
+    return `${getSectionDisplayLabel(index, section.sectionType)} — ${sizeLabel}`
+  }
+
+  return getSectionDisplayLabel(index, section.sectionType)
 }
 
 function getStateSnapshot(state: CardTemplateEditorState) {
@@ -200,6 +263,7 @@ export function TemplatesPage() {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false)
   const [questionBlockDrafts, setQuestionBlockDrafts] = useState<Array<{ startQuestion: string; endQuestion: string }>>([])
   const [activeQuestionBlockIndex, setActiveQuestionBlockIndex] = useState<number | null>(0)
   const [blockSearch, setBlockSearch] = useState('')
@@ -207,6 +271,7 @@ export function TemplatesPage() {
   const persistedStateSnapshotRef = useRef(getStateSnapshot(editorState))
   const pendingLocationRef = useRef<Location | null>(null)
   const shouldBypassBlockerRef = useRef(false)
+  const sectionMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     if (examId) setSelectedExamId(examId)
@@ -275,7 +340,7 @@ export function TemplatesPage() {
   const currentReadMode = getReadModeFromConfig(currentState.omrConfig)
   const confidenceLabel = getConfidenceLabel(currentState.omrConfig)
   const blueprint = getTemplateLayoutBlueprint(currentState)
-  const renderModel = buildNormalizedRenderModel(currentState.definition, currentState.visualTheme.answerGridStyle)
+  const renderModel = buildNormalizedRenderModel(currentState.definition)
   const activeTemplate = activeTemplateId ? templates.find((item) => item.id === activeTemplateId) ?? null : null
   const visibleSections = editorSections.filter((section) =>
     focusMode === 'reading' ? readingSectionIds.includes(section.id) : visualSectionIds.includes(section.id),
@@ -290,7 +355,7 @@ export function TemplatesPage() {
   const focusModeLabel = focusMode === 'reading' ? 'Modo leitura' : 'Modo visual'
   const focusModeDescription =
     focusMode === 'reading'
-      ? 'Revise estrutura, blocos e parâmetros OMR que impactam a leitura e a API.'
+      ? 'Revise configurações do teste, estrutura da prova e parâmetros OMR que impactam a leitura e a API.'
       : 'Ajuste cabeçalho, identificação e estilo sem perder o preview do cartão.'
 
   useEffect(() => {
@@ -305,11 +370,11 @@ export function TemplatesPage() {
   useEffect(() => {
     setQuestionBlockDrafts(
       editorState.definition.questionBlocks.map((block) => ({
-        startQuestion: String(block.startQuestion),
-        endQuestion: String(block.endQuestion),
+        startQuestion: isObjectiveSection(block) ? String(block.startQuestion) : '',
+        endQuestion: isObjectiveSection(block) ? String(block.endQuestion) : '',
       })),
     )
-  }, [editorState.definition.questionBlocks.length, editorState.definition.questionBlocks.map((block) => `${block.startQuestion}-${block.endQuestion}`).join('|')])
+  }, [editorState.definition.questionBlocks.length, editorState.definition.questionBlocks.map((block) => (isObjectiveSection(block) ? `${block.startQuestion}-${block.endQuestion}` : `${block.sectionType}-${block.id}`)).join('|')])
 
   useEffect(() => {
     if (!editorState.definition.enableQuestionBlocks || editorState.definition.questionBlocks.length === 0) {
@@ -322,6 +387,36 @@ export function TemplatesPage() {
       return current
     })
   }, [editorState.definition.enableQuestionBlocks, editorState.definition.questionBlocks.length])
+
+  useEffect(() => {
+    if (!currentState.definition.enableQuestionBlocks) {
+      setIsSectionMenuOpen(false)
+    }
+  }, [currentState.definition.enableQuestionBlocks])
+
+  useEffect(() => {
+    if (!isSectionMenuOpen) return
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!sectionMenuRef.current?.contains(event.target as Node)) {
+        setIsSectionMenuOpen(false)
+      }
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsSectionMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown)
+    window.addEventListener('keydown', handleEscape)
+
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [isSectionMenuOpen])
 
   const navigationBlocker = useBlocker(({ currentLocation, nextLocation }) => {
     const isSameLocation =
@@ -434,7 +529,7 @@ export function TemplatesPage() {
     applyState((current) => {
       const nextState = structuredClone(current)
       const block = nextState.definition.questionBlocks[index]
-      if (!block) return nextState
+      if (!block || !isObjectiveSection(block)) return nextState
       block.choicesPerQuestion = choicesPerQuestion
       block.optionLabels = getDefaultOptionLabels(choicesPerQuestion)
       return applySafeCardLayout(nextState)
@@ -445,7 +540,7 @@ export function TemplatesPage() {
     applyState((current) => {
       const nextState = structuredClone(current)
       const block = nextState.definition.questionBlocks[blockIndex]
-      if (!block) return nextState
+      if (!block || !isObjectiveSection(block)) return nextState
       const normalizedValue = value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 1)
       const nextLabels = [...block.optionLabels]
       nextLabels[optionIndex] = normalizedValue
@@ -519,6 +614,9 @@ export function TemplatesPage() {
     applyState((current) => {
       const nextState = structuredClone(current)
       nextState.visualTheme[field] = value as never
+      if (field === 'answerGridStyle' && typeof value === 'string') {
+        nextState.definition.questionStyle = value as CardTemplateEditorState['definition']['questionStyle']
+      }
       return field === 'density' ? applySafeCardLayout(nextState) : nextState
     })
   }
@@ -534,16 +632,15 @@ export function TemplatesPage() {
       const nextState = structuredClone(current)
       nextState.definition.enableQuestionBlocks = enabled
       if (enabled && nextState.definition.questionBlocks.length === 0) {
-        nextState.definition.questionBlocks = [
+        nextState.definition.questionBlocks = appendQuestionBlockWithDistribution(
+          [],
+          nextState.definition.totalQuestions,
           {
-            startQuestion: 1,
-            endQuestion: Math.min(10, nextState.definition.totalQuestions),
-            title: 'Novo bloco',
             choicesPerQuestion: nextState.definition.choicesPerQuestion,
-            optionLabels: [...nextState.definition.optionLabels],
-            questionStyle: nextState.visualTheme.answerGridStyle,
+            optionLabels: nextState.definition.optionLabels,
+            numberingFormat: 'numeric',
           },
-        ]
+        )
       }
       return applySafeCardLayout(nextState)
     })
@@ -551,14 +648,42 @@ export function TemplatesPage() {
 
   const handleQuestionBlockChange = (
     index: number,
-    field: keyof CardQuestionBlock,
+    field: keyof CardObjectiveSection,
     value: string | number,
   ) => {
     applyState((current) => {
       const nextState = structuredClone(current)
       const block = nextState.definition.questionBlocks[index]
-      if (!block) return nextState
+      if (!block || !isObjectiveSection(block)) return nextState
       block[field] = value as never
+      return nextState
+    })
+  }
+
+  const handleLabelSectionChange = (
+    index: number,
+    field: keyof Pick<CardLabelSection, 'text' | 'align' | 'size'>,
+    value: string,
+  ) => {
+    applyState((current) => {
+      const nextState = structuredClone(current)
+      const section = nextState.definition.questionBlocks[index]
+      if (!section || !isLabelSection(section)) return nextState
+      section[field] = value as never
+      return nextState
+    })
+  }
+
+  const handleSpacerSectionChange = (
+    index: number,
+    field: keyof Pick<CardSpacerSection, 'size'>,
+    value: string,
+  ) => {
+    applyState((current) => {
+      const nextState = structuredClone(current)
+      const section = nextState.definition.questionBlocks[index]
+      if (!section || !isSpacerSection(section)) return nextState
+      section[field] = value as never
       return nextState
     })
   }
@@ -582,7 +707,7 @@ export function TemplatesPage() {
   ) => {
     const draft = questionBlockDrafts[index]
     const currentBlock = currentState.definition.questionBlocks[index]
-    if (!draft || !currentBlock) return
+    if (!draft || !currentBlock || !isObjectiveSection(currentBlock)) return
 
     const rawValue = draft[field]
     const parsedValue = Number(rawValue)
@@ -616,14 +741,56 @@ export function TemplatesPage() {
         {
           choicesPerQuestion: nextState.definition.choicesPerQuestion,
           optionLabels: nextState.definition.optionLabels,
-          questionStyle: nextState.visualTheme.answerGridStyle,
+          numberingFormat: [...nextState.definition.questionBlocks].reverse().find(isObjectiveSection)?.numberingFormat ?? 'numeric',
         },
       )
       nextState.definition.questionBlocks = nextBlocks
-      const latestQuestion = nextBlocks[nextBlocks.length - 1]?.endQuestion ?? nextState.definition.totalQuestions
+      const latestQuestion = nextBlocks.reduce(
+        (maxQuestion, section) => (isObjectiveSection(section) ? Math.max(maxQuestion, section.endQuestion) : maxQuestion),
+        nextState.definition.totalQuestions,
+      )
       nextState.definition.totalQuestions = Math.min(MAX_QUESTIONS, Math.max(nextState.definition.totalQuestions, latestQuestion))
       return applySafeCardLayout(nextState)
     })
+  }
+
+  const handleAddSection = (sectionType: CardTemplateSectionType) => {
+    if (!currentState.definition.enableQuestionBlocks) {
+      setIsSectionMenuOpen(false)
+      return
+    }
+
+    setIsSectionMenuOpen(false)
+    setActiveSection('questionBlocks')
+
+    if (!currentState.definition.enableQuestionBlocks) {
+      handleQuestionBlocksToggle(true)
+      return
+    }
+
+    if (sectionType === 'label') {
+      setActiveQuestionBlockIndex(currentState.definition.questionBlocks.length)
+      applyState((current) => {
+        const nextState = structuredClone(current)
+        nextState.definition.questionBlocks = appendLabelSection(nextState.definition.questionBlocks)
+        return nextState
+      })
+      return
+    }
+
+    if (sectionType === 'spacer') {
+      setActiveQuestionBlockIndex(currentState.definition.questionBlocks.length)
+      applyState((current) => {
+        const nextState = structuredClone(current)
+        nextState.definition.questionBlocks = appendSpacerSection(nextState.definition.questionBlocks)
+        return nextState
+      })
+      return
+    }
+
+    if (sectionType !== 'objective') return
+
+    handleAddQuestionBlock()
   }
 
   const handleDuplicateQuestionBlock = (index: number) => {
@@ -636,7 +803,10 @@ export function TemplatesPage() {
         nextState.definition.totalQuestions,
       )
       nextState.definition.questionBlocks = nextBlocks
-      const latestQuestion = nextBlocks[nextBlocks.length - 1]?.endQuestion ?? nextState.definition.totalQuestions
+      const latestQuestion = nextBlocks.reduce(
+        (maxQuestion, section) => (isObjectiveSection(section) ? Math.max(maxQuestion, section.endQuestion) : maxQuestion),
+        nextState.definition.totalQuestions,
+      )
       nextState.definition.totalQuestions = Math.min(MAX_QUESTIONS, Math.max(nextState.definition.totalQuestions, latestQuestion))
       return applySafeCardLayout(nextState)
     })
@@ -813,10 +983,14 @@ export function TemplatesPage() {
   const normalizedBlockSearch = blockSearch.trim().toLowerCase()
   const filteredCollapsedQuestionBlocks = collapsedQuestionBlocks.filter(({ block, index }) => {
     if (!normalizedBlockSearch) return true
-    const label = `bloco ${index + 1}`.toLowerCase()
-    const range = `${block.startQuestion}-${block.endQuestion}`.toLowerCase()
-    const rangeSingle = `${block.startQuestion}`.toLowerCase()
-    const title = block.title.trim().toLowerCase()
+    const label = getSectionSummaryLabel(index, block).toLowerCase()
+    const range = isObjectiveSection(block) ? `${block.startQuestion}-${block.endQuestion}`.toLowerCase() : ''
+    const rangeSingle = isObjectiveSection(block) ? `${block.startQuestion}`.toLowerCase() : ''
+    const title = isObjectiveSection(block)
+      ? block.title.trim().toLowerCase()
+      : isLabelSection(block)
+        ? block.text.trim().toLowerCase()
+        : block.size.trim().toLowerCase()
     return (
       label.includes(normalizedBlockSearch) ||
       range.includes(normalizedBlockSearch) ||
@@ -826,13 +1000,17 @@ export function TemplatesPage() {
   })
   const getQuestionBlockStatus = (index: number) => {
     const block = currentState.definition.questionBlocks[index]
-    if (!block) return 'default'
-    const previousBlock = currentState.definition.questionBlocks[index - 1]
-    const nextBlock = currentState.definition.questionBlocks[index + 1]
-    const hasGapBefore = index === 0 ? block.startQuestion > 1 : previousBlock.endQuestion + 1 < block.startQuestion
-    const hasGapAfter = Boolean(nextBlock) && block.endQuestion + 1 < nextBlock.startQuestion
-    const hasOverlapBefore = Boolean(previousBlock) && previousBlock.endQuestion >= block.startQuestion
-    const hasOverlapAfter = Boolean(nextBlock) && block.endQuestion >= nextBlock.startQuestion
+    if (!block || !isObjectiveSection(block)) return 'default'
+    const objectiveSections = currentState.definition.questionBlocks
+      .map((section, sectionIndex) => ({ section, sectionIndex }))
+      .filter((entry): entry is { section: CardObjectiveSection; sectionIndex: number } => isObjectiveSection(entry.section))
+    const objectivePosition = objectiveSections.findIndex((entry) => entry.sectionIndex === index)
+    const previousBlock = objectivePosition > 0 ? objectiveSections[objectivePosition - 1].section : null
+    const nextBlock = objectivePosition < objectiveSections.length - 1 ? objectiveSections[objectivePosition + 1].section : null
+    const hasGapBefore = objectivePosition === 0 ? block.startQuestion > 1 : Boolean(previousBlock) && (previousBlock?.endQuestion ?? 0) + 1 < block.startQuestion
+    const hasGapAfter = Boolean(nextBlock) && block.endQuestion + 1 < (nextBlock?.startQuestion ?? block.endQuestion + 1)
+    const hasOverlapBefore = Boolean(previousBlock) && (previousBlock?.endQuestion ?? 0) >= block.startQuestion
+    const hasOverlapAfter = Boolean(nextBlock) && block.endQuestion >= (nextBlock?.startQuestion ?? Number.MAX_SAFE_INTEGER)
     const isOutOfRange = block.endQuestion > MAX_QUESTIONS
 
     return hasGapBefore || hasGapAfter || hasOverlapBefore || hasOverlapAfter || isOutOfRange ? 'warning' : 'default'
@@ -849,34 +1027,34 @@ export function TemplatesPage() {
     overlapCount: renderModel.overlappingQuestions.length,
   }
 
-  const renderQuestionBlockEditor = (block: CardQuestionBlock, index: number) => (
+  const renderQuestionBlockEditor = (block: CardObjectiveSection, index: number) => (
     <Card className="card-editor-question-block" key={`question-block-active-${index}`}>
       <div className="card-editor-question-block__header">
-        <strong>Bloco {index + 1}</strong>
+        <strong>{getSectionDisplayLabel(index, block.sectionType)}</strong>
         <div className="card-editor-question-block__toolbar">
           <button
             type="button"
             className="card-editor-icon-button"
             onClick={() => setActiveQuestionBlockIndex(activeBlockPreviousIndex)}
             disabled={activeBlockPreviousIndex === null}
-            aria-label="Bloco anterior"
+            aria-label="Seção anterior"
           >
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
               <path d="M14.5 6.5L9 12l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="card-editor-nav__tooltip" role="tooltip">Bloco anterior</span>
+            <span className="card-editor-nav__tooltip" role="tooltip">Seção anterior</span>
           </button>
           <button
             type="button"
             className="card-editor-icon-button"
             onClick={() => setActiveQuestionBlockIndex(activeBlockNextIndex)}
             disabled={activeBlockNextIndex === null}
-            aria-label="Próximo bloco"
+            aria-label="Próxima seção"
           >
             <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
               <path d="M9.5 6.5L15 12l-5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span className="card-editor-nav__tooltip" role="tooltip">Próximo bloco</span>
+            <span className="card-editor-nav__tooltip" role="tooltip">Próxima seção</span>
           </button>
           <button
             type="button"
@@ -955,12 +1133,7 @@ export function TemplatesPage() {
             onChange={(event) => handleQuestionBlockDraftChange(index, 'endQuestion', event.target.value)}
             onBlur={() => handleQuestionBlockNumberCommit(index, 'endQuestion')}
           />
-          <small>Última questão coberta pelo bloco.</small>
-        </label>
-        <label className="field card-editor-grid__full">
-          <span>Título</span>
-          <input value={block.title} onChange={(event) => handleQuestionBlockChange(index, 'title', event.target.value)} />
-          <small>Esse texto aparece antes da primeira questão do intervalo no preview e no PDF.</small>
+          <small>Última questão coberta pela seção.</small>
         </label>
         <label className="field">
           <span>Alternativas por questão</span>
@@ -973,7 +1146,7 @@ export function TemplatesPage() {
             <option value="4">4 alternativas</option>
             <option value="5">5 alternativas</option>
           </select>
-          <small>Esse bloco pode ter uma quantidade própria de alternativas.</small>
+          <small>Essa seção pode ter uma quantidade própria de alternativas.</small>
         </label>
         <div className="field">
           <span>Caracteres das alternativas</span>
@@ -992,21 +1165,246 @@ export function TemplatesPage() {
                   className={isInvalid ? 'card-editor-option-labels__input card-editor-option-labels__input--invalid' : 'card-editor-option-labels__input'}
                   value={optionLabel}
                   onChange={(event) => handleQuestionBlockOptionLabelChange(index, optionIndex, event.target.value)}
-                  aria-label={`Caractere da alternativa ${optionIndex + 1} do bloco ${index + 1}`}
+                  aria-label={`Caractere da alternativa ${optionIndex + 1} da seção ${index + 1}`}
                 />
               )
             })}
           </div>
-          <small>Use apenas A-Z ou 0-9, sem repetir caracteres dentro do bloco.</small>
+          <small>Use apenas A-Z ou 0-9, sem repetir caracteres dentro da seção.</small>
         </div>
         <label className="field card-editor-grid__full">
-          <span>Estilo da questão</span>
-          <select value={block.questionStyle} onChange={(event) => handleQuestionBlockChange(index, 'questionStyle', event.target.value)}>
-            <option value="classic">Clássica</option>
-            <option value="lined">Com guias</option>
-            <option value="minimal">Minimalista</option>
+          <span>Formato de numeração</span>
+          <select value={block.numberingFormat} onChange={(event) => handleQuestionBlockChange(index, 'numberingFormat', event.target.value)}>
+            {numberingFormatOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.example}
+              </option>
+            ))}
           </select>
-          <small>Esse estilo passa a valer apenas para as questões desse bloco no preview e no PDF.</small>
+          <small>Esse formato vale apenas para as questões desta seção no editor, no preview e no PDF.</small>
+        </label>
+        {currentState.definition.showQuestionBlockTitles ? (
+          <label className="field card-editor-grid__full">
+            <span>Título (Opcional)</span>
+            <input
+              value={block.title}
+              onChange={(event) => handleQuestionBlockChange(index, 'title', event.target.value)}
+              placeholder="Ex: Língua Portuguesa"
+            />
+          </label>
+        ) : null}
+      </div>
+    </Card>
+  )
+
+  const renderLabelSectionEditor = (section: CardLabelSection, index: number) => (
+    <Card className="card-editor-question-block" key={`label-section-active-${index}`}>
+      <div className="card-editor-question-block__header">
+        <strong>{getSectionDisplayLabel(index, section.sectionType)}</strong>
+        <div className="card-editor-question-block__toolbar">
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => setActiveQuestionBlockIndex(activeBlockPreviousIndex)}
+            disabled={activeBlockPreviousIndex === null}
+            aria-label="Seção anterior"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M14.5 6.5L9 12l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Seção anterior</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => setActiveQuestionBlockIndex(activeBlockNextIndex)}
+            disabled={activeBlockNextIndex === null}
+            aria-label="Próxima seção"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M9.5 6.5L15 12l-5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Próxima seção</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleMoveQuestionBlock(index, -1)}
+            disabled={index === 0}
+            aria-label="Subir"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M12 17.5v-11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M7.5 11 12 6.5 16.5 11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Subir</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleMoveQuestionBlock(index, 1)}
+            disabled={index === currentState.definition.questionBlocks.length - 1}
+            aria-label="Descer"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M12 6.5v11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M7.5 13 12 17.5 16.5 13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Descer</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleDuplicateQuestionBlock(index)}
+            aria-label="Duplicar"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <rect x="8" y="8" width="9" height="9" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M6 14V7a2 2 0 0 1 2-2h7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Duplicar</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleRemoveQuestionBlock(index)}
+            aria-label="Remover"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M5.5 7.5h13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M9 7.5V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M8.5 9.5v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M10.5 11.5v4M13.5 11.5v4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Remover</span>
+          </button>
+        </div>
+      </div>
+      <div className="card-editor-grid">
+        <label className="field">
+          <span>Texto do rótulo</span>
+          <textarea
+            rows={3}
+            value={section.text}
+            onChange={(event) => handleLabelSectionChange(index, 'text', event.target.value)}
+            placeholder="Ex: Matemática ou Ex: Itens do tipo B"
+          />
+          <small>Esse texto aparece no preview e no PDF exatamente na posição desta seção.</small>
+        </label>
+        <div className="card-editor-grid card-editor-grid--two">
+          <label className="field">
+            <span>Alinhamento</span>
+            <select value={section.align} onChange={(event) => handleLabelSectionChange(index, 'align', event.target.value)}>
+              <option value="left">Esquerda</option>
+              <option value="center">Centro</option>
+              <option value="right">Direita</option>
+            </select>
+          </label>
+          <label className="field">
+            <span>Tamanho do texto</span>
+            <select value={section.size} onChange={(event) => handleLabelSectionChange(index, 'size', event.target.value)}>
+              <option value="sm">Pequeno</option>
+              <option value="md">Médio</option>
+              <option value="lg">Grande</option>
+            </select>
+          </label>
+        </div>
+      </div>
+    </Card>
+  )
+
+  const renderSpacerSectionEditor = (section: CardSpacerSection, index: number) => (
+    <Card className="card-editor-question-block" key={`spacer-section-active-${index}`}>
+      <div className="card-editor-question-block__header">
+        <strong>{getSectionDisplayLabel(index, section.sectionType)}</strong>
+        <div className="card-editor-question-block__toolbar">
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => setActiveQuestionBlockIndex(activeBlockPreviousIndex)}
+            disabled={activeBlockPreviousIndex === null}
+            aria-label="Seção anterior"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M14.5 6.5L9 12l5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Seção anterior</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => setActiveQuestionBlockIndex(activeBlockNextIndex)}
+            disabled={activeBlockNextIndex === null}
+            aria-label="Próxima seção"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M9.5 6.5L15 12l-5.5 5.5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Próxima seção</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleMoveQuestionBlock(index, -1)}
+            disabled={index === 0}
+            aria-label="Subir"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M12 17.5v-11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M7.5 11 12 6.5 16.5 11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Subir</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleMoveQuestionBlock(index, 1)}
+            disabled={index === currentState.definition.questionBlocks.length - 1}
+            aria-label="Descer"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M12 6.5v11" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <path d="M7.5 13 12 17.5 16.5 13" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Descer</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleDuplicateQuestionBlock(index)}
+            aria-label="Duplicar"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <rect x="8" y="8" width="9" height="9" rx="2" fill="none" stroke="currentColor" strokeWidth="2" />
+              <path d="M6 14V7a2 2 0 0 1 2-2h7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Duplicar</span>
+          </button>
+          <button
+            type="button"
+            className="card-editor-icon-button"
+            onClick={() => handleRemoveQuestionBlock(index)}
+            aria-label="Remover"
+          >
+            <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+              <path d="M5.5 7.5h13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M9 7.5V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M8.5 9.5v7a2 2 0 0 0 2 2h3a2 2 0 0 0 2-2v-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M10.5 11.5v4M13.5 11.5v4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <span className="card-editor-nav__tooltip" role="tooltip">Remover</span>
+          </button>
+        </div>
+      </div>
+      <div className="card-editor-grid">
+        <label className="field">
+          <span>Tamanho do espaçamento</span>
+          <select value={section.size} onChange={(event) => handleSpacerSectionChange(index, 'size', event.target.value)}>
+            <option value="sm">Pequeno</option>
+            <option value="md">Médio</option>
+            <option value="lg">Grande</option>
+          </select>
+          <small>Essa seção apenas adiciona respiro vertical no preview e no PDF, sem renderizar texto.</small>
         </label>
       </div>
     </Card>
@@ -1063,7 +1461,7 @@ export function TemplatesPage() {
             aria-selected={focusMode === 'reading'}
           >
             <strong>Leitura</strong>
-            <span>Estrutura, blocos e OMR</span>
+            <span>Configurações, estrutura e OMR</span>
           </button>
           <button
             type="button"
@@ -1132,8 +1530,8 @@ export function TemplatesPage() {
           {activeSection === 'structure' ? (
             <Card className="card-editor-panel card-editor-panel--section">
               <div className="card-editor-section-panel__header">
-                <h3>Estrutura da prova</h3>
-                <p>Defina a base do cartão: nome, número de questões, alternativas e distribuição.</p>
+                <h3>Configurações do teste</h3>
+                <p>Defina a base do cartão: nome, número de questões, estilo global e distribuição.</p>
               </div>
               <div className="card-editor-section-panel__body">
             <div className="card-editor-grid card-editor-grid--two">
@@ -1151,8 +1549,8 @@ export function TemplatesPage() {
                 ) : (
                   <div className="card-editor-field-static">
                     <span>Quantidade de questões</span>
-                    <div className="card-editor-field-static__value">{currentState.definition.totalQuestions} questões derivadas dos blocos</div>
-                    <small>Com agrupamento por blocos ativo, o total da prova é calculado automaticamente pelo maior fim configurado.</small>
+                    <div className="card-editor-field-static__value">{currentState.definition.totalQuestions} questões derivadas das seções</div>
+                    <small>Com seções objetivas ativas, o total da prova é calculado automaticamente pelo maior fim configurado.</small>
                   </div>
                 )}
                 {!currentState.definition.enableQuestionBlocks ? (
@@ -1194,11 +1592,11 @@ export function TemplatesPage() {
                   </>
                 ) : (
                   <div className="card-editor-field-static card-editor-grid__full">
-                    <span>Alternativas e estilo por bloco</span>
+                    <span>Alternativas e numeração por seção</span>
                     <div className="card-editor-field-static__value">
-                      As configurações de alternativas e estilo das questões estão sendo definidas individualmente em cada bloco.
+                      As configurações de alternativas e formato de numeração estão sendo definidas individualmente em cada seção.
                     </div>
-                    <small>Abra a seção de blocos para configurar quantidade, caracteres e estilo de cada intervalo.</small>
+                    <small>Abra a estrutura da prova para configurar quantidade, caracteres e numeração de cada seção.</small>
                   </div>
                 )}
               <label className="field">
@@ -1265,18 +1663,16 @@ export function TemplatesPage() {
                 <small>Reposiciona cada linha da questão dentro da área útil da grade.</small>
               </label>
               <label className="field">
-                <span>Formato da numeração</span>
+                <span>Estilo da questão</span>
                 <select
-                  value={currentState.definition.numberingFormat}
-                  onChange={(event) => handleFriendlyStructureChange('numberingFormat', event.target.value as CardNumberingFormat)}
+                  value={currentState.definition.questionStyle}
+                  onChange={(event) => handleFriendlyStructureChange('questionStyle', event.target.value as CardTemplateEditorState['definition']['questionStyle'])}
                 >
-                  {numberingFormatOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.example}
-                    </option>
-                  ))}
+                  <option value="classic">Clássica</option>
+                  <option value="lined">Com guias</option>
+                  <option value="minimal">Minimalista</option>
                 </select>
-                <small>Escolha como a sequência das questões aparece no cartão, no preview e no PDF. Quando houver blocos, os formatos com letra usam o bloco configurado, não a coluna visual.</small>
+                <small>Esse estilo vale para a prova inteira e é refletido igualmente no preview e no PDF.</small>
               </label>
             </div>
               </div>
@@ -1285,37 +1681,79 @@ export function TemplatesPage() {
 
           {activeSection === 'questionBlocks' ? (
             <Card className="card-editor-panel card-editor-panel--section">
-              <div className="card-editor-section-panel__header">
-                <h3>Blocos de questões</h3>
-                <p>Agrupe intervalos de questões e defina títulos para aparecer antes de cada bloco.</p>
+              <div className="card-editor-section-panel__header card-editor-section-panel__header--split">
+                <div className="card-editor-section-panel__title-group">
+                  <h3>Estrutura da prova</h3>
+                  <p>Organize a prova em seções e reutilize a lógica atual de questões objetivas como base.</p>
+                </div>
+                <div className="card-editor-section-menu" ref={sectionMenuRef}>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (!currentState.definition.enableQuestionBlocks) return
+                      setIsSectionMenuOpen((current) => !current)
+                    }}
+                    disabled={!currentState.definition.enableQuestionBlocks}
+                    aria-expanded={currentState.definition.enableQuestionBlocks ? isSectionMenuOpen : false}
+                    aria-haspopup="menu"
+                  >
+                    Adicionar seção
+                  </Button>
+                  {isSectionMenuOpen && currentState.definition.enableQuestionBlocks ? (
+                    <div className="card-editor-section-menu__dropdown" role="menu" aria-label="Tipos de seção">
+                      {sectionMenuOptions.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          className={`card-editor-section-menu__item${option.disabled ? ' card-editor-section-menu__item--disabled' : ''}`}
+                          onClick={() => !option.disabled && handleAddSection(option.id)}
+                          disabled={option.disabled}
+                          role="menuitem"
+                        >
+                          <span className="card-editor-section-menu__item-copy">
+                            <strong>{option.label}</strong>
+                            <small>{option.description}</small>
+                          </span>
+                          {option.badge ? <span className="card-editor-section-menu__badge">{option.badge}</span> : null}
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <div className="card-editor-section-panel__body">
             <div className="card-editor-grid card-editor-grid--two">
               <label className="card-editor-toggle">
                 <input type="checkbox" checked={currentState.definition.enableQuestionBlocks} onChange={(event) => handleQuestionBlocksToggle(event.target.checked)} />
-                <span>Ativar agrupamento por blocos</span>
+                <span>Ativar seções objetivas</span>
               </label>
 
               {currentState.definition.enableQuestionBlocks ? (
                 <>
                   <label className="card-editor-toggle">
                     <input type="checkbox" checked={currentState.definition.showQuestionBlockTitles} onChange={(event) => handleFriendlyStructureChange('showQuestionBlockTitles', event.target.checked)} />
-                    <span>Exibir títulos dos blocos</span>
+                    <span>Exibir títulos das seções</span>
                   </label>
 
                   <div className="card-editor-question-blocks-layout card-editor-grid__full">
                     <div className="card-editor-question-blocks-layout__active">
-                      {activeQuestionBlock && activeQuestionBlockIndex !== null ? renderQuestionBlockEditor(activeQuestionBlock, activeQuestionBlockIndex) : null}
+                      {activeQuestionBlock && activeQuestionBlockIndex !== null
+                        ? isObjectiveSection(activeQuestionBlock)
+                          ? renderQuestionBlockEditor(activeQuestionBlock, activeQuestionBlockIndex)
+                          : isLabelSection(activeQuestionBlock)
+                            ? renderLabelSectionEditor(activeQuestionBlock, activeQuestionBlockIndex)
+                            : renderSpacerSectionEditor(activeQuestionBlock, activeQuestionBlockIndex)
+                        : null}
                     </div>
 
                     <div className="card-editor-question-blocks-layout__collapsed">
                       <label className="field card-editor-question-block-search">
-                        <span>Buscar blocos</span>
+                        <span>Buscar seções</span>
                         <input
                           type="text"
                           value={blockSearch}
                           onChange={(event) => setBlockSearch(event.target.value)}
-                          placeholder="Buscar bloco, intervalo ou título"
+                          placeholder="Buscar seção, intervalo ou título"
                         />
                       </label>
                       {filteredCollapsedQuestionBlocks.length ? (
@@ -1329,8 +1767,10 @@ export function TemplatesPage() {
                             key={`question-block-summary-${index}`}
                           >
                             <div className="card-editor-question-block-summary__main">
-                              <strong className="card-editor-question-block-summary__name">Bloco {index + 1}</strong>
-                              <span className="card-editor-question-block-summary__range">({block.startQuestion}-{block.endQuestion})</span>
+                              <strong className="card-editor-question-block-summary__name">{getSectionSummaryLabel(index, block)}</strong>
+                              {isObjectiveSection(block) ? (
+                                <span className="card-editor-question-block-summary__range">({block.startQuestion}-{block.endQuestion})</span>
+                              ) : null}
                             </div>
                             <Button type="button" variant="ghost" className="card-editor-question-block-summary__open" onClick={() => setActiveQuestionBlockIndex(index)}>
                               Abrir
@@ -1340,22 +1780,19 @@ export function TemplatesPage() {
                       ) : (
                         <Card className="card-editor-question-block-summary card-editor-question-block-summary--empty">
                           <div className="card-editor-question-block-summary__copy">
-                            <strong>{blockSearch.trim() ? 'Nenhum bloco encontrado' : 'Um bloco ativo por vez'}</strong>
-                            <small>{blockSearch.trim() ? 'Ajuste a busca para localizar outro bloco.' : 'Os próximos blocos aparecerão aqui em formato compacto.'}</small>
+                            <strong>{blockSearch.trim() ? 'Nenhuma seção encontrada' : 'Uma seção ativa por vez'}</strong>
+                            <small>{blockSearch.trim() ? 'Ajuste a busca para localizar outra seção.' : 'As próximas seções aparecerão aqui em formato compacto.'}</small>
                           </div>
                         </Card>
                       )}
                     </div>
                   </div>
-
-                  <div className="inline-actions">
-                    <Button type="button" variant="secondary" onClick={handleAddQuestionBlock}>
-                      Adicionar bloco
-                    </Button>
-                  </div>
                 </>
               ) : (
-                <p className="feedback">Ative o agrupamento para separar a prova em intervalos com títulos próprios.</p>
+                <div className="card-editor-section-disabled-state">
+                  <strong>Estrutura de seções inativa</strong>
+                  <p>Ative as seções objetivas para liberar a edição detalhada da estrutura da prova e o botão “Adicionar seção”.</p>
+                </div>
               )}
             </div>
               </div>
@@ -1531,7 +1968,6 @@ export function TemplatesPage() {
             <div className="card-editor-grid card-editor-grid--two">
               <label className="field"><span>Estilo visual</span><select value={currentState.visualTheme.visualStyle} onChange={(event) => handleThemeChange('visualStyle', event.target.value)}><option value="institutional">Institucional</option><option value="vestibular">Vestibular</option><option value="compact">Compacto</option></select></label>
               <label className="field"><span>Densidade visual</span><select value={currentState.visualTheme.density} onChange={(event) => handleThemeChange('density', event.target.value)}><option value="compact">Compacta</option><option value="balanced">Equilibrada</option><option value="spacious">Espaçada</option></select></label>
-              <label className="field"><span>Estilo da grade</span><select value={currentState.visualTheme.answerGridStyle} onChange={(event) => handleThemeChange('answerGridStyle', event.target.value)}><option value="classic">Clássica</option><option value="lined">Com guias</option><option value="minimal">Minimalista</option></select></label>
               <div className="card-editor-toggle-group">
                 {[
                   ['softBorders', 'Bordas suaves'],
@@ -1676,8 +2112,8 @@ export function TemplatesPage() {
             <div className="card-editor-technical-summary">
               <div className="card-editor-readonly"><span>Última questão renderizada</span><strong>{technicalSummary.lastRenderedQuestion || 0}</strong></div>
               <div className="card-editor-readonly"><span>Total efetivo</span><strong>{technicalSummary.totalRenderedQuestions}</strong></div>
-              <div className="card-editor-readonly"><span>Blocos ativos</span><strong>{technicalSummary.activeBlocks}</strong></div>
-              <div className="card-editor-readonly"><span>Questões fora dos blocos</span><strong>{technicalSummary.uncoveredQuestions}</strong></div>
+              <div className="card-editor-readonly"><span>Seções ativas</span><strong>{technicalSummary.activeBlocks}</strong></div>
+              <div className="card-editor-readonly"><span>Questões fora das seções</span><strong>{technicalSummary.uncoveredQuestions}</strong></div>
               <div className="card-editor-readonly"><span>Lacunas</span><strong>{technicalSummary.gapCount}</strong></div>
               <div className="card-editor-readonly"><span>Sobreposições</span><strong>{technicalSummary.overlapCount}</strong></div>
             </div>

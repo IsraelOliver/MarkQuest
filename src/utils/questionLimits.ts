@@ -14,6 +14,9 @@ export function getResolvedTotalQuestions(
     return clampQuestionTotal(definition.totalQuestions)
   }
 
-  const highestBlockEnd = definition.questionBlocks.reduce((maxEnd, block) => Math.max(maxEnd, block.endQuestion), 0)
+  const highestBlockEnd = definition.questionBlocks.reduce(
+    (maxEnd, block) => (block.sectionType === 'objective' ? Math.max(maxEnd, block.endQuestion) : maxEnd),
+    0,
+  )
   return clampQuestionTotal(highestBlockEnd || definition.totalQuestions)
 }

@@ -31,3 +31,9 @@ export function getTemplateRenderMetrics(_metrics: LayoutMetrics) {
     signatureLabelFontSize: 9,
   }
 }
+
+export function getLabelTextFontSize(size: 'sm' | 'md' | 'lg') {
+  if (size === 'sm') return 10
+  if (size === 'lg') return 15
+  return 12
+}

@@ -5,7 +5,13 @@ import type {
   OMRTemplateConfig,
 } from '../types/omr'
 import { getCardTemplateZones } from './cardTemplateZones'
-import { buildNormalizedRenderModel, getMaxQuestionBlockChoices, normalizeQuestionBlocks, validateQuestionBlocks } from './questionBlocks'
+import {
+  buildNormalizedRenderModel,
+  getMaxQuestionBlockChoices,
+  isObjectiveSection,
+  normalizeQuestionBlocks,
+  validateQuestionBlocks,
+} from './questionBlocks'
 import { isValidOptionLabel, normalizeOptionLabels } from './optionLabels'
 import { clampQuestionTotal, getResolvedTotalQuestions, MAX_QUESTIONS } from './questionLimits'
 import { createTemplateLayoutConfig, getSuggestedRowsPerColumn } from './templateLayout'
@@ -44,15 +50,6 @@ function cloneState(state: CardTemplateEditorState): CardTemplateEditorState {
   return structuredClone(state)
 }
 
-function getLegacyNumberingFormat(definition: Record<string, unknown>) {
-  const numberingMode = definition.numberingMode
-  const numberingPattern = definition.numberingPattern
-
-  if (numberingMode === 'by-block' && numberingPattern === 'sequence-column') return 'alphaNumeric'
-  if (numberingMode === 'by-block' && numberingPattern === 'row-column') return 'numericAlpha'
-  return 'numeric'
-}
-
 function getSafeChoicesPerQuestion(value: number) {
   return value === 2 || value === 3 || value === 4 ? value : 5
 }
@@ -65,21 +62,22 @@ function getMinOptionGap(choicesPerQuestion: 2 | 3 | 4 | 5) {
 }
 
 function getQuestionBlockGapDetails(blocks: CardTemplateEditorState['definition']['questionBlocks']) {
+  const objectiveBlocks = blocks.filter(isObjectiveSection)
   const gapDetails: Array<{ previousBlockNumber: number | null; nextBlockNumber: number; startQuestion: number; endQuestion: number }> = []
-  if (!blocks.length) return gapDetails
+  if (!objectiveBlocks.length) return gapDetails
 
-  if (blocks[0].startQuestion > 1) {
+  if (objectiveBlocks[0].startQuestion > 1) {
     gapDetails.push({
       previousBlockNumber: null,
       nextBlockNumber: 1,
       startQuestion: 1,
-      endQuestion: blocks[0].startQuestion - 1,
+      endQuestion: objectiveBlocks[0].startQuestion - 1,
     })
   }
 
-  for (let index = 1; index < blocks.length; index += 1) {
-    const previousBlock = blocks[index - 1]
-    const currentBlock = blocks[index]
+  for (let index = 1; index < objectiveBlocks.length; index += 1) {
+    const previousBlock = objectiveBlocks[index - 1]
+    const currentBlock = objectiveBlocks[index]
     if (previousBlock.endQuestion + 1 < currentBlock.startQuestion) {
       gapDetails.push({
         previousBlockNumber: index,
@@ -94,11 +92,12 @@ function getQuestionBlockGapDetails(blocks: CardTemplateEditorState['definition'
 }
 
 function getQuestionBlockOverlapDetails(blocks: CardTemplateEditorState['definition']['questionBlocks']) {
+  const objectiveBlocks = blocks.filter(isObjectiveSection)
   const overlapDetails: Array<{ previousBlockNumber: number; nextBlockNumber: number; startQuestion: number; endQuestion: number }> = []
 
-  for (let index = 1; index < blocks.length; index += 1) {
-    const previousBlock = blocks[index - 1]
-    const currentBlock = blocks[index]
+  for (let index = 1; index < objectiveBlocks.length; index += 1) {
+    const previousBlock = objectiveBlocks[index - 1]
+    const currentBlock = objectiveBlocks[index]
     if (previousBlock.endQuestion >= currentBlock.startQuestion) {
       overlapDetails.push({
         previousBlockNumber: index,
@@ -142,6 +141,12 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
     numberingPattern?: 'row-column' | 'sequence-column'
     numberingFormat?: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
     columnLayoutMode?: 'left' | 'distributed'
+    questionStyle?: 'classic' | 'lined' | 'minimal'
+    questionBlocks?: Array<{
+      questionStyle?: 'classic' | 'lined' | 'minimal'
+      numberingFormat?: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+      sectionType?: 'objective' | 'mathematics' | 'open' | 'label' | 'spacer'
+    }>
   }
   const totalQuestions = clampQuestionTotal(getResolvedTotalQuestions(nextState.definition))
   const requestedColumns = Math.max(1, Math.round(nextState.definition.columns))
@@ -152,13 +157,18 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
   nextState.definition.totalQuestions = totalQuestions
   nextState.definition.choicesPerQuestion = choicesPerQuestion
   nextState.definition.optionLabels = normalizeOptionLabels(nextState.definition.optionLabels, choicesPerQuestion)
-  nextState.definition.numberingFormat =
-    definitionWithLegacy.numberingFormat === 'numericAlpha' ||
-    definitionWithLegacy.numberingFormat === 'alphaNumeric' ||
-    definitionWithLegacy.numberingFormat === 'numericLower' ||
-    definitionWithLegacy.numberingFormat === 'numericDash'
-      ? definitionWithLegacy.numberingFormat
-      : getLegacyNumberingFormat(definitionWithLegacy)
+  const legacyQuestionStyleSection = nextState.definition.questionBlocks.find(
+    (section): section is typeof section & { questionStyle?: 'classic' | 'lined' | 'minimal' } =>
+      'questionStyle' in (section as object),
+  )
+  nextState.definition.questionStyle =
+    definitionWithLegacy.questionStyle === 'lined' || definitionWithLegacy.questionStyle === 'minimal'
+      ? definitionWithLegacy.questionStyle
+      : legacyQuestionStyleSection?.questionStyle === 'lined' || legacyQuestionStyleSection?.questionStyle === 'minimal'
+        ? legacyQuestionStyleSection.questionStyle
+        : nextState.visualTheme.answerGridStyle === 'lined' || nextState.visualTheme.answerGridStyle === 'minimal'
+          ? nextState.visualTheme.answerGridStyle
+          : 'classic'
   nextState.definition.bubbleSize =
     nextState.definition.bubbleSize === 'medium' || nextState.definition.bubbleSize === 'small'
       ? nextState.definition.bubbleSize
@@ -178,11 +188,13 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
       : 'auto'
   nextState.definition.enableQuestionBlocks = Boolean(nextState.definition.enableQuestionBlocks)
   nextState.definition.showQuestionBlockTitles = Boolean(nextState.definition.showQuestionBlockTitles)
+  const fallbackNumberingFormat = 'numeric'
   nextState.definition.questionBlocks = normalizeQuestionBlocks(nextState.definition.questionBlocks, totalQuestions, {
     choicesPerQuestion,
     optionLabels: nextState.definition.optionLabels,
-    questionStyle: nextState.visualTheme.answerGridStyle,
+    numberingFormat: fallbackNumberingFormat,
   })
+  nextState.visualTheme.answerGridStyle = nextState.definition.questionStyle
   const effectiveChoicesPerQuestion = getMaxQuestionBlockChoices(nextState.definition)
   nextState.definition.rowsPerColumn = Math.max(getSuggestedRowsPerColumn(totalQuestions, columns), rowsPerColumn)
   nextState.omrConfig = createTemplateLayoutConfig(totalQuestions, {
@@ -307,7 +319,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   const sanitizedState = normalizeEditorState(state)
   const issues: CardTemplateValidationIssue[] = []
   const { definition, omrConfig, visualTheme } = sanitizedState
-  const renderModel = buildNormalizedRenderModel(definition, visualTheme.answerGridStyle)
+  const renderModel = buildNormalizedRenderModel(definition)
   const renderedQuestionTotal = renderModel.totalRenderedQuestions
   const capacity = definition.columns * definition.rowsPerColumn
   const effectiveChoicesPerQuestion = getMaxQuestionBlockChoices(definition)
@@ -318,7 +330,8 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   const questionBlockIssues = validateQuestionBlocks(definition.questionBlocks, definition.totalQuestions, {
     choicesPerQuestion: definition.choicesPerQuestion,
     optionLabels: definition.optionLabels,
-    questionStyle: visualTheme.answerGridStyle,
+    numberingFormat:
+      definition.questionBlocks.find(isObjectiveSection)?.numberingFormat ?? 'numeric',
   })
   const invalidOptionLabels = definition.optionLabels.filter((label) => !isValidOptionLabel(label))
   const duplicatedOptionLabels = new Set(

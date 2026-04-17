@@ -4,7 +4,7 @@ import { getFooterMessageAnchor, wrapFooterMessage } from '../utils/footerMessag
 import { getLogoBoxPlacement } from '../utils/logoLayout'
 import { buildNormalizedRenderModel, getQuestionBlockQuestionConfig } from '../utils/questionBlocks'
 import { formatQuestionLabel } from '../utils/questionNumbering'
-import { estimateTextWidth, getTemplateRenderMetrics } from '../utils/templateRenderMetrics'
+import { estimateTextWidth, getLabelTextFontSize, getTemplateRenderMetrics } from '../utils/templateRenderMetrics'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from '../utils/templateLayoutGeometry'
 import { getPaginatedTemplatePages } from '../utils/templatePageLayout'
 
@@ -57,7 +57,7 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
 
 export function CardTemplatePreview({ state, classroomName, examName }: CardTemplatePreviewProps) {
   const { definition, visualTheme } = state
-  const renderModel = buildNormalizedRenderModel(definition, visualTheme.answerGridStyle)
+  const renderModel = buildNormalizedRenderModel(definition)
   const zones = getCardTemplateZones(state)
   const palette = getThemePalette(visualTheme.visualStyle)
   const sectionStroke = visualTheme.showSectionSeparators ? palette.stroke : '#d6dbe4'
@@ -102,7 +102,7 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
         <h3>Preview do cartão</h3>
         <div className="card-editor-preview__chips">
           <span>{renderModel.totalRenderedQuestions} questões</span>
-          <span>{definition.enableQuestionBlocks ? 'alternativas por bloco' : `${definition.choicesPerQuestion} alternativas`}</span>
+          <span>{definition.enableQuestionBlocks ? 'alternativas por seção' : `${definition.choicesPerQuestion} alternativas`}</span>
           <span>{definition.columns} colunas</span>
           <span>
             {totalPages} {totalPages === 1 ? 'página' : 'páginas'}
@@ -112,7 +112,7 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
 
       <div className="card-editor-preview__frame">
         <div className="card-editor-preview__pages">
-          {pages.map(({ pageIndex, metrics, questions, blockTitles }) => {
+          {pages.map(({ pageIndex, metrics, questions, blockTitles, labels }) => {
             const renderMetrics = getTemplateRenderMetrics(metrics)
             const previewQrSize = renderMetrics.previewQrSize
             const previewQrX = zones.footer.codeBoxX + (zones.footer.codeBoxWidth - previewQrSize) / 2
@@ -221,12 +221,38 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                   )
                 })}
 
+                {labels.map((label) => {
+                  const labelX =
+                    label.align === 'center'
+                      ? label.x + label.width / 2
+                      : label.align === 'right'
+                        ? label.x + label.width
+                        : label.x
+                  const textAnchor = label.align === 'center' ? 'middle' : label.align === 'right' ? 'end' : 'start'
+                  const labelFontSize = getLabelTextFontSize(label.size)
+
+                  return (
+                    <text
+                      key={`label-${pageIndex}-${label.id}`}
+                      x={labelX}
+                      y={label.textY}
+                      textAnchor={textAnchor}
+                      className="card-editor-preview__question"
+                      fill={palette.title}
+                      style={{ fontSize: `${labelFontSize}px`, fontWeight: 700 }}
+                    >
+                      {label.text}
+                    </text>
+                  )
+                })}
+
                 {questions.map((question) => (
                   <g key={`question-${pageIndex}-${question.questionNumber}`}>
                     {(() => {
-                      const blockConfig = getQuestionBlockQuestionConfig(definition, visualTheme.answerGridStyle, question.questionNumber)
-                      const questionLabel = formatQuestionLabel(definition.numberingFormat, question, {
-                        choicesPerQuestion: blockConfig.choicesPerQuestion,
+                      const questionLabel = formatQuestionLabel(question.numberingFormat, question, {
+                        choicesPerQuestion: question.choicesPerQuestion,
+                        blockStartQuestion: question.blockStartQuestion,
+                        localQuestionIndex: question.localQuestionIndex,
                       })
                       const questionLabelWidth = estimateTextWidth(questionLabel, renderMetrics.questionFontSize)
                       return (
@@ -243,7 +269,7 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                     })()}
 
                     {(() => {
-                      const blockConfig = getQuestionBlockQuestionConfig(definition, visualTheme.answerGridStyle, question.questionNumber)
+                      const blockConfig = getQuestionBlockQuestionConfig(definition, question.questionNumber)
                       return blockConfig.optionLabels.map((option, optionIndex) => (
                         <g key={`${pageIndex}-${question.questionNumber}-${option}`}>
                           <circle

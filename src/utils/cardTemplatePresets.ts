@@ -34,7 +34,9 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
   const totalQuestions = clampQuestionTotal(input.totalQuestions ?? 45)
   const columns = input.columns ?? 2
   const choicesPerQuestion = input.choicesPerQuestion ?? 5
-  const questionStyle = input.questionBlocks?.[0]?.questionStyle ?? 'classic'
+  const legacyQuestionBlocks = input.questionBlocks as Array<{ questionStyle?: CardTemplateDefinition['questionStyle'] }> | undefined
+  const questionStyle = input.questionStyle ?? legacyQuestionBlocks?.[0]?.questionStyle ?? 'classic'
+  const numberingFormat = 'numeric'
 
   return {
     pageSize: 'A4',
@@ -43,7 +45,7 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
     optionLabels: normalizeOptionLabels(input.optionLabels, choicesPerQuestion),
     columns,
     rowsPerColumn: input.rowsPerColumn ?? getSuggestedRowsPerColumn(totalQuestions, columns),
-    numberingFormat: input.numberingFormat ?? 'numeric',
+    questionStyle,
     bubbleSize: input.bubbleSize ?? 'large',
     rowSpacing: input.rowSpacing ?? 'compact',
     columnLayoutMode: input.columnLayoutMode ?? 'left',
@@ -54,7 +56,7 @@ function createDefinition(input: Partial<CardTemplateDefinition> = {}): CardTemp
     questionBlocks: normalizeQuestionBlocks(input.questionBlocks ?? [], totalQuestions, {
       choicesPerQuestion,
       optionLabels: normalizeOptionLabels(input.optionLabels, choicesPerQuestion),
-      questionStyle,
+      numberingFormat,
     }),
     identification: {
       showStudentName: input.identification?.showStudentName ?? true,
@@ -368,8 +370,9 @@ export function applySafeCardLayout(state: CardTemplateEditorState) {
   nextState.definition.questionBlocks = normalizeQuestionBlocks(nextState.definition.questionBlocks, nextState.definition.totalQuestions, {
     choicesPerQuestion: nextState.definition.choicesPerQuestion,
     optionLabels: nextState.definition.optionLabels,
-    questionStyle: nextState.visualTheme.answerGridStyle,
+    numberingFormat: 'numeric',
   })
+  nextState.visualTheme.answerGridStyle = nextState.definition.questionStyle
   nextState.definition.columns = manualColumns
   nextState.definition.rowsPerColumn = safeRowsPerColumn
 
@@ -405,14 +408,18 @@ export function createEditorStateFromTemplate(template: Template): CardTemplateE
   definition.questionBlocks = normalizeQuestionBlocks(definition.questionBlocks, definition.totalQuestions, {
     choicesPerQuestion: definition.choicesPerQuestion,
     optionLabels: definition.optionLabels,
-    questionStyle: template.visualTheme.answerGridStyle,
+    numberingFormat: 'numeric',
   })
+  definition.questionStyle = definition.questionStyle ?? template.visualTheme.answerGridStyle
 
   return {
     name: template.name,
     presetId: template.presetId,
     definition,
-    visualTheme: structuredClone(template.visualTheme),
+    visualTheme: {
+      ...structuredClone(template.visualTheme),
+      answerGridStyle: definition.questionStyle,
+    },
     omrConfig: structuredClone(template.omrConfig),
   }
 }

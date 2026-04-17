@@ -484,7 +484,7 @@
         ],
         "columns": 4,
         "rowsPerColumn": 30,
-        "numberingFormat": "numeric",
+        "questionStyle": "classic",
         "bubbleSize": "small",
         "rowSpacing": "compact",
         "columnLayoutMode": "left",
@@ -494,6 +494,17 @@
         "showQuestionBlockTitles": false,
         "questionBlocks": [
           {
+            "id": "section-label-14",
+            "sectionType": "label",
+            "readMode": "ignored",
+            "text": "Matemática",
+            "align": "left",
+            "size": "md"
+          },
+          {
+            "id": "section-objective-1",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 1,
             "endQuestion": 9,
             "title": "Matemática",
@@ -502,9 +513,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-2",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 10,
             "endQuestion": 10,
             "title": "Língua Portuguesa",
@@ -515,9 +529,12 @@
               "C",
               "D"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-3",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 11,
             "endQuestion": 32,
             "title": "Inglês",
@@ -526,9 +543,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-4",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 33,
             "endQuestion": 33,
             "title": "História",
@@ -540,9 +560,12 @@
               "O",
               "B"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-5",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 34,
             "endQuestion": 68,
             "title": "Bloco 5",
@@ -551,9 +574,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-6",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 69,
             "endQuestion": 69,
             "title": "Bloco 6",
@@ -564,9 +590,12 @@
               "C",
               "D"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-7",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 70,
             "endQuestion": 79,
             "title": "Bloco 7",
@@ -575,9 +604,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-8",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 80,
             "endQuestion": 81,
             "title": "Bloco 8",
@@ -588,9 +620,12 @@
               "C",
               "D"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-9",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 82,
             "endQuestion": 82,
             "title": "Bloco 9",
@@ -602,9 +637,12 @@
               "O",
               "D"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-10",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 83,
             "endQuestion": 101,
             "title": "Bloco 10",
@@ -613,9 +651,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-11",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 102,
             "endQuestion": 111,
             "title": "Bloco 11",
@@ -624,9 +665,12 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-12",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 112,
             "endQuestion": 112,
             "title": "Bloco 12",
@@ -637,9 +681,12 @@
               "C",
               "D"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           },
           {
+            "id": "section-objective-13",
+            "sectionType": "objective",
+            "readMode": "answers",
             "startQuestion": 113,
             "endQuestion": 120,
             "title": "Bloco 13",
@@ -648,7 +695,7 @@
               "C",
               "E"
             ],
-            "questionStyle": "classic"
+            "numberingFormat": "numeric"
           }
         ],
         "identification": {
@@ -706,8 +753,8 @@
         "ambiguityThreshold": 0.07
       },
       "createdAt": "2026-03-23T15:47:33.982Z",
-      "updatedAt": "2026-03-31T20:03:10.714Z",
-      "version": "v1"
+      "updatedAt": "2026-04-16T18:34:26.034Z",
+      "version": "v2"
     }
   ],
   "answerKeys": [

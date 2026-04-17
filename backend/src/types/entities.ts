@@ -78,6 +78,33 @@ export type CardPresetId =
   | 'answer-sheet-4'
   | 'answer-sheet-5'
 
+export type CardTemplateSection =
+  | {
+      id: string
+      sectionType: 'objective'
+      readMode: 'answers'
+      startQuestion: number
+      endQuestion: number
+      title: string
+      choicesPerQuestion: 2 | 3 | 4 | 5
+      optionLabels: string[]
+      numberingFormat: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+    }
+  | {
+      id: string
+      sectionType: 'label'
+      readMode: 'ignored'
+      text: string
+      align: 'left' | 'center' | 'right'
+      size: 'sm' | 'md' | 'lg'
+    }
+  | {
+      id: string
+      sectionType: 'spacer'
+      readMode: 'ignored'
+      size: 'sm' | 'md' | 'lg'
+    }
+
 export type CardTemplateDefinition = {
   pageSize: 'A4'
   totalQuestions: number
@@ -85,7 +112,7 @@ export type CardTemplateDefinition = {
   optionLabels: string[]
   columns: number
   rowsPerColumn: number
-  numberingFormat: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
+  questionStyle: 'classic' | 'lined' | 'minimal'
   bubbleSize: 'large' | 'medium' | 'small'
   rowSpacing: 'compact' | 'uniform'
   columnLayoutMode: 'left' | 'distributed'
@@ -93,14 +120,7 @@ export type CardTemplateDefinition = {
   optionAlignment: 'auto' | 'left' | 'right' | 'center' | 'justify'
   enableQuestionBlocks: boolean
   showQuestionBlockTitles: boolean
-  questionBlocks: Array<{
-    startQuestion: number
-    endQuestion: number
-    title: string
-    choicesPerQuestion: 2 | 3 | 4 | 5
-    optionLabels: string[]
-    questionStyle: 'classic' | 'lined' | 'minimal'
-  }>
+  questionBlocks: CardTemplateSection[]
   identification: {
     showStudentName: boolean
     showStudentCode: boolean

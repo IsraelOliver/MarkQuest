@@ -97,14 +97,42 @@ export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
 export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
 export type CardQuestionStyle = 'classic' | 'lined' | 'minimal'
 export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
-export type CardQuestionBlock = {
+export type CardTemplateSectionType = 'objective' | 'mathematics' | 'open' | 'label' | 'spacer'
+export type CardTemplateSectionReadMode = 'answers' | 'ignored'
+export type CardLabelAlign = 'left' | 'center' | 'right'
+export type CardLabelSize = 'sm' | 'md' | 'lg'
+export type CardSpacerSize = 'sm' | 'md' | 'lg'
+
+export type CardObjectiveSection = {
+  id: string
+  sectionType: 'objective'
+  readMode: 'answers'
   startQuestion: number
   endQuestion: number
   title: string
   choicesPerQuestion: 2 | 3 | 4 | 5
   optionLabels: string[]
-  questionStyle: CardQuestionStyle
+  numberingFormat: CardNumberingFormat
 }
+
+export type CardLabelSection = {
+  id: string
+  sectionType: 'label'
+  readMode: 'ignored'
+  text: string
+  align: CardLabelAlign
+  size: CardLabelSize
+}
+
+export type CardSpacerSection = {
+  id: string
+  sectionType: 'spacer'
+  readMode: 'ignored'
+  size: CardSpacerSize
+}
+
+export type CardTemplateSection = CardObjectiveSection | CardLabelSection | CardSpacerSection
+export type CardQuestionBlock = CardTemplateSection
 
 export type CardTemplateDefinition = {
   pageSize: CardPageSize
@@ -113,7 +141,7 @@ export type CardTemplateDefinition = {
   optionLabels: string[]
   columns: number
   rowsPerColumn: number
-  numberingFormat: CardNumberingFormat
+  questionStyle: CardQuestionStyle
   bubbleSize: CardBubbleSize
   rowSpacing: CardRowSpacing
   columnLayoutMode: CardColumnLayoutMode
@@ -121,7 +149,7 @@ export type CardTemplateDefinition = {
   optionAlignment: CardOptionAlignment
   enableQuestionBlocks: boolean
   showQuestionBlockTitles: boolean
-  questionBlocks: CardQuestionBlock[]
+  questionBlocks: CardTemplateSection[]
   identification: {
     showStudentName: boolean
     showStudentCode: boolean

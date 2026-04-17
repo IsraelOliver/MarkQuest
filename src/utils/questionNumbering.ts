@@ -6,33 +6,53 @@ type QuestionLabelInput = {
   rowIndex: number
 }
 
+type QuestionLabelContext = {
+  choicesPerQuestion?: CardTemplateDefinition['choicesPerQuestion']
+  blockStartQuestion?: number
+  localQuestionIndex?: number
+}
+
+function getAlphabeticSuffix(index: number, lowercase = false) {
+  let value = Math.max(0, Math.floor(index))
+  let suffix = ''
+
+  do {
+    suffix = String.fromCharCode(65 + (value % 26)) + suffix
+    value = Math.floor(value / 26) - 1
+  } while (value >= 0)
+
+  return lowercase ? suffix.toLowerCase() : suffix
+}
+
 export function formatQuestionLabel(
   numberingFormat: CardNumberingFormat,
   question: QuestionLabelInput,
-  definition?: Pick<CardTemplateDefinition, 'choicesPerQuestion'>,
+  context?: QuestionLabelContext,
 ) {
   const choicesPerQuestion =
-    definition?.choicesPerQuestion === 2 ||
-    definition?.choicesPerQuestion === 3 ||
-    definition?.choicesPerQuestion === 4
-      ? definition.choicesPerQuestion
+    context?.choicesPerQuestion === 2 ||
+    context?.choicesPerQuestion === 3 ||
+    context?.choicesPerQuestion === 4
+      ? context.choicesPerQuestion
       : 5
-  const sequenceIndex = Math.max(0, question.questionNumber - 1)
-  const sequenceNumber = Math.floor(sequenceIndex / choicesPerQuestion) + 1
-  const optionIndex = sequenceIndex % choicesPerQuestion
-  const upperSuffix = String.fromCharCode(65 + optionIndex)
-  const lowerSuffix = upperSuffix.toLowerCase()
+  const blockStartQuestion = Math.max(1, Math.round(context?.blockStartQuestion ?? question.questionNumber))
+  const localQuestionIndex = Math.max(0, Math.floor(context?.localQuestionIndex ?? question.questionNumber - blockStartQuestion))
+  const legacySequenceIndex = Math.max(0, question.questionNumber - 1)
+  const legacySequenceNumber = Math.floor(legacySequenceIndex / choicesPerQuestion) + 1
+  const blockBaseNumber = blockStartQuestion
+  const upperSuffix = getAlphabeticSuffix(localQuestionIndex)
+  const lowerSuffix = getAlphabeticSuffix(localQuestionIndex, true)
 
   switch (numberingFormat) {
     case 'numericAlpha':
-      return `${sequenceNumber}${upperSuffix}`
+      return `${blockBaseNumber}${upperSuffix}`
     case 'alphaNumeric':
       return `${question.questionNumber}A`
     case 'numericLower':
-      return `${sequenceNumber}${lowerSuffix}`
+      return `${blockBaseNumber}${lowerSuffix}`
     case 'numericDash':
-      return `${sequenceNumber}-${lowerSuffix}`
+      return `${blockBaseNumber}-${lowerSuffix}`
     default:
-      return String(question.questionNumber)
+      return String(question.questionNumber || legacySequenceNumber)
   }
 }

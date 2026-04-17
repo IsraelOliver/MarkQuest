@@ -7,7 +7,7 @@ import { getLogoBoxPlacement } from './logoLayout'
 import { processLogoDataUrl } from './logoImageProcessing'
 import { getQuestionBlockQuestionConfig } from './questionBlocks'
 import { formatQuestionLabel } from './questionNumbering'
-import { getTemplateRenderMetrics } from './templateRenderMetrics'
+import { getLabelTextFontSize, getTemplateRenderMetrics } from './templateRenderMetrics'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from './templateLayoutGeometry'
 import { getPaginatedTemplatePages } from './templatePageLayout'
 
@@ -127,7 +127,7 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
 
   for (const student of students) {
     for (const pageLayout of pages) {
-      const { pageIndex, totalPages, metrics, questions, blockTitles } = pageLayout
+      const { pageIndex, totalPages, metrics, questions, blockTitles, labels } = pageLayout
       const renderMetrics = getTemplateRenderMetrics(metrics)
       const cardId = createCardIdentifier(payload, student, pageIndex)
       const qrImage = await buildQrImage(pdf, cardId)
@@ -220,10 +220,31 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
         })
       })
 
+      labels.forEach((label) => {
+        const labelFontSize = getLabelTextFontSize(label.size)
+        const lineWidth = fontBold.widthOfTextAtSize(label.text, labelFontSize)
+        const labelX =
+          label.align === 'center'
+            ? label.x + (label.width - lineWidth) / 2
+            : label.align === 'right'
+              ? label.x + label.width - lineWidth
+              : label.x
+
+        page.drawText(label.text, {
+          x: labelX,
+          y: toPdfY(label.textY),
+          size: labelFontSize,
+          font: fontBold,
+          color: rgb(0.059, 0.09, 0.165),
+        })
+      })
+
       questions.forEach((question) => {
-        const blockConfig = getQuestionBlockQuestionConfig(definition, payload.state.visualTheme.answerGridStyle, question.questionNumber)
-        const questionLabel = formatQuestionLabel(definition.numberingFormat, question, {
-          choicesPerQuestion: blockConfig.choicesPerQuestion,
+        const blockConfig = getQuestionBlockQuestionConfig(definition, question.questionNumber)
+        const questionLabel = formatQuestionLabel(question.numberingFormat, question, {
+          choicesPerQuestion: question.choicesPerQuestion,
+          blockStartQuestion: question.blockStartQuestion,
+          localQuestionIndex: question.localQuestionIndex,
         })
         const questionLabelWidth = fontRegular.widthOfTextAtSize(questionLabel, renderMetrics.questionFontSize)
         page.drawText(questionLabel, {
