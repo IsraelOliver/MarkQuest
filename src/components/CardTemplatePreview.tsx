@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react'
+import QRCode from 'qrcode'
 import type { CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from '../utils/cardTemplateZones'
 import { getFooterMessageAnchor, wrapFooterMessage } from '../utils/footerMessageLayout'
@@ -13,6 +15,7 @@ type CardTemplatePreviewProps = {
   unitName: string
   classroomName: string
   examName: string
+  examId?: string
 }
 
 const PREVIEW_MARGIN = 3
@@ -55,7 +58,7 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
   }
 }
 
-export function CardTemplatePreview({ state, classroomName, examName }: CardTemplatePreviewProps) {
+export function CardTemplatePreview({ state, classroomName, examName, examId }: CardTemplatePreviewProps) {
   const { definition, visualTheme } = state
   const renderModel = buildNormalizedRenderModel(definition)
   const zones = getCardTemplateZones(state)
@@ -64,6 +67,8 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
   const topInstruction =
     definition.header.instructions || 'Marque apenas uma alternativa e preencha todo o campo da bolinha'
   const previewStudentCode = 'ST-001'
+  const previewStudentId = 'preview-student'
+  const [essayQrDataUrl, setEssayQrDataUrl] = useState('')
   const pages = getPaginatedTemplatePages(state)
   const totalPages = pages.length
   const previewViewBox = [
@@ -96,6 +101,45 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
   const pageTextY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 22 : zones.footer.bottom - 8
   const footerMessageStartY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 42 : zones.footer.top + 30
 
+  useEffect(() => {
+    let cancelled = false
+    const qrPayload = JSON.stringify({
+      testId: examId || 'preview-test',
+      studentId: previewStudentId,
+      code: previewStudentCode,
+    })
+
+    QRCode.toDataURL(qrPayload, {
+      errorCorrectionLevel: 'L',
+      margin: 4,
+      width: 320,
+      color: { dark: '#000000', light: '#ffffff' },
+    }).then((dataUrl) => {
+      if (!cancelled) setEssayQrDataUrl(dataUrl)
+    }).catch(() => {
+      if (!cancelled) setEssayQrDataUrl('')
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [examId])
+
+  const getEssayHeaderValue = (field: 'studentName' | 'class' | 'testName' | 'code' | 'teacher' | 'shift' | 'date') => {
+    switch (field) {
+      case 'studentName':
+        return 'Aluno'
+      case 'class':
+        return classroomName || 'Turma'
+      case 'testName':
+        return examName || 'Prova'
+      case 'code':
+        return previewStudentCode
+      default:
+        return ''
+    }
+  }
+
   return (
     <div className="card-editor-preview">
       <div className="card-editor-preview__header">
@@ -112,10 +156,158 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
 
       <div className="card-editor-preview__frame">
         <div className="card-editor-preview__pages">
-          {pages.map(({ pageIndex, metrics, questions, blockTitles, labels }) => {
+          {pages.map(({ pageKind, pageIndex, metrics, questions, blockTitles, labels, openAnswers, mathBlocks, essays, signatures }) => {
             const renderMetrics = getTemplateRenderMetrics(metrics)
             const previewQrSize = renderMetrics.previewQrSize
             const previewQrX = zones.footer.codeBoxX + (zones.footer.codeBoxWidth - previewQrSize) / 2
+
+            if (pageKind === 'essay') {
+              return (
+                <div className="card-editor-preview__page-sheet" key={`page-${pageIndex}`}>
+                  <svg
+                    className="card-editor-preview__svg"
+                    viewBox={previewViewBox}
+                    role="img"
+                    aria-label={`Preview da folha de redação ${state.name} - página ${pageIndex + 1}`}
+                  >
+                    <rect
+                      x={TEMPLATE_PAGE_X}
+                      y={TEMPLATE_PAGE_Y}
+                      width={TEMPLATE_PAGE_WIDTH}
+                      height={TEMPLATE_PAGE_HEIGHT}
+                      rx={visualTheme.softBorders ? 18 : 8}
+                      fill="#ffffff"
+                      stroke="#d4dae3"
+                      strokeWidth="1"
+                    />
+                    {essays.map((essay) => (
+                      <g key={`essay-${pageIndex}-${essay.id}`}>
+                        {essay.logoBox && definition.header.institutionLogoDataUrl ? (
+                          <image
+                            href={definition.header.institutionLogoDataUrl}
+                            x={essay.logoBox.x}
+                            y={essay.logoBox.y}
+                            width={essay.logoBox.width}
+                            height={essay.logoBox.height}
+                            preserveAspectRatio="xMidYMid meet"
+                          />
+                        ) : null}
+                        {essay.qrBox && essayQrDataUrl ? (
+                          <image
+                            href={essayQrDataUrl}
+                            x={essay.qrBox.x}
+                            y={essay.qrBox.y}
+                            width={essay.qrBox.size}
+                            height={essay.qrBox.size}
+                            preserveAspectRatio="xMidYMid meet"
+                          />
+                        ) : null}
+                        <text
+                          x={essay.x + essay.width / 2}
+                          y={essay.titleY}
+                          textAnchor="middle"
+                          className="card-editor-preview__title"
+                          fill={palette.title}
+                          style={{ fontSize: '18px', fontWeight: 800 }}
+                        >
+                          {essay.title}
+                        </text>
+                        {essay.headerFields.map((field, fieldIndex) => {
+                          const value = getEssayHeaderValue(field.key)
+                          return (
+                          <g key={`essay-header-${fieldIndex}`}>
+                            <text x={field.x} y={field.y} className="card-editor-preview__field-label" fill={palette.title}>
+                              {field.label}
+                            </text>
+                            {value ? (
+                              <text
+                                x={field.lineX}
+                                y={field.y}
+                                className="card-editor-preview__body"
+                                fill="#475569"
+                                style={{ fontSize: '8px' }}
+                              >
+                                {value}
+                              </text>
+                            ) : (
+                              <line
+                                x1={field.lineX}
+                                y1={field.y}
+                                x2={field.lineX + field.lineWidth}
+                                y2={field.y}
+                                stroke="#64748b"
+                                strokeWidth="0.9"
+                              />
+                            )}
+                          </g>
+                          )
+                        })}
+                        {essay.showEssayTitleField ? (
+                          <g>
+                            <text x={essay.x} y={essay.essayTitleLabelY} className="card-editor-preview__field-label" fill={palette.title}>
+                              Título da redação:
+                            </text>
+                            <line
+                              x1={essay.x + 84}
+                              y1={essay.essayTitleLineY}
+                              x2={essay.x + essay.width}
+                              y2={essay.essayTitleLineY}
+                              stroke="#64748b"
+                              strokeWidth="0.9"
+                            />
+                          </g>
+                        ) : null}
+                        {essay.style === 'box' ? (
+                          <rect
+                            x={essay.answerBox.x}
+                            y={essay.answerBox.y}
+                            width={essay.answerBox.width}
+                            height={essay.answerBox.height}
+                            rx="7"
+                            fill="#ffffff"
+                            stroke="#64748b"
+                            strokeWidth="1.1"
+                          />
+                        ) : null}
+                        {essay.lineLayouts.map((line) => (
+                          <g key={`essay-line-${line.number}`}>
+                            {line.highlight ? (
+                              <rect
+                                x={essay.x}
+                                y={line.lineY - 12}
+                                width="24"
+                                height="14"
+                                rx="3"
+                                fill="#e2e8f0"
+                              />
+                            ) : null}
+                            <text
+                              x={line.numberX}
+                              y={line.numberY}
+                              textAnchor="end"
+                              className="card-editor-preview__tiny"
+                              fill="#475569"
+                              style={{ fontSize: '8px', fontWeight: 700 }}
+                            >
+                              {line.number}
+                            </text>
+                            <line
+                              x1={line.lineX}
+                              y1={line.lineY}
+                              x2={line.lineX + line.lineWidth}
+                              y2={line.lineY}
+                              stroke="#94a3b8"
+                              strokeWidth={essay.style === 'box' ? '0.45' : '0.8'}
+                              opacity={essay.style === 'box' ? '0.45' : '1'}
+                            />
+                          </g>
+                        ))}
+                      </g>
+                    ))}
+                  </svg>
+                </div>
+              )
+            }
 
             return (
             <div className="card-editor-preview__page-sheet" key={`page-${pageIndex}`}>
@@ -246,6 +438,163 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                   )
                 })}
 
+                {openAnswers.map((openAnswer) => (
+                  <g key={`open-answer-${pageIndex}-${openAnswer.id}`}>
+                    <text
+                      x={openAnswer.x}
+                      y={openAnswer.labelY}
+                      textAnchor="start"
+                      className="card-editor-preview__question"
+                      fill={palette.title}
+                      style={{ fontSize: `${openAnswer.fontSize}px`, fontWeight: 700 }}
+                    >
+                      {openAnswer.linkedQuestionNumber ? `${openAnswer.label} — Questão ${openAnswer.linkedQuestionNumber}` : openAnswer.label}
+                    </text>
+                    {openAnswer.lineStyle === 'box' ? (
+                      <rect
+                        x={openAnswer.x}
+                        y={openAnswer.answerTopY}
+                        width={openAnswer.width}
+                        height={openAnswer.answerHeight}
+                        rx="6"
+                        fill="#ffffff"
+                        stroke="#94a3b8"
+                        strokeWidth="1.1"
+                      />
+                    ) : (
+                      openAnswer.lineYs.map((lineY, lineIndex) => (
+                        <line
+                          key={`open-answer-line-${pageIndex}-${openAnswer.id}-${lineIndex}`}
+                          x1={openAnswer.x}
+                          y1={lineY}
+                          x2={openAnswer.x + openAnswer.width}
+                          y2={lineY}
+                          stroke="#94a3b8"
+                          strokeWidth="0.9"
+                        />
+                      ))
+                    )}
+                  </g>
+                ))}
+
+                {mathBlocks.map((mathBlock) => (
+                  <g key={`math-block-${pageIndex}-${mathBlock.id}`}>
+                    {mathBlock.linkedQuestionNumber ? (
+                      <text
+                        x={mathBlock.x}
+                        y={mathBlock.titleY}
+                        textAnchor="start"
+                        className="card-editor-preview__question"
+                        fill={palette.title}
+                        style={{ fontSize: '9px', fontWeight: 700 }}
+                      >
+                        {`Questão matemática — Questão ${mathBlock.linkedQuestionNumber}`}
+                      </text>
+                    ) : null}
+                    {mathBlock.showColumnHeaders ? (
+                      <g>
+                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                          <text
+                            key={`math-header-${pageIndex}-${mathBlock.id}-${columnIndex}`}
+                            x={columnX}
+                            y={mathBlock.headerY}
+                            textAnchor="middle"
+                            className="card-editor-preview__tiny"
+                            fill={palette.title}
+                            style={{ fontSize: '8px', fontWeight: 800 }}
+                          >
+                            {mathBlock.columnHeaders[columnIndex]}
+                          </text>
+                        ))}
+                      </g>
+                    ) : null}
+                    {mathBlock.showTopInputRow ? (
+                      <g>
+                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                          <rect
+                            key={`math-input-${pageIndex}-${mathBlock.id}-${columnIndex}`}
+                            x={Math.round(columnX - mathBlock.inputBoxWidth / 2)}
+                            y={Math.round(mathBlock.topInputY - mathBlock.inputBoxHeight / 2)}
+                            width={mathBlock.inputBoxWidth}
+                            height={mathBlock.inputBoxHeight}
+                            rx="4"
+                            fill="#ffffff"
+                            stroke="#d5dee9"
+                            strokeWidth="0.9"
+                            shapeRendering="crispEdges"
+                          />
+                        ))}
+                      </g>
+                    ) : null}
+                    {mathBlock.showColumnSeparators ? (
+                      <g>
+                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                          <text
+                            key={`math-separator-${pageIndex}-${mathBlock.id}-${columnIndex}`}
+                            x={columnX}
+                            y={mathBlock.separatorY}
+                            textAnchor="middle"
+                            className="card-editor-preview__tiny"
+                            fill="#475569"
+                            style={{ fontSize: '8px', fontWeight: 600 }}
+                          >
+                            {mathBlock.columnSeparators[columnIndex]}
+                          </text>
+                        ))}
+                      </g>
+                    ) : null}
+                    {mathBlock.rows.map((row) => (
+                      <g key={`math-row-${pageIndex}-${mathBlock.id}-${row.digit}`}>
+                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                          <g key={`math-bubble-${pageIndex}-${mathBlock.id}-${row.digit}-${columnIndex}`}>
+                            <circle
+                              cx={columnX}
+                              cy={row.y}
+                              r={mathBlock.bubbleRadius}
+                              fill="#ffffff"
+                              stroke={palette.title}
+                              strokeWidth={renderMetrics.bubbleStrokeWidthPreview}
+                            />
+                            <text
+                              x={columnX}
+                              y={row.y + renderMetrics.bubbleLabelOffsetY}
+                              textAnchor="middle"
+                              className="card-editor-preview__tiny"
+                              fill="#475569"
+                              style={{ fontSize: `${renderMetrics.bubbleLabelFontSize}px`, fontWeight: 700 }}
+                            >
+                              {row.digit}
+                            </text>
+                          </g>
+                        ))}
+                      </g>
+                    ))}
+                  </g>
+                ))}
+
+                {signatures.map((signature) => (
+                  <g key={`signature-${pageIndex}-${signature.id}`}>
+                    <line
+                      x1={signature.x}
+                      y1={signature.lineY}
+                      x2={signature.x + signature.width}
+                      y2={signature.lineY}
+                      stroke="#64748b"
+                      strokeWidth="1.2"
+                    />
+                    <text
+                      x={signature.labelX}
+                      y={signature.labelY}
+                      textAnchor={signature.labelAnchor}
+                      className="card-editor-preview__tiny"
+                      fill="#475569"
+                      style={{ fontSize: `${signature.fontSize}px`, fontWeight: 700 }}
+                    >
+                      {signature.label}
+                    </text>
+                  </g>
+                ))}
+
                 {questions.map((question) => (
                   <g key={`question-${pageIndex}-${question.questionNumber}`}>
                     {(() => {
@@ -269,6 +618,22 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                     })()}
 
                     {(() => {
+                      const logicalQuestion = renderModel.logicalQuestionMap.get(question.questionNumber)
+                      if (logicalQuestion && logicalQuestion.type !== 'objective' && logicalQuestion.markerLabel) {
+                        return (
+                          <text
+                            x={question.optionStartX + question.optionGroupWidth / 2}
+                            y={question.optionY + renderMetrics.bubbleLabelOffsetY}
+                            textAnchor="middle"
+                            className="card-editor-preview__question"
+                            fill={palette.title}
+                            style={{ fontSize: `${Math.max(renderMetrics.questionFontSize - 0.2, 8.5)}px`, fontWeight: 700 }}
+                          >
+                            {logicalQuestion.markerLabel}
+                          </text>
+                        )
+                      }
+
                       const blockConfig = getQuestionBlockQuestionConfig(definition, question.questionNumber)
                       return blockConfig.optionLabels.map((option, optionIndex) => (
                         <g key={`${pageIndex}-${question.questionNumber}-${option}`}>

@@ -97,11 +97,17 @@ export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
 export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
 export type CardQuestionStyle = 'classic' | 'lined' | 'minimal'
 export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
-export type CardTemplateSectionType = 'objective' | 'mathematics' | 'open' | 'label' | 'spacer'
-export type CardTemplateSectionReadMode = 'answers' | 'ignored'
+export type CardTemplateSectionType = 'objective' | 'mathematics' | 'math' | 'open' | 'label' | 'spacer' | 'pageBreak' | 'signature' | 'essay'
+export type CardTemplateSectionReadMode = 'answers' | 'ignored' | 'manual'
 export type CardLabelAlign = 'left' | 'center' | 'right'
 export type CardLabelSize = 'sm' | 'md' | 'lg'
 export type CardSpacerSize = 'sm' | 'md' | 'lg'
+export type CardSignatureAlign = 'left' | 'center' | 'right'
+export type CardSignatureLineWidth = 'sm' | 'md' | 'lg'
+export type CardOpenLineStyle = 'line' | 'box'
+export type CardEssayStyle = 'lines' | 'box'
+export type CardEssayLogoPosition = 'top-left' | 'top-center' | 'top-right'
+export type CardEssayQrPosition = 'bottom-right' | 'top-right'
 
 export type CardObjectiveSection = {
   id: string
@@ -131,7 +137,80 @@ export type CardSpacerSection = {
   size: CardSpacerSize
 }
 
-export type CardTemplateSection = CardObjectiveSection | CardLabelSection | CardSpacerSection
+export type CardPageBreakSection = {
+  id: string
+  sectionType: 'pageBreak'
+  readMode: 'ignored'
+}
+
+export type CardSignatureSection = {
+  id: string
+  sectionType: 'signature'
+  readMode: 'ignored'
+  label: string
+  align: CardSignatureAlign
+  lineWidth: CardSignatureLineWidth
+}
+
+export type CardOpenSection = {
+  id: string
+  sectionType: 'open'
+  readMode: 'manual'
+  label: string
+  lines: number
+  lineStyle: CardOpenLineStyle
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+}
+
+export type CardMathSection = {
+  id: string
+  sectionType: 'math'
+  readMode: 'manual'
+  columns: number
+  showTopInputRow: boolean
+  showColumnHeaders: boolean
+  columnHeaders: string[]
+  showColumnSeparators: boolean
+  columnSeparators: string[]
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+}
+
+export type CardEssaySection = {
+  id: string
+  sectionType: 'essay'
+  readMode: 'manual'
+  title: string
+  style: CardEssayStyle
+  lines: number
+  highlightStep: number
+  showHeader: boolean
+  showEssayTitleField: boolean
+  showStudentName: boolean
+  showClass: boolean
+  showTestName: boolean
+  showCode: boolean
+  showTeacher: boolean
+  showShift: boolean
+  showDate: boolean
+  showLogo: boolean
+  logoPosition: CardEssayLogoPosition
+  showQRCode: boolean
+  qrPosition: CardEssayQrPosition
+}
+
+export type CardTemplateSection =
+  | CardObjectiveSection
+  | CardOpenSection
+  | CardMathSection
+  | CardEssaySection
+  | CardLabelSection
+  | CardSpacerSection
+  | CardPageBreakSection
+  | CardSignatureSection
 export type CardQuestionBlock = CardTemplateSection
 
 export type CardTemplateDefinition = {

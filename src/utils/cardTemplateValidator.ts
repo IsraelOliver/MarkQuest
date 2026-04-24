@@ -50,6 +50,10 @@ function cloneState(state: CardTemplateEditorState): CardTemplateEditorState {
   return structuredClone(state)
 }
 
+function preserveEditableText(value: string | undefined, fallback: string) {
+  return typeof value === 'string' ? value : fallback
+}
+
 function getSafeChoicesPerQuestion(value: number) {
   return value === 2 || value === 3 || value === 4 ? value : 5
 }
@@ -145,7 +149,34 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
     questionBlocks?: Array<{
       questionStyle?: 'classic' | 'lined' | 'minimal'
       numberingFormat?: 'numeric' | 'numericAlpha' | 'alphaNumeric' | 'numericLower' | 'numericDash'
-      sectionType?: 'objective' | 'mathematics' | 'open' | 'label' | 'spacer'
+      sectionType?: 'objective' | 'mathematics' | 'math' | 'open' | 'label' | 'spacer' | 'pageBreak' | 'signature' | 'essay'
+      lines?: number
+      lineStyle?: 'line' | 'box'
+      columns?: number
+      showTopInputRow?: boolean
+      showColumnHeaders?: boolean
+      columnHeaders?: string[]
+      showColumnSeparators?: boolean
+      columnSeparators?: string[]
+      linkedToMainQuestion?: boolean
+      linkedQuestionNumber?: number | null
+      markerLabel?: string
+      style?: 'lines' | 'box'
+      highlightStep?: number
+      showHeaderFields?: boolean
+      showHeader?: boolean
+      showEssayTitleField?: boolean
+      showStudentName?: boolean
+      showClass?: boolean
+      showTestName?: boolean
+      showCode?: boolean
+      showTeacher?: boolean
+      showShift?: boolean
+      showDate?: boolean
+      showLogo?: boolean
+      logoPosition?: 'top-left' | 'top-center' | 'top-right'
+      showQRCode?: boolean
+      qrPosition?: 'bottom-right' | 'top-right'
     }>
   }
   const totalQuestions = clampQuestionTotal(getResolvedTotalQuestions(nextState.definition))
@@ -205,12 +236,15 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
     rowsPerColumn: nextState.definition.rowsPerColumn,
   })
 
-  nextState.definition.header.examName = nextState.definition.header.examName.trim() || nextState.name.trim() || 'Cartão-resposta'
-  nextState.definition.header.institutionName = nextState.definition.header.institutionName.trim() || 'Instituição'
+  nextState.definition.header.examName = preserveEditableText(
+    nextState.definition.header.examName,
+    preserveEditableText(nextState.name, 'Cartão-resposta'),
+  )
+  nextState.definition.header.institutionName = preserveEditableText(nextState.definition.header.institutionName, 'Instituição')
   nextState.definition.header.instructions =
-    nextState.definition.header.instructions?.trim() || 'Marque apenas uma alternativa e preencha todo o campo da bolinha'
+    preserveEditableText(nextState.definition.header.instructions, 'Marque apenas uma alternativa e preencha todo o campo da bolinha')
   nextState.definition.header.showInstructions = Boolean(nextState.definition.header.showInstructions)
-  nextState.definition.header.footerMessage = nextState.definition.header.footerMessage?.trim() ?? ''
+  nextState.definition.header.footerMessage = preserveEditableText(nextState.definition.header.footerMessage, '')
   nextState.definition.header.footerMessageAlignment =
     nextState.definition.header.footerMessageAlignment === 'left' || nextState.definition.header.footerMessageAlignment === 'right'
       ? nextState.definition.header.footerMessageAlignment
@@ -229,7 +263,7 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
       : 'center'
   nextState.definition.header.logoScale = Math.min(1.2, Math.max(0.6, nextState.definition.header.logoScale ?? 1))
   nextState.definition.header.logoMonochrome = Boolean(nextState.definition.header.logoMonochrome)
-  nextState.name = nextState.name.trim() || nextState.definition.header.examName
+  nextState.name = preserveEditableText(nextState.name, nextState.definition.header.examName)
 
   const safeZones = getCardTemplateZones(nextState)
   let currentMetrics = safeZones.metrics
@@ -600,8 +634,9 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
   }
 
   questionBlockIssues.forEach((issue) => {
+    const isLinkWarning = issue.code.startsWith('QUESTION_LINK_MISSING_') || issue.code.startsWith('QUESTION_LINK_CONFLICT_')
     issues.push({
-      severity: issue.code === 'QUESTION_BLOCKS_WITH_GAPS' ? 'warning' : 'error',
+      severity: issue.code === 'QUESTION_BLOCKS_WITH_GAPS' || isLinkWarning ? 'warning' : 'error',
       code: issue.code,
       field: 'definition.questionBlocks',
       message: issue.message,

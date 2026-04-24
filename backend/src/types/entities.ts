@@ -92,6 +92,53 @@ export type CardTemplateSection =
     }
   | {
       id: string
+      sectionType: 'open'
+      readMode: 'manual'
+      label: string
+      lines: number
+      lineStyle: 'line' | 'box'
+      linkedToMainQuestion: boolean
+      linkedQuestionNumber: number | null
+      markerLabel: string
+    }
+  | {
+      id: string
+      sectionType: 'math'
+      readMode: 'manual'
+      columns: number
+      showTopInputRow: boolean
+      showColumnHeaders: boolean
+      columnHeaders: string[]
+      showColumnSeparators: boolean
+      columnSeparators: string[]
+      linkedToMainQuestion: boolean
+      linkedQuestionNumber: number | null
+      markerLabel: string
+    }
+  | {
+      id: string
+      sectionType: 'essay'
+      readMode: 'manual'
+      title: string
+      style: 'lines' | 'box'
+      lines: number
+      highlightStep: number
+      showHeader: boolean
+      showEssayTitleField: boolean
+      showStudentName: boolean
+      showClass: boolean
+      showTestName: boolean
+      showCode: boolean
+      showTeacher: boolean
+      showShift: boolean
+      showDate: boolean
+      showLogo: boolean
+      logoPosition: 'top-left' | 'top-center' | 'top-right'
+      showQRCode: boolean
+      qrPosition: 'bottom-right' | 'top-right'
+    }
+  | {
+      id: string
       sectionType: 'label'
       readMode: 'ignored'
       text: string
@@ -103,6 +150,19 @@ export type CardTemplateSection =
       sectionType: 'spacer'
       readMode: 'ignored'
       size: 'sm' | 'md' | 'lg'
+    }
+  | {
+      id: string
+      sectionType: 'pageBreak'
+      readMode: 'ignored'
+    }
+  | {
+      id: string
+      sectionType: 'signature'
+      readMode: 'ignored'
+      label: string
+      align: 'left' | 'center' | 'right'
+      lineWidth: 'sm' | 'md' | 'lg'
     }
 
 export type CardTemplateDefinition = {

@@ -1,8 +1,13 @@
 import type {
+  CardEssaySection,
   CardLabelSection,
+  CardMathSection,
   CardNumberingFormat,
   CardObjectiveSection,
+  CardOpenSection,
+  CardPageBreakSection,
   CardQuestionStyle,
+  CardSignatureSection,
   CardSpacerSection,
   CardTemplateDefinition,
   CardTemplateSection,
@@ -57,6 +62,59 @@ export type NormalizedLabelSection = {
   size: 'sm' | 'md' | 'lg'
 }
 
+export type NormalizedOpenSection = {
+  id: string
+  order: number
+  sectionType: 'open'
+  readMode: 'manual'
+  label: string
+  lines: number
+  lineStyle: 'line' | 'box'
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+}
+
+export type NormalizedMathSection = {
+  id: string
+  order: number
+  sectionType: 'math'
+  readMode: 'manual'
+  columns: number
+  showTopInputRow: boolean
+  showColumnHeaders: boolean
+  columnHeaders: string[]
+  showColumnSeparators: boolean
+  columnSeparators: string[]
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+}
+
+export type NormalizedEssaySection = {
+  id: string
+  order: number
+  sectionType: 'essay'
+  readMode: 'manual'
+  title: string
+  style: 'lines' | 'box'
+  lines: number
+  highlightStep: number
+  showHeader: boolean
+  showEssayTitleField: boolean
+  showStudentName: boolean
+  showClass: boolean
+  showTestName: boolean
+  showCode: boolean
+  showTeacher: boolean
+  showShift: boolean
+  showDate: boolean
+  showLogo: boolean
+  logoPosition: 'top-left' | 'top-center' | 'top-right'
+  showQRCode: boolean
+  qrPosition: 'bottom-right' | 'top-right'
+}
+
 export type NormalizedSpacerSection = {
   id: string
   order: number
@@ -65,7 +123,32 @@ export type NormalizedSpacerSection = {
   size: 'sm' | 'md' | 'lg'
 }
 
-export type NormalizedTemplateSection = NormalizedObjectiveSection | NormalizedLabelSection | NormalizedSpacerSection
+export type NormalizedPageBreakSection = {
+  id: string
+  order: number
+  sectionType: 'pageBreak'
+  readMode: 'ignored'
+}
+
+export type NormalizedSignatureSection = {
+  id: string
+  order: number
+  sectionType: 'signature'
+  readMode: 'ignored'
+  label: string
+  align: 'left' | 'center' | 'right'
+  lineWidth: 'sm' | 'md' | 'lg'
+}
+
+export type NormalizedTemplateSection =
+  | NormalizedObjectiveSection
+  | NormalizedOpenSection
+  | NormalizedMathSection
+  | NormalizedEssaySection
+  | NormalizedLabelSection
+  | NormalizedSpacerSection
+  | NormalizedPageBreakSection
+  | NormalizedSignatureSection
 
 export type ResolvedQuestion = {
   questionNumber: number
@@ -84,6 +167,10 @@ export type NormalizedRenderModel = {
   sections: NormalizedTemplateSection[]
   blocks: NormalizedObjectiveSection[]
   questions: ResolvedQuestion[]
+  logicalQuestions: LogicalQuestion[]
+  logicalQuestionMap: Map<number, LogicalQuestion>
+  manualQuestionLinks: ManualQuestionLink[]
+  manualQuestionLinksByQuestion: Map<number, ManualQuestionLink[]>
   totalRenderedQuestions: number
   lastRenderedQuestion: number
   hasGaps: boolean
@@ -93,8 +180,59 @@ export type NormalizedRenderModel = {
   overlappingQuestions: number[]
 }
 
+export type ManualQuestionLink = {
+  sectionId: string
+  sectionType: 'open' | 'math'
+  linkedQuestionNumber: number
+  markerLabel: string
+}
+
+export type LogicalQuestionType = 'objective' | 'math' | 'open'
+
+export type LogicalQuestionAnswerModel =
+  | {
+      type: 'objective'
+      answer: null
+    }
+  | {
+      type: 'math'
+      answer: null
+      columns: number
+    }
+  | {
+      type: 'open'
+      answer: null
+    }
+
+export type LogicalQuestion = {
+  number: number
+  type: LogicalQuestionType
+  sourceSectionId: string
+  linkedSectionId?: string
+  markerLabel?: string
+  answerModel: LogicalQuestionAnswerModel
+}
+
+export type LogicalQuestionExport = {
+  number: number
+  type: LogicalQuestionType
+  sectionId: string
+}
+
 export function isObjectiveSection(section: CardTemplateSection): section is CardObjectiveSection {
   return section.sectionType === 'objective'
+}
+
+export function isOpenSection(section: CardTemplateSection): section is CardOpenSection {
+  return section.sectionType === 'open'
+}
+
+export function isMathSection(section: CardTemplateSection): section is CardMathSection {
+  return section.sectionType === 'math'
+}
+
+export function isEssaySection(section: CardTemplateSection): section is CardEssaySection {
+  return section.sectionType === 'essay'
 }
 
 export function isLabelSection(section: CardTemplateSection): section is CardLabelSection {
@@ -105,7 +243,15 @@ export function isSpacerSection(section: CardTemplateSection): section is CardSp
   return section.sectionType === 'spacer'
 }
 
-function createSectionId(index: number, prefix: 'objective' | 'label' | 'spacer') {
+export function isPageBreakSection(section: CardTemplateSection): section is CardPageBreakSection {
+  return section.sectionType === 'pageBreak'
+}
+
+export function isSignatureSection(section: CardTemplateSection): section is CardSignatureSection {
+  return section.sectionType === 'signature'
+}
+
+function createSectionId(index: number, prefix: 'objective' | 'open' | 'math' | 'essay' | 'label' | 'spacer' | 'page-break' | 'signature') {
   return `section-${prefix}-${index + 1}`
 }
 
@@ -125,6 +271,74 @@ function normalizeLabelSize(value: string | undefined): CardLabelSection['size']
 
 function normalizeSpacerSize(value: string | undefined): CardSpacerSection['size'] {
   return value === 'sm' || value === 'lg' ? value : 'md'
+}
+
+function normalizeSignatureAlign(value: string | undefined): CardSignatureSection['align'] {
+  return value === 'center' || value === 'right' ? value : 'left'
+}
+
+function normalizeSignatureLineWidth(value: string | undefined): CardSignatureSection['lineWidth'] {
+  return value === 'sm' || value === 'lg' ? value : 'md'
+}
+
+function normalizeOpenLineStyle(value: string | undefined): CardOpenSection['lineStyle'] {
+  return value === 'box' ? 'box' : 'line'
+}
+
+function normalizeOpenLines(value: number | undefined) {
+  return Math.min(20, Math.max(1, Math.round(value ?? 5)))
+}
+
+function normalizeLinkedQuestionNumber(value: number | null | undefined) {
+  if (value === null || value === undefined) return null
+  const rounded = Math.round(Number(value))
+  return Number.isFinite(rounded) && rounded > 0 ? rounded : null
+}
+
+function normalizeMarkerLabel(value: string | undefined, fallback: string) {
+  return (value ?? fallback).slice(0, 12)
+}
+
+function normalizeMathColumns(value: number | undefined) {
+  return Math.min(10, Math.max(1, Math.round(value ?? 3)))
+}
+
+function normalizeMathColumnHeader(value: string | undefined) {
+  return (value ?? '').replace(/[\r\n\t]/g, ' ').slice(0, 3)
+}
+
+function normalizeMathColumnHeaders(value: string[] | undefined, columns: number) {
+  const source = Array.isArray(value) ? value : []
+  return Array.from({ length: columns }, (_, index) => normalizeMathColumnHeader(source[index]))
+}
+
+function normalizeMathColumnSeparator(value: string | undefined) {
+  return value === '.' || value === ',' || value === '-' ? value : ''
+}
+
+function normalizeMathColumnSeparators(value: string[] | undefined, columns: number) {
+  const source = Array.isArray(value) ? value : []
+  return Array.from({ length: columns }, (_, index) => normalizeMathColumnSeparator(source[index]))
+}
+
+function normalizeEssayLines(value: number | undefined) {
+  return Math.min(60, Math.max(10, Math.round(value ?? 30)))
+}
+
+function normalizeEssayHighlightStep(value: number | undefined) {
+  return Math.min(20, Math.max(0, Math.round(value ?? 5)))
+}
+
+function normalizeEssayStyle(value: string | undefined): CardEssaySection['style'] {
+  return value === 'box' ? 'box' : 'lines'
+}
+
+function normalizeEssayLogoPosition(value: string | undefined): CardEssaySection['logoPosition'] {
+  return value === 'top-center' || value === 'top-right' ? value : 'top-left'
+}
+
+function normalizeEssayQrPosition(value: string | undefined): CardEssaySection['qrPosition'] {
+  return value === 'top-right' ? 'top-right' : 'bottom-right'
 }
 
 function normalizeObjectiveSection(
@@ -168,12 +382,89 @@ function normalizeLabelSection(section: Partial<CardLabelSection>, index: number
   }
 }
 
+function normalizeOpenSection(section: Partial<CardOpenSection>, index: number): CardOpenSection {
+  return {
+    id: section.id?.trim() || createSectionId(index, 'open'),
+    sectionType: 'open',
+    readMode: 'manual',
+    label: section.label ?? 'Resposta',
+    lines: normalizeOpenLines(section.lines),
+    lineStyle: normalizeOpenLineStyle(section.lineStyle),
+    linkedToMainQuestion: section.linkedToMainQuestion ?? false,
+    linkedQuestionNumber: normalizeLinkedQuestionNumber(section.linkedQuestionNumber),
+    markerLabel: normalizeMarkerLabel(section.markerLabel, 'TIPO D'),
+  }
+}
+
+function normalizeMathSection(section: Partial<CardMathSection>, index: number): CardMathSection {
+  const columns = normalizeMathColumns(section.columns)
+
+  return {
+    id: section.id?.trim() || createSectionId(index, 'math'),
+    sectionType: 'math',
+    readMode: 'manual',
+    columns,
+    showTopInputRow: section.showTopInputRow ?? true,
+    showColumnHeaders: section.showColumnHeaders ?? false,
+    columnHeaders: normalizeMathColumnHeaders(section.columnHeaders, columns),
+    showColumnSeparators: section.showColumnSeparators ?? false,
+    columnSeparators: normalizeMathColumnSeparators(section.columnSeparators, columns),
+    linkedToMainQuestion: section.linkedToMainQuestion ?? false,
+    linkedQuestionNumber: normalizeLinkedQuestionNumber(section.linkedQuestionNumber),
+    markerLabel: normalizeMarkerLabel(section.markerLabel, 'TIPO B'),
+  }
+}
+
+function normalizeEssaySection(section: Partial<CardEssaySection> & { showHeaderFields?: boolean }, index: number): CardEssaySection {
+  return {
+    id: section.id?.trim() || createSectionId(index, 'essay'),
+    sectionType: 'essay',
+    readMode: 'manual',
+    title: section.title ?? 'FOLHA DE REDAÇÃO',
+    style: normalizeEssayStyle(section.style),
+    lines: normalizeEssayLines(section.lines),
+    highlightStep: normalizeEssayHighlightStep(section.highlightStep),
+    showHeader: section.showHeader ?? section.showHeaderFields ?? true,
+    showEssayTitleField: section.showEssayTitleField ?? true,
+    showStudentName: section.showStudentName ?? true,
+    showClass: section.showClass ?? true,
+    showTestName: section.showTestName ?? true,
+    showCode: section.showCode ?? true,
+    showTeacher: section.showTeacher ?? false,
+    showShift: section.showShift ?? false,
+    showDate: section.showDate ?? false,
+    showLogo: section.showLogo ?? true,
+    logoPosition: normalizeEssayLogoPosition(section.logoPosition),
+    showQRCode: section.showQRCode ?? true,
+    qrPosition: normalizeEssayQrPosition(section.qrPosition),
+  }
+}
+
 function normalizeSpacerSection(section: Partial<CardSpacerSection>, index: number): CardSpacerSection {
   return {
     id: section.id?.trim() || createSectionId(index, 'spacer'),
     sectionType: 'spacer',
     readMode: 'ignored',
     size: normalizeSpacerSize(section.size),
+  }
+}
+
+function normalizePageBreakSection(section: Partial<CardPageBreakSection>, index: number): CardPageBreakSection {
+  return {
+    id: section.id?.trim() || createSectionId(index, 'page-break'),
+    sectionType: 'pageBreak',
+    readMode: 'ignored',
+  }
+}
+
+function normalizeSignatureSection(section: Partial<CardSignatureSection>, index: number): CardSignatureSection {
+  return {
+    id: section.id?.trim() || createSectionId(index, 'signature'),
+    sectionType: 'signature',
+    readMode: 'ignored',
+    label: section.label ?? 'Assinatura do aluno',
+    align: normalizeSignatureAlign(section.align),
+    lineWidth: normalizeSignatureLineWidth(section.lineWidth),
   }
 }
 
@@ -212,11 +503,91 @@ export function createLabelSection(index: number, overrides: Partial<CardLabelSe
   )
 }
 
+export function createOpenSection(index: number, overrides: Partial<CardOpenSection> = {}): CardOpenSection {
+  return normalizeOpenSection(
+    {
+      id: overrides.id ?? createSectionId(index, 'open'),
+      label: overrides.label ?? 'Resposta',
+      lines: overrides.lines ?? 5,
+      lineStyle: overrides.lineStyle ?? 'line',
+      linkedToMainQuestion: overrides.linkedToMainQuestion ?? false,
+      linkedQuestionNumber: overrides.linkedQuestionNumber ?? null,
+      markerLabel: overrides.markerLabel ?? 'TIPO D',
+    },
+    index,
+  )
+}
+
+export function createMathSection(index: number, overrides: Partial<CardMathSection> = {}): CardMathSection {
+  return normalizeMathSection(
+    {
+      id: overrides.id ?? createSectionId(index, 'math'),
+      columns: overrides.columns ?? 3,
+      showTopInputRow: overrides.showTopInputRow ?? true,
+      showColumnHeaders: overrides.showColumnHeaders ?? false,
+      columnHeaders: overrides.columnHeaders ?? [],
+      showColumnSeparators: overrides.showColumnSeparators ?? false,
+      columnSeparators: overrides.columnSeparators ?? [],
+      linkedToMainQuestion: overrides.linkedToMainQuestion ?? false,
+      linkedQuestionNumber: overrides.linkedQuestionNumber ?? null,
+      markerLabel: overrides.markerLabel ?? 'TIPO B',
+    },
+    index,
+  )
+}
+
+export function createEssaySection(index: number, overrides: Partial<CardEssaySection> = {}): CardEssaySection {
+  return normalizeEssaySection(
+    {
+      id: overrides.id ?? createSectionId(index, 'essay'),
+      title: overrides.title ?? 'FOLHA DE REDAÇÃO',
+      style: overrides.style ?? 'lines',
+      lines: overrides.lines ?? 30,
+      highlightStep: overrides.highlightStep ?? 5,
+      showHeader: overrides.showHeader ?? true,
+      showEssayTitleField: overrides.showEssayTitleField ?? true,
+      showStudentName: overrides.showStudentName ?? true,
+      showClass: overrides.showClass ?? true,
+      showTestName: overrides.showTestName ?? true,
+      showCode: overrides.showCode ?? true,
+      showTeacher: overrides.showTeacher ?? false,
+      showShift: overrides.showShift ?? false,
+      showDate: overrides.showDate ?? false,
+      showLogo: overrides.showLogo ?? true,
+      logoPosition: overrides.logoPosition ?? 'top-left',
+      showQRCode: overrides.showQRCode ?? true,
+      qrPosition: overrides.qrPosition ?? 'bottom-right',
+    },
+    index,
+  )
+}
+
 export function createSpacerSection(index: number, overrides: Partial<CardSpacerSection> = {}): CardSpacerSection {
   return normalizeSpacerSection(
     {
       id: overrides.id ?? createSectionId(index, 'spacer'),
       size: overrides.size ?? 'md',
+    },
+    index,
+  )
+}
+
+export function createPageBreakSection(index: number, overrides: Partial<CardPageBreakSection> = {}): CardPageBreakSection {
+  return normalizePageBreakSection(
+    {
+      id: overrides.id ?? createSectionId(index, 'page-break'),
+    },
+    index,
+  )
+}
+
+export function createSignatureSection(index: number, overrides: Partial<CardSignatureSection> = {}): CardSignatureSection {
+  return normalizeSignatureSection(
+    {
+      id: overrides.id ?? createSectionId(index, 'signature'),
+      label: overrides.label ?? 'Assinatura do aluno',
+      align: overrides.align ?? 'left',
+      lineWidth: overrides.lineWidth ?? 'md',
     },
     index,
   )
@@ -234,8 +605,28 @@ export function normalizeQuestionBlocks(
       return normalizeLabelSection(section, index)
     }
 
+    if (isOpenSection(section)) {
+      return normalizeOpenSection(section, index)
+    }
+
+    if (isMathSection(section)) {
+      return normalizeMathSection(section, index)
+    }
+
+    if (isEssaySection(section)) {
+      return normalizeEssaySection(section, index)
+    }
+
     if (isSpacerSection(section)) {
       return normalizeSpacerSection(section, index)
+    }
+
+    if (isPageBreakSection(section)) {
+      return normalizePageBreakSection(section, index)
+    }
+
+    if (isSignatureSection(section)) {
+      return normalizeSignatureSection(section, index)
     }
 
     return normalizeObjectiveSection(section, index, safeTotalQuestions, fallbackConfig)
@@ -338,7 +729,165 @@ export function validateQuestionBlocks(
     }
   }
 
+  const coveredObjectiveQuestions = new Set<number>()
+  sortedBlocks.forEach(({ section: block }) => {
+    for (let question = block.startQuestion; question <= Math.min(block.endQuestion, totalQuestions); question += 1) {
+      coveredObjectiveQuestions.add(question)
+    }
+  })
+
+  const manualLinks = blocks.flatMap((section) => {
+    if (!isOpenSection(section) && !isMathSection(section)) return []
+    if (!section.linkedToMainQuestion || section.linkedQuestionNumber === null) return []
+    return [{
+      sectionId: section.id,
+      sectionType: section.sectionType,
+      linkedQuestionNumber: section.linkedQuestionNumber,
+      markerLabel: section.markerLabel,
+    } satisfies ManualQuestionLink]
+  })
+
+  const linkCounts = new Map<number, number>()
+  manualLinks.forEach((link) => {
+    linkCounts.set(link.linkedQuestionNumber, (linkCounts.get(link.linkedQuestionNumber) ?? 0) + 1)
+  })
+
+  manualLinks.forEach((link, index) => {
+    if (!coveredObjectiveQuestions.has(link.linkedQuestionNumber)) {
+      issues.push({
+        code: `QUESTION_LINK_MISSING_${index}`,
+        message: `A questão informada não existe nas seções objetivas atuais: ${link.linkedQuestionNumber}.`,
+      })
+    }
+
+    if ((linkCounts.get(link.linkedQuestionNumber) ?? 0) > 1) {
+      issues.push({
+        code: `QUESTION_LINK_CONFLICT_${index}`,
+        message: `Já existe outra seção vinculada à questão ${link.linkedQuestionNumber}.`,
+      })
+    }
+  })
+
   return issues
+}
+
+export function getManualQuestionLinks(
+  definition: Pick<CardTemplateDefinition, 'questionBlocks'>,
+) {
+  const links = definition.questionBlocks.flatMap((section) => {
+    if (!isOpenSection(section) && !isMathSection(section)) return []
+    if (!section.linkedToMainQuestion || section.linkedQuestionNumber === null) return []
+    return [{
+      sectionId: section.id,
+      sectionType: section.sectionType,
+      linkedQuestionNumber: section.linkedQuestionNumber,
+      markerLabel: section.markerLabel,
+    } satisfies ManualQuestionLink]
+  })
+
+  const byQuestion = new Map<number, ManualQuestionLink[]>()
+  links.forEach((link) => {
+    byQuestion.set(link.linkedQuestionNumber, [...(byQuestion.get(link.linkedQuestionNumber) ?? []), link])
+  })
+
+  return {
+    links,
+    byQuestion,
+  }
+}
+
+function getLogicalQuestionTypePriority(type: LogicalQuestionType) {
+  if (type === 'math') return 3
+  if (type === 'open') return 2
+  return 1
+}
+
+function buildLogicalQuestionAnswerModel(
+  type: LogicalQuestionType,
+  section: NormalizedObjectiveSection | NormalizedOpenSection | NormalizedMathSection,
+): LogicalQuestionAnswerModel {
+  if (type === 'math' && section.sectionType === 'math') {
+    return {
+      type: 'math',
+      answer: null,
+      columns: section.columns,
+    }
+  }
+
+  if (type === 'open' && section.sectionType === 'open') {
+    return {
+      type: 'open',
+      answer: null,
+    }
+  }
+
+  return {
+    type: 'objective',
+    answer: null,
+  }
+}
+
+function buildLogicalQuestions(
+  questions: ResolvedQuestion[],
+  sections: NormalizedTemplateSection[],
+  manualQuestionLinks: ManualQuestionLink[],
+) {
+  const logicalQuestionMap = new Map<number, LogicalQuestion>()
+  const sectionById = new Map(sections.map((section) => [section.id, section] as const))
+
+  questions.forEach((question) => {
+    const sourceSection = sectionById.get(question.blockId)
+    if (!sourceSection || sourceSection.sectionType !== 'objective') return
+
+    logicalQuestionMap.set(question.questionNumber, {
+      number: question.questionNumber,
+      type: 'objective',
+      sourceSectionId: question.blockId,
+      answerModel: buildLogicalQuestionAnswerModel('objective', sourceSection),
+    })
+  })
+
+  manualQuestionLinks.forEach((link) => {
+    const currentLogicalQuestion = logicalQuestionMap.get(link.linkedQuestionNumber)
+    if (!currentLogicalQuestion) return
+
+    const linkedSection = sectionById.get(link.sectionId)
+    if (!linkedSection || (linkedSection.sectionType !== 'open' && linkedSection.sectionType !== 'math')) return
+
+    const nextType = link.sectionType
+    if (getLogicalQuestionTypePriority(nextType) < getLogicalQuestionTypePriority(currentLogicalQuestion.type)) return
+
+    logicalQuestionMap.set(link.linkedQuestionNumber, {
+      number: currentLogicalQuestion.number,
+      type: nextType,
+      sourceSectionId: currentLogicalQuestion.sourceSectionId,
+      linkedSectionId: link.sectionId,
+      markerLabel: link.markerLabel,
+      answerModel: buildLogicalQuestionAnswerModel(nextType, linkedSection),
+    })
+  })
+
+  const logicalQuestions = [...logicalQuestionMap.values()].sort((left, right) => left.number - right.number)
+
+  return {
+    logicalQuestions,
+    logicalQuestionMap,
+  }
+}
+
+export function getLogicalQuestionExport(
+  definition: Pick<CardTemplateDefinition, 'enableQuestionBlocks' | 'questionBlocks' | 'totalQuestions' | 'choicesPerQuestion' | 'optionLabels' | 'questionStyle'>,
+  maxQuestions = MAX_QUESTIONS,
+) {
+  const renderModel = buildNormalizedRenderModel(definition, maxQuestions)
+
+  return {
+    questions: renderModel.logicalQuestions.map((question) => ({
+      number: question.number,
+      type: question.type,
+      sectionId: question.linkedSectionId ?? question.sourceSectionId,
+    } satisfies LogicalQuestionExport)),
+  }
 }
 
 function getBlockSpan(block: CardObjectiveSection) {
@@ -367,6 +916,7 @@ export function buildNormalizedRenderModel(
 ): NormalizedRenderModel {
   const safeMaxQuestions = clampQuestionTotal(maxQuestions)
   const safeTotalQuestions = clampQuestionTotal(definition.totalQuestions)
+  const { links: manualQuestionLinks, byQuestion: manualQuestionLinksByQuestion } = getManualQuestionLinks(definition)
 
   if (!definition.enableQuestionBlocks) {
     const alternativesCount = definition.choicesPerQuestion
@@ -386,23 +936,29 @@ export function buildNormalizedRenderModel(
       questionStyle: definition.questionStyle,
       questionNumbers,
     }
+    const questions = questionNumbers.map((questionNumber) => ({
+      questionNumber,
+      blockId: block.id,
+      blockOrder: block.order,
+      blockTitle: block.title,
+      blockStartQuestion: block.startQuestion,
+      localQuestionIndex: questionNumber - block.startQuestion,
+      alternativesCount,
+      alternativeLabels,
+      numberingFormat: 'numeric' as const,
+      questionStyle: definition.questionStyle,
+    }))
+    const { logicalQuestions, logicalQuestionMap } = buildLogicalQuestions(questions, [block], manualQuestionLinks)
 
     return {
       sections: [block],
       blocks: [block],
-      questions: questionNumbers.map((questionNumber) => ({
-        questionNumber,
-        blockId: block.id,
-        blockOrder: block.order,
-        blockTitle: block.title,
-        blockStartQuestion: block.startQuestion,
-        localQuestionIndex: questionNumber - block.startQuestion,
-        alternativesCount,
-        alternativeLabels,
-        numberingFormat: 'numeric',
-        questionStyle: definition.questionStyle,
-      })),
-      totalRenderedQuestions: questionNumbers.length,
+      questions,
+      logicalQuestions,
+      logicalQuestionMap,
+      manualQuestionLinks,
+      manualQuestionLinksByQuestion,
+      totalRenderedQuestions: questions.length,
       lastRenderedQuestion: questionNumbers[questionNumbers.length - 1] ?? 0,
       hasGaps: false,
       hasOverlap: false,
@@ -433,6 +989,68 @@ export function buildNormalizedRenderModel(
       return
     }
 
+    if (isOpenSection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'open',
+        readMode: 'manual',
+        label: section.label,
+        lines: section.lines,
+        lineStyle: section.lineStyle,
+        linkedToMainQuestion: section.linkedToMainQuestion,
+        linkedQuestionNumber: section.linkedQuestionNumber,
+        markerLabel: section.markerLabel,
+      })
+      return
+    }
+
+    if (isMathSection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'math',
+        readMode: 'manual',
+        columns: section.columns,
+        showTopInputRow: section.showTopInputRow,
+        showColumnHeaders: section.showColumnHeaders,
+        columnHeaders: section.columnHeaders,
+        showColumnSeparators: section.showColumnSeparators,
+        columnSeparators: section.columnSeparators,
+        linkedToMainQuestion: section.linkedToMainQuestion,
+        linkedQuestionNumber: section.linkedQuestionNumber,
+        markerLabel: section.markerLabel,
+      })
+      return
+    }
+
+    if (isEssaySection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'essay',
+        readMode: 'manual',
+        title: section.title,
+        style: section.style,
+        lines: section.lines,
+        highlightStep: section.highlightStep,
+        showHeader: section.showHeader,
+        showEssayTitleField: section.showEssayTitleField,
+        showStudentName: section.showStudentName,
+        showClass: section.showClass,
+        showTestName: section.showTestName,
+        showCode: section.showCode,
+        showTeacher: section.showTeacher,
+        showShift: section.showShift,
+        showDate: section.showDate,
+        showLogo: section.showLogo,
+        logoPosition: section.logoPosition,
+        showQRCode: section.showQRCode,
+        qrPosition: section.qrPosition,
+      })
+      return
+    }
+
     if (isSpacerSection(section)) {
       normalizedSections.push({
         id: section.id,
@@ -440,6 +1058,29 @@ export function buildNormalizedRenderModel(
         sectionType: 'spacer',
         readMode: 'ignored',
         size: section.size,
+      })
+      return
+    }
+
+    if (isPageBreakSection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'pageBreak',
+        readMode: 'ignored',
+      })
+      return
+    }
+
+    if (isSignatureSection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'signature',
+        readMode: 'ignored',
+        label: section.label,
+        align: section.align,
+        lineWidth: section.lineWidth,
       })
       return
     }
@@ -506,11 +1147,20 @@ export function buildNormalizedRenderModel(
   const renderedQuestionNumbers = sortedRenderedQuestions.map((question) => question.questionNumber)
   const lastRenderedQuestion = renderedQuestionNumbers[renderedQuestionNumbers.length - 1] ?? 0
   const gapRanges = buildGapRanges(renderedQuestionNumbers)
+  const { logicalQuestions, logicalQuestionMap } = buildLogicalQuestions(
+    sortedRenderedQuestions,
+    normalizedSections,
+    manualQuestionLinks,
+  )
 
   return {
     sections: normalizedSections,
     blocks: objectiveBlocks,
     questions: sortedRenderedQuestions,
+    logicalQuestions,
+    logicalQuestionMap,
+    manualQuestionLinks,
+    manualQuestionLinksByQuestion,
     totalRenderedQuestions: sortedRenderedQuestions.length,
     lastRenderedQuestion,
     hasGaps: gapRanges.length > 0,
@@ -800,9 +1450,34 @@ export function appendLabelSection(blocks: CardTemplateSection[] | undefined): C
   return [...currentSections, createLabelSection(currentSections.length)]
 }
 
+export function appendOpenSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createOpenSection(currentSections.length)]
+}
+
+export function appendMathSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createMathSection(currentSections.length)]
+}
+
+export function appendEssaySection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createEssaySection(currentSections.length)]
+}
+
 export function appendSpacerSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
   const currentSections = [...(blocks ?? [])]
   return [...currentSections, createSpacerSection(currentSections.length)]
+}
+
+export function appendPageBreakSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createPageBreakSection(currentSections.length)]
+}
+
+export function appendSignatureSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createSignatureSection(currentSections.length)]
 }
 
 export function duplicateQuestionBlockAtIndex(
@@ -819,8 +1494,33 @@ export function duplicateQuestionBlockAtIndex(
     return currentSections
   }
 
+  if (isOpenSection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createOpenSection(index + 1, sourceSection))
+    return currentSections
+  }
+
+  if (isMathSection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createMathSection(index + 1, sourceSection))
+    return currentSections
+  }
+
+  if (isEssaySection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createEssaySection(index + 1, sourceSection))
+    return currentSections
+  }
+
   if (isSpacerSection(sourceSection)) {
     currentSections.splice(index + 1, 0, createSpacerSection(index + 1, sourceSection))
+    return currentSections
+  }
+
+  if (isPageBreakSection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createPageBreakSection(index + 1, sourceSection))
+    return currentSections
+  }
+
+  if (isSignatureSection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createSignatureSection(index + 1, sourceSection))
     return currentSections
   }
 

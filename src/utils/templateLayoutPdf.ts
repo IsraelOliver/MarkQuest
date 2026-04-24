@@ -5,7 +5,7 @@ import { getCardTemplateZones } from './cardTemplateZones'
 import { wrapFooterMessage } from './footerMessageLayout'
 import { getLogoBoxPlacement } from './logoLayout'
 import { processLogoDataUrl } from './logoImageProcessing'
-import { getQuestionBlockQuestionConfig } from './questionBlocks'
+import { buildNormalizedRenderModel, getQuestionBlockQuestionConfig } from './questionBlocks'
 import { formatQuestionLabel } from './questionNumbering'
 import { getLabelTextFontSize, getTemplateRenderMetrics } from './templateRenderMetrics'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from './templateLayoutGeometry'
@@ -111,6 +111,7 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
   const fontRegular = await pdf.embedFont(StandardFonts.Helvetica)
   const fontBold = await pdf.embedFont(StandardFonts.HelveticaBold)
   const { definition } = payload.state
+  const renderModel = buildNormalizedRenderModel(definition)
   const zones = getCardTemplateZones(payload.state)
   const pages = getPaginatedTemplatePages(payload.state)
 
@@ -127,7 +128,7 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
 
   for (const student of students) {
     for (const pageLayout of pages) {
-      const { pageIndex, totalPages, metrics, questions, blockTitles, labels } = pageLayout
+      const { pageKind, pageIndex, totalPages, metrics, questions, blockTitles, labels, openAnswers, mathBlocks, essays, signatures } = pageLayout
       const renderMetrics = getTemplateRenderMetrics(metrics)
       const cardId = createCardIdentifier(payload, student, pageIndex)
       const qrImage = await buildQrImage(pdf, cardId)
@@ -150,6 +151,138 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
         borderColor: rgb(0.831, 0.855, 0.89),
         borderWidth: 1,
       })
+
+      if (pageKind === 'essay') {
+        for (const essay of essays) {
+          if (essay.logoBox && logoImage) {
+            const scale = Math.min(essay.logoBox.width / logoImage.width, essay.logoBox.height / logoImage.height)
+            const drawWidth = logoImage.width * scale
+            const drawHeight = logoImage.height * scale
+            page.drawImage(logoImage, {
+              x: essay.logoBox.x + (essay.logoBox.width - drawWidth) / 2,
+              y: toPdfRectY(essay.logoBox.y + (essay.logoBox.height - drawHeight) / 2, drawHeight),
+              width: drawWidth,
+              height: drawHeight,
+            })
+          }
+
+          if (essay.qrBox) {
+            const essayQrImage = await buildQrImage(pdf, JSON.stringify({
+              testId: payload.examId,
+              studentId: student.id,
+              code: student.studentCode,
+            }))
+            page.drawImage(essayQrImage, {
+              x: essay.qrBox.x,
+              y: toPdfRectY(essay.qrBox.y, essay.qrBox.size),
+              width: essay.qrBox.size,
+              height: essay.qrBox.size,
+            })
+          }
+
+          const titleSize = 18
+          const titleWidth = fontBold.widthOfTextAtSize(essay.title, titleSize)
+          page.drawText(essay.title, {
+            x: essay.x + essay.width / 2 - titleWidth / 2,
+            y: toPdfY(essay.titleY),
+            size: titleSize,
+            font: fontBold,
+            color: rgb(0.059, 0.09, 0.165),
+          })
+
+          essay.headerFields.forEach((field) => {
+            const value =
+              field.key === 'studentName'
+                ? getStudentDisplayName(student)
+                : field.key === 'class'
+                  ? student.classroomName || payload.classroomName
+                  : field.key === 'testName'
+                    ? payload.examName
+                    : field.key === 'code'
+                      ? student.studentCode
+                      : ''
+            page.drawText(field.label, {
+              x: field.x,
+              y: toPdfY(field.y),
+              size: 8,
+              font: fontBold,
+              color: rgb(0.059, 0.09, 0.165),
+            })
+            if (value) {
+              page.drawText(value, {
+                x: field.lineX,
+                y: toPdfY(field.y),
+                size: 8,
+                font: fontRegular,
+                color: rgb(0.278, 0.349, 0.412),
+              })
+            } else {
+              page.drawLine({
+                start: { x: field.lineX, y: toPdfY(field.y) },
+                end: { x: field.lineX + field.lineWidth, y: toPdfY(field.y) },
+                thickness: 0.8,
+                color: rgb(0.392, 0.455, 0.545),
+              })
+            }
+          })
+
+          if (essay.showEssayTitleField) {
+            page.drawText('Título da redação:', {
+              x: essay.x,
+              y: toPdfY(essay.essayTitleLabelY),
+              size: 8,
+              font: fontBold,
+              color: rgb(0.059, 0.09, 0.165),
+            })
+            page.drawLine({
+              start: { x: essay.x + 84, y: toPdfY(essay.essayTitleLineY) },
+              end: { x: essay.x + essay.width, y: toPdfY(essay.essayTitleLineY) },
+              thickness: 0.8,
+              color: rgb(0.392, 0.455, 0.545),
+            })
+          }
+
+          if (essay.style === 'box') {
+            page.drawRectangle({
+              x: essay.answerBox.x,
+              y: toPdfRectY(essay.answerBox.y, essay.answerBox.height),
+              width: essay.answerBox.width,
+              height: essay.answerBox.height,
+              borderColor: rgb(0.392, 0.455, 0.545),
+              borderWidth: 1,
+            })
+          }
+
+          essay.lineLayouts.forEach((line) => {
+            if (line.highlight) {
+              page.drawRectangle({
+                x: essay.x,
+                y: toPdfRectY(line.lineY - 12, 14),
+                width: 24,
+                height: 14,
+                color: rgb(0.886, 0.91, 0.941),
+              })
+            }
+            const numberLabel = String(line.number)
+            const numberWidth = fontBold.widthOfTextAtSize(numberLabel, 8)
+            page.drawText(numberLabel, {
+              x: line.numberX - numberWidth,
+              y: toPdfY(line.numberY),
+              size: 8,
+              font: fontBold,
+              color: rgb(0.278, 0.349, 0.412),
+            })
+            page.drawLine({
+              start: { x: line.lineX, y: toPdfY(line.lineY) },
+              end: { x: line.lineX + line.lineWidth, y: toPdfY(line.lineY) },
+              thickness: essay.style === 'box' ? 0.35 : 0.7,
+              color: rgb(0.58, 0.65, 0.72),
+              opacity: essay.style === 'box' ? 0.45 : 1,
+            })
+          })
+        }
+        continue
+      }
 
       const identificationRows = [
         ['Aluno', getStudentDisplayName(student)],
@@ -239,8 +372,141 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
         })
       })
 
+      openAnswers.forEach((openAnswer) => {
+        page.drawText(openAnswer.linkedQuestionNumber ? `${openAnswer.label} — Questão ${openAnswer.linkedQuestionNumber}` : openAnswer.label, {
+          x: openAnswer.x,
+          y: toPdfY(openAnswer.labelY),
+          size: openAnswer.fontSize,
+          font: fontBold,
+          color: rgb(0.059, 0.09, 0.165),
+        })
+
+        if (openAnswer.lineStyle === 'box') {
+          page.drawRectangle({
+            x: openAnswer.x,
+            y: toPdfRectY(openAnswer.answerTopY, openAnswer.answerHeight),
+            width: openAnswer.width,
+            height: openAnswer.answerHeight,
+            borderColor: rgb(0.58, 0.65, 0.72),
+            borderWidth: 1,
+          })
+          return
+        }
+
+        openAnswer.lineYs.forEach((lineY) => {
+          page.drawLine({
+            start: { x: openAnswer.x, y: toPdfY(lineY) },
+            end: { x: openAnswer.x + openAnswer.width, y: toPdfY(lineY) },
+            thickness: 0.8,
+            color: rgb(0.58, 0.65, 0.72),
+          })
+        })
+      })
+
+      mathBlocks.forEach((mathBlock) => {
+        if (mathBlock.linkedQuestionNumber) {
+          page.drawText(`Questão matemática — Questão ${mathBlock.linkedQuestionNumber}`, {
+            x: mathBlock.x,
+            y: toPdfY(mathBlock.titleY),
+            size: 9,
+            font: fontBold,
+            color: rgb(0.059, 0.09, 0.165),
+          })
+        }
+
+        if (mathBlock.showColumnHeaders) {
+          mathBlock.columnXs.forEach((columnX, columnIndex) => {
+            const headerText = mathBlock.columnHeaders[columnIndex] ?? ''
+            const headerWidth = fontBold.widthOfTextAtSize(headerText, 8)
+            page.drawText(headerText, {
+              x: columnX - headerWidth / 2,
+              y: toPdfY(mathBlock.headerY),
+              size: 8,
+              font: fontBold,
+              color: rgb(0.059, 0.09, 0.165),
+            })
+          })
+        }
+
+        if (mathBlock.showTopInputRow) {
+          mathBlock.columnXs.forEach((columnX) => {
+            const boxX = Math.round(columnX - mathBlock.inputBoxWidth / 2)
+            const boxTopY = Math.round(mathBlock.topInputY - mathBlock.inputBoxHeight / 2)
+            page.drawRectangle({
+              x: boxX,
+              y: toPdfRectY(boxTopY, mathBlock.inputBoxHeight),
+              width: mathBlock.inputBoxWidth,
+              height: mathBlock.inputBoxHeight,
+              borderColor: rgb(0.835, 0.871, 0.914),
+              borderWidth: 0.85,
+            })
+          })
+        }
+
+        if (mathBlock.showColumnSeparators) {
+          mathBlock.columnXs.forEach((columnX, columnIndex) => {
+            const separatorText = mathBlock.columnSeparators[columnIndex] ?? ''
+            const separatorWidth = fontBold.widthOfTextAtSize(separatorText, 8)
+            page.drawText(separatorText, {
+              x: columnX - separatorWidth / 2,
+              y: toPdfY(mathBlock.separatorY),
+              size: 8,
+              font: fontBold,
+              color: rgb(0.278, 0.349, 0.412),
+            })
+          })
+        }
+
+        mathBlock.rows.forEach((row) => {
+          const rowDigit = String(row.digit)
+
+          mathBlock.columnXs.forEach((columnX) => {
+            page.drawCircle({
+              x: columnX,
+              y: toPdfY(row.y),
+              size: mathBlock.bubbleRadius,
+              borderColor: rgb(0.059, 0.09, 0.165),
+              borderWidth: renderMetrics.bubbleStrokeWidthPdf,
+              color: rgb(1, 1, 1),
+            })
+            const digitWidth = fontBold.widthOfTextAtSize(rowDigit, 6.5)
+            page.drawText(rowDigit, {
+              x: columnX - digitWidth / 2,
+              y: toPdfY(row.y + renderMetrics.bubbleLabelOffsetY),
+              size: renderMetrics.bubbleLabelFontSize,
+              font: fontBold,
+              color: rgb(0.278, 0.349, 0.412),
+            })
+          })
+        })
+      })
+
+      signatures.forEach((signature) => {
+        page.drawLine({
+          start: { x: signature.x, y: toPdfY(signature.lineY) },
+          end: { x: signature.x + signature.width, y: toPdfY(signature.lineY) },
+          thickness: 1,
+          color: rgb(0.392, 0.455, 0.545),
+        })
+
+        const labelWidth = fontBold.widthOfTextAtSize(signature.label, signature.fontSize)
+        const labelX =
+          signature.labelAnchor === 'middle'
+            ? signature.labelX - labelWidth / 2
+            : signature.labelAnchor === 'end'
+              ? signature.labelX - labelWidth
+              : signature.labelX
+
+        page.drawText(signature.label, {
+          x: labelX,
+          y: toPdfY(signature.labelY),
+          size: signature.fontSize,
+          font: fontBold,
+          color: rgb(0.278, 0.349, 0.412),
+        })
+      })
+
       questions.forEach((question) => {
-        const blockConfig = getQuestionBlockQuestionConfig(definition, question.questionNumber)
         const questionLabel = formatQuestionLabel(question.numberingFormat, question, {
           choicesPerQuestion: question.choicesPerQuestion,
           blockStartQuestion: question.blockStartQuestion,
@@ -255,6 +521,20 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
           color: rgb(0.278, 0.349, 0.412),
         })
 
+        const logicalQuestion = renderModel.logicalQuestionMap.get(question.questionNumber)
+        if (logicalQuestion && logicalQuestion.type !== 'objective' && logicalQuestion.markerLabel) {
+          const markerWidth = fontBold.widthOfTextAtSize(logicalQuestion.markerLabel, Math.max(renderMetrics.questionFontSize - 0.2, 8.5))
+          page.drawText(logicalQuestion.markerLabel, {
+            x: question.optionStartX + question.optionGroupWidth / 2 - markerWidth / 2,
+            y: toPdfY(question.optionY + renderMetrics.bubbleLabelOffsetY),
+            size: Math.max(renderMetrics.questionFontSize - 0.2, 8.5),
+            font: fontBold,
+            color: rgb(0.059, 0.09, 0.165),
+          })
+          return
+        }
+
+        const blockConfig = getQuestionBlockQuestionConfig(definition, question.questionNumber)
         blockConfig.optionLabels.forEach((option, optionIndex) => {
           const centerX = question.optionStartX + optionIndex * question.optionSpacing
           const centerY = toPdfY(question.optionY)
