@@ -5,6 +5,18 @@ export type Unit = {
   createdAt: string
 }
 
+export type UserRole = 'admin' | 'editor' | 'teacher' | 'viewer'
+
+export type User = {
+  id: string
+  name: string
+  email: string
+  passwordHash: string
+  role: UserRole
+  createdAt: string
+  updatedAt: string
+}
+
 export type Classroom = {
   id: string
   unitId: string

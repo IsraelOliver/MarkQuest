@@ -9,6 +9,8 @@ const envSchema = z.object({
   HOST: z.string().default('0.0.0.0'),
   UPLOAD_DIR: z.string().default('uploads'),
   DATA_FILE: z.string().default('data/markquest-db.json'),
+  AUTH_TOKEN_SECRET: z.string().min(16).default('markquest-development-secret'),
+  AUTH_TOKEN_EXPIRES_IN_SECONDS: z.coerce.number().int().positive().default(60 * 60 * 24 * 7),
 })
 
 export const env = envSchema.parse(process.env)

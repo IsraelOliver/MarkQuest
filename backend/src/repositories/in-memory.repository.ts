@@ -1,10 +1,11 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { env } from '../config/env.js'
-import type { AnswerKey, Classroom, Exam, OMRResult, ProcessingJob, Student, StudentResult, Template, Unit, UploadFile } from '../types/entities.js'
+import type { AnswerKey, Classroom, Exam, OMRResult, ProcessingJob, Student, StudentResult, Template, Unit, UploadFile, User } from '../types/entities.js'
 
 type DbShape = {
   units: Unit[]
+  users: User[]
   classrooms: Classroom[]
   exams: Exam[]
   students: Student[]
@@ -19,6 +20,7 @@ type DbShape = {
 function createInitialState(): DbShape {
   return {
     units: [],
+    users: [],
     classrooms: [],
     exams: [],
     students: [],
@@ -47,6 +49,10 @@ export class JsonRepository {
 
   get units() {
     return this.state.units
+  }
+
+  get users() {
+    return this.state.users
   }
 
   get classrooms() {
@@ -114,6 +120,7 @@ export class JsonRepository {
       const parsed = JSON.parse(raw) as Partial<DbShape>
       this.state = {
         units: parsed.units ?? [],
+        users: parsed.users ?? [],
         classrooms: parsed.classrooms ?? [],
         exams: parsed.exams ?? [],
         students: parsed.students ?? [],
