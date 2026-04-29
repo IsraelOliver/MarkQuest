@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 
 const links = [
   { to: '/app/dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -7,6 +8,8 @@ const links = [
 ]
 
 export function Sidebar() {
+  const { logout, user } = useAuth()
+
   return (
     <aside className="sidebar sidebar--collapsed">
       <div className="sidebar__top">
@@ -52,6 +55,19 @@ export function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      <div className="sidebar__session">
+        <button className="sidebar__link sidebar__button" type="button" onClick={() => void logout()} aria-label="Sair">
+          <span className="sidebar__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M10 4H5v16h5v-2H7V6h3V4Zm4.7 3.3-1.4 1.4 2.3 2.3H10v2h5.6l-2.3 2.3 1.4 1.4L19.4 12l-4.7-4.7Z" />
+            </svg>
+          </span>
+          <span className="sidebar__tooltip" role="tooltip">
+            Sair{user ? ` - ${user.name}` : ''}
+          </span>
+        </button>
+      </div>
     </aside>
   )
 }

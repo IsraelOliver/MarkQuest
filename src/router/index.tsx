@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom'
+import { RequireAuth } from '../auth/RequireAuth'
 import { MainLayout } from '../layouts/MainLayout'
 import { AnswerKeysPage } from '../pages/AnswerKeysPage'
 import { AccountSettingsPage } from '../pages/AccountSettingsPage'
@@ -8,6 +9,7 @@ import { ClassroomStudentsPage } from '../pages/ClassroomStudentsPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { ExamDetailPage } from '../pages/ExamDetailPage'
 import { LandingPage } from '../pages/LandingPage'
+import { LoginPage } from '../pages/LoginPage'
 import { ResultsPage } from '../pages/ResultsPage'
 import { TemplatesPage } from '../pages/TemplatesPage'
 import { UnitDetailPage } from '../pages/UnitDetailPage'
@@ -20,8 +22,16 @@ export const router = createBrowserRouter([
     element: <LandingPage />,
   },
   {
+    path: '/login',
+    element: <LoginPage />,
+  },
+  {
     path: '/app',
-    element: <MainLayout />,
+    element: (
+      <RequireAuth>
+        <MainLayout />
+      </RequireAuth>
+    ),
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },

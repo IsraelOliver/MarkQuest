@@ -8,6 +8,7 @@ export const API_ENDPOINTS = {
   results: '/api/results',
   templates: '/api/templates',
   answerKeys: '/api/answer-keys',
+  auth: '/api/auth',
 } as const
 
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE'
