@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
 import { resultsListQuerySchema } from '../schemas/results.schema.js'
 import { ResultsService } from '../services/results.service.js'
-import { ok } from '../utils/http-response.js'
+import { API_ERROR_CODES, ok, sendError } from '../utils/http-response.js'
 
 const resultsService = new ResultsService()
 
@@ -15,10 +15,7 @@ export class ResultsController {
     const data = resultsService.getByJobId(request.params.id)
 
     if (!data) {
-      return reply.status(404).send({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Resultado não encontrado para este job.' },
-      })
+      return sendError(reply, 404, API_ERROR_CODES.NOT_FOUND, 'Resultado não encontrado para este job.')
     }
 
     return ok(reply, data)
@@ -27,10 +24,7 @@ export class ResultsController {
   async exportById(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const csv = resultsService.exportByJobId(request.params.id)
     if (!csv) {
-      return reply.status(404).send({
-        success: false,
-        error: { code: 'NOT_FOUND', message: 'Resultado não encontrado para exportação.' },
-      })
+      return sendError(reply, 404, API_ERROR_CODES.NOT_FOUND, 'Resultado não encontrado para exportação.')
     }
 
     reply.header('Content-Type', 'text/csv; charset=utf-8')

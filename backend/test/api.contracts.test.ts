@@ -75,7 +75,10 @@ describe('API contracts', () => {
       payload: { unitId: 'unt_missing', name: 'Turma sem unidade', year: '2026' },
     })
     expect(invalidFkResponse.statusCode).toBe(404)
-    expect(parseJson<ApiFailure>(invalidFkResponse).error.code).toBe('UNIT_NOT_FOUND')
+    expect(parseJson<ApiFailure>(invalidFkResponse).error).toMatchObject({
+      code: 'NOT_FOUND',
+      details: { cause: 'UNIT_NOT_FOUND' },
+    })
 
     const deleteResponse = await ctx.app.inject({ method: 'DELETE', url: `/api/classrooms/${classroom.id}` })
     expect(deleteResponse.statusCode).toBe(200)
@@ -107,7 +110,10 @@ describe('API contracts', () => {
       payload: { classroomId: 'cls_missing', title: 'Simulado inválido', subject: 'Geo', totalQuestions: 2 },
     })
     expect(invalidFkResponse.statusCode).toBe(404)
-    expect(parseJson<ApiFailure>(invalidFkResponse).error.code).toBe('CLASSROOM_NOT_FOUND')
+    expect(parseJson<ApiFailure>(invalidFkResponse).error).toMatchObject({
+      code: 'NOT_FOUND',
+      details: { cause: 'CLASSROOM_NOT_FOUND' },
+    })
 
     const deleteResponse = await ctx.app.inject({ method: 'DELETE', url: `/api/exams/${exam.id}` })
     expect(deleteResponse.statusCode).toBe(200)
@@ -151,7 +157,10 @@ describe('API contracts', () => {
       },
     })
     expect(invalidFkResponse.statusCode).toBe(404)
-    expect(parseJson<ApiFailure>(invalidFkResponse).error.code).toBe('CLASSROOM_NOT_FOUND')
+    expect(parseJson<ApiFailure>(invalidFkResponse).error).toMatchObject({
+      code: 'NOT_FOUND',
+      details: { cause: 'CLASSROOM_NOT_FOUND' },
+    })
 
     const deleteResponse = await ctx.app.inject({ method: 'DELETE', url: `/api/students/${student.id}` })
     expect(deleteResponse.statusCode).toBe(200)
@@ -196,7 +205,10 @@ describe('API contracts', () => {
       payload: buildTemplatePayload({ examId: 'exam_missing' }),
     })
     expect(invalidExamResponse.statusCode).toBe(404)
-    expect(parseJson<ApiFailure>(invalidExamResponse).error.code).toBe('EXAM_NOT_FOUND')
+    expect(parseJson<ApiFailure>(invalidExamResponse).error).toMatchObject({
+      code: 'NOT_FOUND',
+      details: { cause: 'EXAM_NOT_FOUND' },
+    })
 
     const invalidTotalResponse = await ctx.app.inject({
       method: 'POST',
@@ -204,7 +216,10 @@ describe('API contracts', () => {
       payload: { ...buildTemplatePayload({ examId: exam.id }), totalQuestions: 3 },
     })
     expect(invalidTotalResponse.statusCode).toBe(400)
-    expect(parseJson<ApiFailure>(invalidTotalResponse).error.code).toBe('EXAM_TEMPLATE_TOTAL_MISMATCH')
+    expect(parseJson<ApiFailure>(invalidTotalResponse).error).toMatchObject({
+      code: 'REQUEST_ERROR',
+      details: { cause: 'EXAM_TEMPLATE_TOTAL_MISMATCH' },
+    })
   })
 
   it('covers answer key create, list, get and validation contracts', async () => {
@@ -229,7 +244,10 @@ describe('API contracts', () => {
       payload: { name: 'Curto', examId: exam.id, templateId: template.id, answers: ['A'] },
     })
     expect(invalidSizeResponse.statusCode).toBe(400)
-    expect(parseJson<ApiFailure>(invalidSizeResponse).error.code).toBe('ANSWER_KEY_SIZE_MISMATCH')
+    expect(parseJson<ApiFailure>(invalidSizeResponse).error).toMatchObject({
+      code: 'REQUEST_ERROR',
+      details: { cause: 'ANSWER_KEY_SIZE_MISMATCH' },
+    })
 
     const invalidExamResponse = await ctx.app.inject({
       method: 'POST',
@@ -237,7 +255,10 @@ describe('API contracts', () => {
       payload: { name: 'Sem prova', examId: 'exam_missing', templateId: template.id, answers: ['A', 'B'] },
     })
     expect(invalidExamResponse.statusCode).toBe(404)
-    expect(parseJson<ApiFailure>(invalidExamResponse).error.code).toBe('EXAM_NOT_FOUND')
+    expect(parseJson<ApiFailure>(invalidExamResponse).error).toMatchObject({
+      code: 'NOT_FOUND',
+      details: { cause: 'EXAM_NOT_FOUND' },
+    })
   })
 
   it('covers upload contracts and keeps invalid files out of persistent storage', async () => {
@@ -264,7 +285,11 @@ describe('API contracts', () => {
       content: 'invalid',
     })
     expect(invalidMimeResponse.statusCode).toBe(400)
-    expect(parseJson<ApiFailure>(invalidMimeResponse).error.message).toContain('10 MB')
+    expect(parseJson<ApiFailure>(invalidMimeResponse).error).toMatchObject({
+      code: 'UPLOAD_INVALID',
+      message: expect.stringContaining('10 MB'),
+      details: { cause: 'INVALID_UPLOAD_FILE' },
+    })
 
     const invalidExtensionResponse = await uploadFile(ctx.app, {
       examId: exam.id,
@@ -274,6 +299,7 @@ describe('API contracts', () => {
       content: 'invalid-extension',
     })
     expect(invalidExtensionResponse.statusCode).toBe(400)
+    expect(parseJson<ApiFailure>(invalidExtensionResponse).error.code).toBe('UPLOAD_INVALID')
 
     const oversizedResponse = await uploadFile(ctx.app, {
       examId: exam.id,
@@ -283,6 +309,7 @@ describe('API contracts', () => {
       content: Buffer.alloc(10 * 1024 * 1024 + 1, 1),
     })
     expect(oversizedResponse.statusCode).toBe(413)
+    expect(parseJson<ApiFailure>(oversizedResponse).error.code).toBe('PAYLOAD_TOO_LARGE')
 
     const listResponse = await ctx.app.inject({ method: 'GET', url: `/api/uploads?examId=${exam.id}` })
     expect(parseJson<ApiSuccess<UploadDto[]>>(listResponse).data).toHaveLength(1)
