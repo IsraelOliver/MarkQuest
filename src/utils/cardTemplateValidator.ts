@@ -698,7 +698,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
         severity: 'warning',
         code: `QUESTION_BLOCK_RENDER_GAP_DETAIL_${detailIndex}`,
         field: 'definition.questionBlocks',
-        message: `HÃ¡ lacuna ${relationLabel}: questÃµes ${gapRange}. Essas questÃµes nÃ£o entram no preview nem no PDF.`,
+        message: `Há lacuna ${relationLabel}: questões ${gapRange}. Essas questões não entram no preview nem no PDF.`,
       })
     })
 
@@ -712,7 +712,7 @@ export function validateCardTemplateEditorState(state: CardTemplateEditorState):
         severity: 'warning',
         code: `QUESTION_BLOCK_RENDER_OVERLAP_DETAIL_${detailIndex}`,
         field: 'definition.questionBlocks',
-        message: `Existe sobreposiÃ§Ã£o entre os blocos ${overlap.previousBlockNumber} e ${overlap.nextBlockNumber} nas questÃµes ${overlapRange}. O renderer mantÃ©m apenas a primeira ocorrÃªncia de cada questÃ£o.`,
+        message: `Existe sobreposição entre os blocos ${overlap.previousBlockNumber} e ${overlap.nextBlockNumber} nas questões ${overlapRange}. O renderer mantém apenas a primeira ocorrência de cada questão.`,
       })
     })
   }

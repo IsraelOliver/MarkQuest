@@ -33,7 +33,12 @@ type BackendProcessingJob = {
   answerKeyVersion: string
   status: ProcessingJob['status']
   createdAt: string
+  updatedAt?: string
   finishedAt?: string
+  totalFiles?: number
+  processedFiles?: number
+  failedFiles?: number
+  results?: BackendOMRResult[]
 }
 
 type BackendStudentResult = {
@@ -124,7 +129,11 @@ function mapJob(job: BackendProcessingJob): ProcessingJob {
     answerKeyVersion: job.answerKeyVersion,
     status: job.status,
     createdAt: job.createdAt,
+    updatedAt: job.updatedAt,
     finishedAt: job.finishedAt,
+    totalFiles: job.totalFiles,
+    processedFiles: job.processedFiles,
+    failedFiles: job.failedFiles,
   }
 }
 

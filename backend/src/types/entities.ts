@@ -66,6 +66,7 @@ export type ProcessingJob = {
   answerKeyVersion: string
   status: ProcessingJobStatus
   createdAt: string
+  updatedAt: string
   finishedAt?: string
 }
 
@@ -114,6 +115,25 @@ export type CardTemplateSection =
       linkedToMainQuestion: boolean
       linkedQuestionNumber: number | null
       markerLabel: string
+    }
+  | {
+      id: string
+      sectionType: 'image'
+      readMode: 'ignored' | 'manual'
+      imageSrc: string | null
+      imageName: string | null
+      imageWidth?: number | null
+      imageHeight?: number | null
+      size: 'auto' | '25' | '50' | '75' | '100'
+      align: 'left' | 'center' | 'right'
+      isQuestion: boolean
+      linkedToMainQuestion: boolean
+      linkedQuestionNumber: number | null
+      markerLabel: string
+      mimeType?: string
+      fileSize?: number
+      optimized?: boolean
+      originalName?: string
     }
   | {
       id: string

@@ -29,11 +29,22 @@ type ApiErrorResponse = {
   error?: {
     code?: string
     message?: string
+    details?: unknown
   }
 }
 
 function isFormData(body: unknown): body is FormData {
   return typeof FormData !== 'undefined' && body instanceof FormData
+}
+
+function parseApiResponse<T>(rawText: string) {
+  if (!rawText) return null
+
+  try {
+    return JSON.parse(rawText) as ApiSuccessResponse<T> | ApiErrorResponse
+  } catch {
+    return null
+  }
 }
 
 export async function request<T>(url: string, config: RequestConfig): Promise<T> {
@@ -58,11 +69,19 @@ export async function request<T>(url: string, config: RequestConfig): Promise<T>
   })
 
   const rawText = await response.text()
-  const parsed = rawText ? (JSON.parse(rawText) as ApiSuccessResponse<T> | ApiErrorResponse) : null
+  const parsed = parseApiResponse<T>(rawText)
 
   if (!response.ok) {
+    if (parsed && 'error' in parsed && parsed.error?.code === 'VALIDATION_ERROR') {
+      console.error('Erro de validação da API:', parsed.error.details ?? parsed.error)
+
+      if (url.includes('/api/templates')) {
+        throw new Error('Não foi possível salvar o template. Verifique os dados da seção de imagem.')
+      }
+    }
+
     const message =
-      parsed && 'error' in parsed ? parsed.error?.message || 'Falha ao comunicar com a API.' : 'Falha ao comunicar com a API.'
+      parsed && 'error' in parsed ? parsed.error?.message || 'Falha ao comunicar com a API.' : rawText || 'Falha ao comunicar com a API.'
     throw new Error(message)
   }
 

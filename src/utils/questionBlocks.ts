@@ -1,5 +1,6 @@
 import type {
   CardEssaySection,
+  CardImageSection,
   CardLabelSection,
   CardMathSection,
   CardNumberingFormat,
@@ -91,6 +92,23 @@ export type NormalizedMathSection = {
   markerLabel: string
 }
 
+export type NormalizedImageSection = {
+  id: string
+  order: number
+  sectionType: 'image'
+  readMode: 'ignored' | 'manual'
+  imageSrc: string | null
+  imageName: string | null
+  imageWidth: number | null
+  imageHeight: number | null
+  size: 'auto' | '25' | '50' | '75' | '100'
+  align: 'left' | 'center' | 'right'
+  isQuestion: boolean
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+}
+
 export type NormalizedEssaySection = {
   id: string
   order: number
@@ -144,6 +162,7 @@ export type NormalizedTemplateSection =
   | NormalizedObjectiveSection
   | NormalizedOpenSection
   | NormalizedMathSection
+  | NormalizedImageSection
   | NormalizedEssaySection
   | NormalizedLabelSection
   | NormalizedSpacerSection
@@ -171,6 +190,7 @@ export type NormalizedRenderModel = {
   logicalQuestionMap: Map<number, LogicalQuestion>
   manualQuestionLinks: ManualQuestionLink[]
   manualQuestionLinksByQuestion: Map<number, ManualQuestionLink[]>
+  manualSectionQuestionMap: Map<number, ManualSectionQuestionMeta>
   totalRenderedQuestions: number
   lastRenderedQuestion: number
   hasGaps: boolean
@@ -182,12 +202,20 @@ export type NormalizedRenderModel = {
 
 export type ManualQuestionLink = {
   sectionId: string
-  sectionType: 'open' | 'math'
+  sectionType: 'open' | 'math' | 'image'
   linkedQuestionNumber: number
   markerLabel: string
 }
 
-export type LogicalQuestionType = 'objective' | 'math' | 'open'
+export type ManualSectionQuestionMeta = {
+  sectionId: string
+  sectionOrder: number
+  sectionType: 'open' | 'math' | 'image'
+  questionNumber: number
+  linkedToMainQuestion: boolean
+}
+
+export type LogicalQuestionType = 'objective' | 'math' | 'open' | 'image'
 
 export type LogicalQuestionAnswerModel =
   | {
@@ -201,6 +229,10 @@ export type LogicalQuestionAnswerModel =
     }
   | {
       type: 'open'
+      answer: null
+    }
+  | {
+      type: 'image'
       answer: null
     }
 
@@ -231,6 +263,10 @@ export function isMathSection(section: CardTemplateSection): section is CardMath
   return section.sectionType === 'math'
 }
 
+export function isImageSection(section: CardTemplateSection): section is CardImageSection {
+  return section.sectionType === 'image'
+}
+
 export function isEssaySection(section: CardTemplateSection): section is CardEssaySection {
   return section.sectionType === 'essay'
 }
@@ -251,7 +287,7 @@ export function isSignatureSection(section: CardTemplateSection): section is Car
   return section.sectionType === 'signature'
 }
 
-function createSectionId(index: number, prefix: 'objective' | 'open' | 'math' | 'essay' | 'label' | 'spacer' | 'page-break' | 'signature') {
+function createSectionId(index: number, prefix: 'objective' | 'open' | 'math' | 'image' | 'essay' | 'label' | 'spacer' | 'page-break' | 'signature') {
   return `section-${prefix}-${index + 1}`
 }
 
@@ -297,6 +333,21 @@ function normalizeLinkedQuestionNumber(value: number | null | undefined) {
 
 function normalizeMarkerLabel(value: string | undefined, fallback: string) {
   return (value ?? fallback).slice(0, 12)
+}
+
+function normalizeImageSize(value: string | undefined): CardImageSection['size'] {
+  if (value === 'auto') return 'auto'
+  return value === '25' || value === '75' || value === '100' ? value : '50'
+}
+
+function normalizeImageAlign(value: string | undefined): CardImageSection['align'] {
+  return value === 'left' || value === 'right' ? value : 'center'
+}
+
+function normalizeImageDimension(value: number | null | undefined) {
+  if (value === null || value === undefined) return null
+  const rounded = Math.round(Number(value))
+  return Number.isFinite(rounded) && rounded > 0 ? rounded : null
 }
 
 function normalizeMathColumns(value: number | undefined) {
@@ -412,6 +463,34 @@ function normalizeMathSection(section: Partial<CardMathSection>, index: number):
     linkedToMainQuestion: section.linkedToMainQuestion ?? false,
     linkedQuestionNumber: normalizeLinkedQuestionNumber(section.linkedQuestionNumber),
     markerLabel: normalizeMarkerLabel(section.markerLabel, 'TIPO B'),
+  }
+}
+
+function normalizeImageSection(
+  section: Partial<CardImageSection> & { layoutMode?: 'natural' | 'fullWidth' },
+  index: number,
+): CardImageSection {
+  const isQuestion = section.isQuestion ?? false
+  const size = normalizeImageSize(section.size)
+
+  return {
+    id: section.id?.trim() || createSectionId(index, 'image'),
+    sectionType: 'image',
+    readMode: isQuestion ? 'manual' : 'ignored',
+    imageSrc: section.imageSrc ?? null,
+    imageName: section.imageName ?? null,
+    imageWidth: normalizeImageDimension(section.imageWidth),
+    imageHeight: normalizeImageDimension(section.imageHeight),
+    size,
+    align: normalizeImageAlign(section.align),
+    isQuestion,
+    linkedToMainQuestion: section.linkedToMainQuestion ?? false,
+    linkedQuestionNumber: normalizeLinkedQuestionNumber(section.linkedQuestionNumber),
+    markerLabel: normalizeMarkerLabel(section.markerLabel, 'IMAGEM'),
+    mimeType: section.mimeType,
+    fileSize: section.fileSize,
+    optimized: section.optimized,
+    originalName: section.originalName,
   }
 }
 
@@ -536,6 +615,28 @@ export function createMathSection(index: number, overrides: Partial<CardMathSect
   )
 }
 
+export function createImageSection(
+  index: number,
+  overrides: Partial<CardImageSection> & { layoutMode?: 'natural' | 'fullWidth' } = {},
+): CardImageSection {
+  return normalizeImageSection(
+    {
+      id: overrides.id ?? createSectionId(index, 'image'),
+      imageSrc: overrides.imageSrc ?? null,
+      imageName: overrides.imageName ?? null,
+      imageWidth: overrides.imageWidth ?? null,
+      imageHeight: overrides.imageHeight ?? null,
+      size: overrides.size ?? '50',
+      align: overrides.align ?? 'center',
+      isQuestion: overrides.isQuestion ?? false,
+      linkedToMainQuestion: overrides.linkedToMainQuestion ?? false,
+      linkedQuestionNumber: overrides.linkedQuestionNumber ?? null,
+      markerLabel: overrides.markerLabel ?? 'IMAGEM',
+    },
+    index,
+  )
+}
+
 export function createEssaySection(index: number, overrides: Partial<CardEssaySection> = {}): CardEssaySection {
   return normalizeEssaySection(
     {
@@ -611,6 +712,10 @@ export function normalizeQuestionBlocks(
 
     if (isMathSection(section)) {
       return normalizeMathSection(section, index)
+    }
+
+    if (isImageSection(section)) {
+      return normalizeImageSection(section, index)
     }
 
     if (isEssaySection(section)) {
@@ -737,7 +842,8 @@ export function validateQuestionBlocks(
   })
 
   const manualLinks = blocks.flatMap((section) => {
-    if (!isOpenSection(section) && !isMathSection(section)) return []
+    if (!isOpenSection(section) && !isMathSection(section) && !isImageSection(section)) return []
+    if (isImageSection(section) && !section.isQuestion) return []
     if (!section.linkedToMainQuestion || section.linkedQuestionNumber === null) return []
     return [{
       sectionId: section.id,
@@ -775,7 +881,8 @@ export function getManualQuestionLinks(
   definition: Pick<CardTemplateDefinition, 'questionBlocks'>,
 ) {
   const links = definition.questionBlocks.flatMap((section) => {
-    if (!isOpenSection(section) && !isMathSection(section)) return []
+    if (!isOpenSection(section) && !isMathSection(section) && !isImageSection(section)) return []
+    if (isImageSection(section) && !section.isQuestion) return []
     if (!section.linkedToMainQuestion || section.linkedQuestionNumber === null) return []
     return [{
       sectionId: section.id,
@@ -798,13 +905,14 @@ export function getManualQuestionLinks(
 
 function getLogicalQuestionTypePriority(type: LogicalQuestionType) {
   if (type === 'math') return 3
+  if (type === 'image') return 3
   if (type === 'open') return 2
   return 1
 }
 
 function buildLogicalQuestionAnswerModel(
   type: LogicalQuestionType,
-  section: NormalizedObjectiveSection | NormalizedOpenSection | NormalizedMathSection,
+  section: NormalizedObjectiveSection | NormalizedOpenSection | NormalizedMathSection | NormalizedImageSection,
 ): LogicalQuestionAnswerModel {
   if (type === 'math' && section.sectionType === 'math') {
     return {
@@ -821,6 +929,13 @@ function buildLogicalQuestionAnswerModel(
     }
   }
 
+  if (type === 'image' && section.sectionType === 'image') {
+    return {
+      type: 'image',
+      answer: null,
+    }
+  }
+
   return {
     type: 'objective',
     answer: null,
@@ -830,15 +945,17 @@ function buildLogicalQuestionAnswerModel(
 function buildLogicalQuestions(
   questions: ResolvedQuestion[],
   sections: NormalizedTemplateSection[],
-  manualQuestionLinks: ManualQuestionLink[],
 ) {
   const logicalQuestionMap = new Map<number, LogicalQuestion>()
+  const manualSectionQuestionMap = new Map<number, ManualSectionQuestionMeta>()
   const sectionById = new Map(sections.map((section) => [section.id, section] as const))
+  const occupiedQuestionNumbers = new Set<number>()
 
   questions.forEach((question) => {
     const sourceSection = sectionById.get(question.blockId)
     if (!sourceSection || sourceSection.sectionType !== 'objective') return
 
+    occupiedQuestionNumbers.add(question.questionNumber)
     logicalQuestionMap.set(question.questionNumber, {
       number: question.questionNumber,
       type: 'objective',
@@ -847,23 +964,60 @@ function buildLogicalQuestions(
     })
   })
 
-  manualQuestionLinks.forEach((link) => {
-    const currentLogicalQuestion = logicalQuestionMap.get(link.linkedQuestionNumber)
-    if (!currentLogicalQuestion) return
+  let nextManualQuestionNumber = (questions[questions.length - 1]?.questionNumber ?? 0) + 1
 
-    const linkedSection = sectionById.get(link.sectionId)
-    if (!linkedSection || (linkedSection.sectionType !== 'open' && linkedSection.sectionType !== 'math')) return
+  sections.forEach((section) => {
+    if (section.sectionType !== 'open' && section.sectionType !== 'math' && section.sectionType !== 'image') return
+    if (section.sectionType === 'image' && !section.isQuestion) return
 
-    const nextType = link.sectionType
-    if (getLogicalQuestionTypePriority(nextType) < getLogicalQuestionTypePriority(currentLogicalQuestion.type)) return
+    if (section.linkedToMainQuestion && section.linkedQuestionNumber !== null) {
+      manualSectionQuestionMap.set(section.order, {
+        sectionId: section.id,
+        sectionOrder: section.order,
+        sectionType: section.sectionType,
+        questionNumber: section.linkedQuestionNumber,
+        linkedToMainQuestion: true,
+      })
+      occupiedQuestionNumbers.add(section.linkedQuestionNumber)
 
-    logicalQuestionMap.set(link.linkedQuestionNumber, {
-      number: currentLogicalQuestion.number,
-      type: nextType,
-      sourceSectionId: currentLogicalQuestion.sourceSectionId,
-      linkedSectionId: link.sectionId,
-      markerLabel: link.markerLabel,
-      answerModel: buildLogicalQuestionAnswerModel(nextType, linkedSection),
+      const currentLogicalQuestion = logicalQuestionMap.get(section.linkedQuestionNumber)
+      if (!currentLogicalQuestion) return
+
+      const nextType = section.sectionType
+      if (getLogicalQuestionTypePriority(nextType) < getLogicalQuestionTypePriority(currentLogicalQuestion.type)) return
+
+      logicalQuestionMap.set(section.linkedQuestionNumber, {
+        number: currentLogicalQuestion.number,
+        type: nextType,
+        sourceSectionId: currentLogicalQuestion.sourceSectionId,
+        linkedSectionId: section.id,
+        markerLabel: section.markerLabel,
+        answerModel: buildLogicalQuestionAnswerModel(nextType, section),
+      })
+      return
+    }
+
+    while (occupiedQuestionNumbers.has(nextManualQuestionNumber)) {
+      nextManualQuestionNumber += 1
+    }
+
+    const autoQuestionNumber = nextManualQuestionNumber
+    nextManualQuestionNumber += 1
+    occupiedQuestionNumbers.add(autoQuestionNumber)
+
+    manualSectionQuestionMap.set(section.order, {
+      sectionId: section.id,
+      sectionOrder: section.order,
+      sectionType: section.sectionType,
+      questionNumber: autoQuestionNumber,
+      linkedToMainQuestion: false,
+    })
+
+    logicalQuestionMap.set(autoQuestionNumber, {
+      number: autoQuestionNumber,
+      type: section.sectionType,
+      sourceSectionId: section.id,
+      answerModel: buildLogicalQuestionAnswerModel(section.sectionType, section),
     })
   })
 
@@ -872,6 +1026,7 @@ function buildLogicalQuestions(
   return {
     logicalQuestions,
     logicalQuestionMap,
+    manualSectionQuestionMap,
   }
 }
 
@@ -948,7 +1103,7 @@ export function buildNormalizedRenderModel(
       numberingFormat: 'numeric' as const,
       questionStyle: definition.questionStyle,
     }))
-    const { logicalQuestions, logicalQuestionMap } = buildLogicalQuestions(questions, [block], manualQuestionLinks)
+    const { logicalQuestions, logicalQuestionMap, manualSectionQuestionMap } = buildLogicalQuestions(questions, [block])
 
     return {
       sections: [block],
@@ -958,6 +1113,7 @@ export function buildNormalizedRenderModel(
       logicalQuestionMap,
       manualQuestionLinks,
       manualQuestionLinksByQuestion,
+      manualSectionQuestionMap,
       totalRenderedQuestions: questions.length,
       lastRenderedQuestion: questionNumbers[questionNumbers.length - 1] ?? 0,
       hasGaps: false,
@@ -1017,6 +1173,26 @@ export function buildNormalizedRenderModel(
         columnHeaders: section.columnHeaders,
         showColumnSeparators: section.showColumnSeparators,
         columnSeparators: section.columnSeparators,
+        linkedToMainQuestion: section.linkedToMainQuestion,
+        linkedQuestionNumber: section.linkedQuestionNumber,
+        markerLabel: section.markerLabel,
+      })
+      return
+    }
+
+    if (isImageSection(section)) {
+      normalizedSections.push({
+        id: section.id,
+        order: index + 1,
+        sectionType: 'image',
+        readMode: section.isQuestion ? 'manual' : 'ignored',
+        imageSrc: section.imageSrc,
+        imageName: section.imageName,
+        imageWidth: section.imageWidth,
+        imageHeight: section.imageHeight,
+        size: section.size,
+        align: section.align,
+        isQuestion: section.isQuestion,
         linkedToMainQuestion: section.linkedToMainQuestion,
         linkedQuestionNumber: section.linkedQuestionNumber,
         markerLabel: section.markerLabel,
@@ -1147,10 +1323,9 @@ export function buildNormalizedRenderModel(
   const renderedQuestionNumbers = sortedRenderedQuestions.map((question) => question.questionNumber)
   const lastRenderedQuestion = renderedQuestionNumbers[renderedQuestionNumbers.length - 1] ?? 0
   const gapRanges = buildGapRanges(renderedQuestionNumbers)
-  const { logicalQuestions, logicalQuestionMap } = buildLogicalQuestions(
+  const { logicalQuestions, logicalQuestionMap, manualSectionQuestionMap } = buildLogicalQuestions(
     sortedRenderedQuestions,
     normalizedSections,
-    manualQuestionLinks,
   )
 
   return {
@@ -1161,6 +1336,7 @@ export function buildNormalizedRenderModel(
     logicalQuestionMap,
     manualQuestionLinks,
     manualQuestionLinksByQuestion,
+    manualSectionQuestionMap,
     totalRenderedQuestions: sortedRenderedQuestions.length,
     lastRenderedQuestion,
     hasGaps: gapRanges.length > 0,
@@ -1460,6 +1636,11 @@ export function appendMathSection(blocks: CardTemplateSection[] | undefined): Ca
   return [...currentSections, createMathSection(currentSections.length)]
 }
 
+export function appendImageSection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
+  const currentSections = [...(blocks ?? [])]
+  return [...currentSections, createImageSection(currentSections.length)]
+}
+
 export function appendEssaySection(blocks: CardTemplateSection[] | undefined): CardTemplateSection[] {
   const currentSections = [...(blocks ?? [])]
   return [...currentSections, createEssaySection(currentSections.length)]
@@ -1501,6 +1682,11 @@ export function duplicateQuestionBlockAtIndex(
 
   if (isMathSection(sourceSection)) {
     currentSections.splice(index + 1, 0, createMathSection(index + 1, sourceSection))
+    return currentSections
+  }
+
+  if (isImageSection(sourceSection)) {
+    currentSections.splice(index + 1, 0, createImageSection(index + 1, sourceSection))
     return currentSections
   }
 

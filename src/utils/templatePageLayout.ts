@@ -1,4 +1,4 @@
-import type { CardEssaySection, CardLabelSection, CardNumberingFormat, CardOpenSection, CardSignatureSection, CardSpacerSection, CardTemplateEditorState } from '../types/omr'
+import type { CardEssaySection, CardImageSection, CardLabelSection, CardNumberingFormat, CardOpenSection, CardSignatureSection, CardSpacerSection, CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from './cardTemplateZones'
 import { buildNormalizedRenderModel } from './questionBlocks'
 import { getTemplateLayoutMetrics } from './templateLayoutGeometry'
@@ -57,6 +57,7 @@ export type TemplateSignatureLayout = {
 export type TemplateOpenAnswerLayout = {
   id: string
   label: string
+  displayQuestionNumber: number | null
   linkedQuestionNumber: number | null
   lines: number
   lineStyle: CardOpenSection['lineStyle']
@@ -83,6 +84,7 @@ export type TemplateMathLayout = {
   y: number
   width: number
   height: number
+  displayQuestionNumber: number | null
   linkedQuestionNumber: number | null
   titleY: number
   headerY: number
@@ -97,6 +99,24 @@ export type TemplateMathLayout = {
   bubbleRadius: number
   inputBoxWidth: number
   inputBoxHeight: number
+}
+
+export type TemplateImageLayout = {
+  id: string
+  imageSrc: string | null
+  imageName: string | null
+  imageWidth: number | null
+  imageHeight: number | null
+  size: CardImageSection['size']
+  align: CardImageSection['align']
+  displayQuestionNumber: number | null
+  linkedQuestionNumber: number | null
+  x: number
+  y: number
+  width: number
+  height: number
+  imageBoxY: number
+  imageBoxHeight: number
 }
 
 export type TemplateEssayLayout = {
@@ -138,6 +158,8 @@ export type TemplateEssayLayout = {
   }>
   essayTitleLabelY: number
   essayTitleLineY: number
+  essayTitleLineX: number
+  essayTitleLineWidth: number
   writingTopY: number
   answerBox: {
     x: number
@@ -150,6 +172,8 @@ export type TemplateEssayLayout = {
     number: number
     numberX: number
     numberY: number
+    rowTopY: number
+    rowBottomY: number
     lineY: number
     lineX: number
     lineWidth: number
@@ -170,6 +194,7 @@ export type TemplatePageLayout = {
   labels: TemplateLabelLayout[]
   openAnswers: TemplateOpenAnswerLayout[]
   mathBlocks: TemplateMathLayout[]
+  images: TemplateImageLayout[]
   essays: TemplateEssayLayout[]
   signatures: TemplateSignatureLayout[]
 }
@@ -210,6 +235,7 @@ type LayoutFlowSection =
       label: string
       lines: number
       lineStyle: CardOpenSection['lineStyle']
+      displayQuestionNumber: number | null
       linkedQuestionNumber: number | null
     }
   | {
@@ -221,6 +247,19 @@ type LayoutFlowSection =
       columnHeaders: string[]
       showColumnSeparators: boolean
       columnSeparators: string[]
+      displayQuestionNumber: number | null
+      linkedQuestionNumber: number | null
+    }
+  | {
+      kind: 'image'
+      id: string
+      imageSrc: string | null
+      imageName: string | null
+      imageWidth: number | null
+      imageHeight: number | null
+      size: CardImageSection['size']
+      align: CardImageSection['align']
+      displayQuestionNumber: number | null
       linkedQuestionNumber: number | null
     }
   | {
@@ -269,6 +308,7 @@ type DraftPageLayout = {
   labels: TemplateLabelLayout[]
   openAnswers: TemplateOpenAnswerLayout[]
   mathBlocks: TemplateMathLayout[]
+  images: TemplateImageLayout[]
   essays: TemplateEssayLayout[]
   signatures: TemplateSignatureLayout[]
 }
@@ -335,9 +375,39 @@ function getOpenAnswerSectionMetrics(rowOffset: number, lines: number) {
   }
 }
 
-function getOpenAnswerTitleMetrics(linkedQuestionNumber: number | null) {
-  if (!linkedQuestionNumber) return { titleHeight: 0, titleGap: 0 }
+function getOpenAnswerTitleMetrics(displayQuestionNumber: number | null) {
+  if (!displayQuestionNumber) return { titleHeight: 0, titleGap: 0 }
   return { titleHeight: 12, titleGap: 8 }
+}
+
+function getImageSizeRatio(size: CardImageSection['size']) {
+  if (size === 'auto') return 1
+  if (size === '25') return 0.25
+  if (size === '75') return 0.75
+  if (size === '100') return 1
+  return 0.5
+}
+
+function getImageSectionMetrics(
+  rowOffset: number,
+  displayQuestionNumber: number | null,
+  imageHeight: number,
+) {
+  const topGap = Math.max(14, rowOffset * 0.56)
+  const titleHeight = displayQuestionNumber ? 14 : 0
+  const titleGap = displayQuestionNumber ? 7 : 0
+  const imageBoxHeight = Math.max(36, imageHeight)
+  const afterGap = Math.max(12, rowOffset * 0.42)
+
+  return {
+    fontSize: 10,
+    topGap,
+    titleHeight,
+    titleGap,
+    imageBoxHeight,
+    totalHeight: topGap + titleHeight + titleGap + imageBoxHeight,
+    afterGap,
+  }
 }
 
 function getMathColumns(value: number) {
@@ -350,14 +420,14 @@ function getMathSectionMetrics(
   showTopInputRow: boolean,
   showColumnHeaders: boolean,
   showColumnSeparators: boolean,
-  linkedQuestionNumber: number | null,
+  displayQuestionNumber: number | null,
   sharedBubbleRadius: number,
   sharedBubbleSpacing: number,
 ) {
   const safeColumns = getMathColumns(columns)
   const topGap = Math.max(18, rowOffset * 0.66)
-  const titleHeight = linkedQuestionNumber ? 12 : 0
-  const titleToContentGap = linkedQuestionNumber ? 7 : 0
+  const titleHeight = displayQuestionNumber ? 12 : 0
+  const titleToContentGap = displayQuestionNumber ? 7 : 0
   const compactVerticalGap = Math.max(6, Math.min(8, rowOffset * 0.24))
   const headerHeight = showColumnHeaders ? 12 : 0
   const headerToInputGap = showColumnHeaders && showTopInputRow ? Math.max(4, compactVerticalGap - 1) : 0
@@ -424,32 +494,6 @@ function getEssayLines(value: number) {
 
 function getEssayHighlightStep(value: number) {
   return Math.min(20, Math.max(0, Math.round(value)))
-}
-
-function getEssayLogoBox(
-  position: CardEssaySection['logoPosition'],
-  bounds: { x: number; y: number; width: number },
-) {
-  const width = 92
-  const height = 38
-  const x =
-    position === 'top-center'
-      ? bounds.x + (bounds.width - width) / 2
-      : position === 'top-right'
-        ? bounds.x + bounds.width - width
-        : bounds.x
-
-  return { x, y: bounds.y, width, height }
-}
-
-function getEssayQrBox(
-  position: CardEssaySection['qrPosition'],
-  bounds: { x: number; y: number; width: number; bottomY: number },
-) {
-  const size = 62
-  const x = bounds.x + bounds.width - size
-  const y = position === 'top-right' ? bounds.y : bounds.bottomY - size
-  return { x, y, size }
 }
 
 function getSpacerSectionHeight(size: CardSpacerSection['size']) {
@@ -530,6 +574,7 @@ function createDraftPageLayout(
     labels: [],
     openAnswers: [],
     mathBlocks: [],
+    images: [],
     essays: [],
     signatures: [],
   }
@@ -538,18 +583,26 @@ function createDraftPageLayout(
 function createEssayLayout(
   section: Extract<LayoutFlowSection, { kind: 'essay' }>,
   zones: ReturnType<typeof getCardTemplateZones>,
+  state: CardTemplateEditorState,
 ): TemplateEssayLayout {
+  const { definition } = state
   const pagePaddingX = 34
   const x = zones.page.x + pagePaddingX
-  const y = zones.page.y + 34
+  const y = zones.page.y + 24
   const width = zones.page.width - pagePaddingX * 2
-  const bottomY = zones.page.y + zones.page.height - 34
+  const bottomY = zones.footer.top - 18
   const lines = getEssayLines(section.lines)
   const highlightStep = getEssayHighlightStep(section.highlightStep)
-  const titleY = y + 18
-  const logoBox = section.showLogo ? getEssayLogoBox(section.logoPosition, { x, y, width }) : null
-  const qrBox = section.showQRCode ? getEssayQrBox(section.qrPosition, { x, y, width, bottomY }) : null
-  const headerTopY = Math.max(titleY + 30, logoBox ? logoBox.y + logoBox.height + 20 : titleY + 34)
+  const titleY = y + 12
+  const logoPosition =
+    definition.header.logoAlignment === 'center'
+      ? 'top-center'
+      : definition.header.logoAlignment === 'right'
+        ? 'top-right'
+        : 'top-left'
+  const logoBox = null
+  const qrBox = null
+  const headerTopY = titleY + 28
   const headerRows: Array<Array<{ key: TemplateEssayLayout['headerFields'][number]['key']; label: string; widthRatio: number }>> = []
 
   if (section.showStudentName || section.showTestName) {
@@ -586,7 +639,7 @@ function createEssayLayout(
             key: field.key,
             label: field.label,
             x: cursorX,
-            y: headerTopY + rowIndex * 24,
+            y: headerTopY + rowIndex * 19,
             labelWidth,
             lineX: cursorX + labelWidth + 5,
             lineWidth: Math.max(28, fieldWidth - labelWidth - 14),
@@ -596,28 +649,37 @@ function createEssayLayout(
         })
       })
     : []
-  const afterHeaderY = section.showHeader && headerRows.length ? headerTopY + headerRows.length * 24 + 4 : titleY + 22
-  const essayTitleLabelY = afterHeaderY + 18
-  const essayTitleLineY = essayTitleLabelY + 13
-  const writingTopY = section.showEssayTitleField ? essayTitleLineY + 24 : afterHeaderY + 18
+  const afterHeaderY = section.showHeader && headerRows.length ? headerTopY + headerRows.length * 19 + 3 : titleY + 20
+  const essayTitleLabelY = afterHeaderY + 9
+  const essayTitleLineY = essayTitleLabelY + 1
+  const titleLineWidth = Math.min(width * 0.62, 250)
+  const titleLineX = x + (width - titleLineWidth) / 2
+  const writingTopY = section.showEssayTitleField ? essayTitleLineY + 21 : afterHeaderY + 14
   const availableWritingHeight = Math.max(180, bottomY - writingTopY)
-  const lineSpacing = Math.min(20, Math.max(11, availableWritingHeight / lines))
-  const numberColumnWidth = 26
-  const lineX = x + numberColumnWidth + 8
-  const lineWidth = width - numberColumnWidth - 8
+  const lineSpacing = Math.min(18, Math.max(10, availableWritingHeight / lines))
+  const numberColumnWidth = section.style === 'box' ? 34 : 26
+  const lineX = section.style === 'box' ? x + numberColumnWidth : x + numberColumnWidth + 8
+  const lineWidth = section.style === 'box' ? width - numberColumnWidth : width - numberColumnWidth - 8
+  const answerBoxInsetX = 0
+  const answerBoxPaddingY = section.style === 'box' ? 0 : 8
+  const answerBoxHeight = section.style === 'box' ? lineSpacing * lines : Math.max(24, (lines - 1) * lineSpacing + answerBoxPaddingY * 2)
   const answerBox = {
-    x: lineX,
-    y: writingTopY - 8,
-    width: lineWidth,
-    height: Math.max(24, (lines - 1) * lineSpacing + 16),
+    x: section.style === 'box' ? x : lineX - answerBoxInsetX,
+    y: writingTopY - answerBoxPaddingY,
+    width: section.style === 'box' ? width : lineWidth + answerBoxInsetX * 2,
+    height: answerBoxHeight,
   }
   const lineLayouts = Array.from({ length: lines }, (_, index) => {
     const number = index + 1
-    const lineY = writingTopY + index * lineSpacing
+    const rowTopY = section.style === 'box' ? answerBox.y + index * lineSpacing : writingTopY + index * lineSpacing - 12
+    const rowBottomY = section.style === 'box' ? rowTopY + lineSpacing : writingTopY + index * lineSpacing
+    const lineY = section.style === 'box' ? rowBottomY : writingTopY + index * lineSpacing
     return {
       number,
-      numberX: x + numberColumnWidth - 6,
-      numberY: lineY - 3,
+      numberX: section.style === 'box' ? answerBox.x + numberColumnWidth / 2 : x + numberColumnWidth - 6,
+      numberY: section.style === 'box' ? rowTopY + lineSpacing * 0.64 : lineY - 3,
+      rowTopY,
+      rowBottomY,
       lineY,
       lineX,
       lineWidth,
@@ -633,10 +695,10 @@ function createEssayLayout(
     showEssayTitleField: section.showEssayTitleField,
     lines,
     highlightStep,
-    showLogo: section.showLogo,
-    logoPosition: section.logoPosition,
-    showQRCode: section.showQRCode,
-    qrPosition: section.qrPosition,
+    showLogo: definition.header.showInstitutionLogo,
+    logoPosition,
+    showQRCode: definition.identification.showExamCode,
+    qrPosition: 'bottom-right',
     x,
     y,
     width,
@@ -647,6 +709,8 @@ function createEssayLayout(
     headerFields,
     essayTitleLabelY,
     essayTitleLineY,
+    essayTitleLineX: titleLineX,
+    essayTitleLineWidth: titleLineWidth,
     writingTopY,
     answerBox,
     numberColumnWidth,
@@ -686,17 +750,20 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
         }
 
         if (section.sectionType === 'open') {
+          const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
           return {
             kind: 'open' as const,
             id: section.id,
             label: section.label,
             lines: section.lines,
             lineStyle: section.lineStyle,
+            displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
             linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
           }
         }
 
         if (section.sectionType === 'math') {
+          const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
           return {
             kind: 'math' as const,
             id: section.id,
@@ -706,6 +773,23 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
             columnHeaders: section.columnHeaders,
             showColumnSeparators: section.showColumnSeparators,
             columnSeparators: section.columnSeparators,
+            displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
+            linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
+          }
+        }
+
+        if (section.sectionType === 'image') {
+          const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
+          return {
+            kind: 'image' as const,
+            id: section.id,
+            imageSrc: section.imageSrc,
+            imageName: section.imageName,
+            imageWidth: section.imageWidth,
+            imageHeight: section.imageHeight,
+            size: section.size,
+            align: section.align,
+            displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
             linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
           }
         }
@@ -760,6 +844,7 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
           section.kind === 'pageBreak' ||
           section.kind === 'open' ||
           section.kind === 'math' ||
+          section.kind === 'image' ||
           section.kind === 'essay' ||
           section.kind === 'signature' ||
           section.questionNumbers.length > 0,
@@ -799,6 +884,7 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
     }
 
     if (section.sectionType === 'open') {
+      const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
       if (pendingObjectiveGroup) {
         flowSections.push(pendingObjectiveGroup)
       }
@@ -809,12 +895,14 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
         label: section.label,
         lines: section.lines,
         lineStyle: section.lineStyle,
+        displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
         linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
       })
       return
     }
 
     if (section.sectionType === 'math') {
+      const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
       if (pendingObjectiveGroup) {
         flowSections.push(pendingObjectiveGroup)
       }
@@ -828,6 +916,28 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
         columnHeaders: section.columnHeaders,
         showColumnSeparators: section.showColumnSeparators,
         columnSeparators: section.columnSeparators,
+        displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
+        linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
+      })
+      return
+    }
+
+    if (section.sectionType === 'image') {
+      const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
+      if (pendingObjectiveGroup) {
+        flowSections.push(pendingObjectiveGroup)
+      }
+      pendingObjectiveGroup = null
+      flowSections.push({
+        kind: 'image',
+        id: section.id,
+        imageSrc: section.imageSrc,
+        imageName: section.imageName,
+        imageWidth: section.imageWidth,
+        imageHeight: section.imageHeight,
+        size: section.size,
+        align: section.align,
+        displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
         linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
       })
       return
@@ -966,6 +1076,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
       currentPage.labels.length === 0 &&
       currentPage.openAnswers.length === 0 &&
       currentPage.mathBlocks.length === 0 &&
+      currentPage.images.length === 0 &&
       currentPage.essays.length === 0 &&
       currentPage.signatures.length === 0
     ) return
@@ -991,6 +1102,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
     currentPage.labels.length > 0 ||
     currentPage.openAnswers.length > 0 ||
     currentPage.mathBlocks.length > 0 ||
+    currentPage.images.length > 0 ||
     currentPage.essays.length > 0 ||
     currentPage.signatures.length > 0
 
@@ -1052,6 +1164,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
         y: sectionY,
         width: blockWidth,
         height: metrics.totalHeight,
+        displayQuestionNumber: section.displayQuestionNumber,
         linkedQuestionNumber: section.linkedQuestionNumber,
         titleY,
         headerY,
@@ -1100,7 +1213,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
     if (section.kind === 'essay') {
       pushCurrentPage()
       currentPage.pageKind = 'essay'
-      currentPage.essays.push(createEssayLayout(section, zones))
+      currentPage.essays.push(createEssayLayout(section, zones, state))
       pushCurrentPage()
       return
     }
@@ -1154,7 +1267,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
 
     if (section.kind === 'open') {
   const openMetrics = getOpenAnswerSectionMetrics(resolvedRowOffset, section.lines)
-      const openTitleMetrics = getOpenAnswerTitleMetrics(section.linkedQuestionNumber)
+      const openTitleMetrics = getOpenAnswerTitleMetrics(section.displayQuestionNumber)
       if (hasContentOnPage() && currentY + openTitleMetrics.titleHeight + openTitleMetrics.titleGap + openMetrics.totalHeight > pageBottomY) {
         pushCurrentPage()
       }
@@ -1166,6 +1279,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
       currentPage.openAnswers.push({
         id: section.id,
         label: section.label,
+        displayQuestionNumber: section.displayQuestionNumber,
         linkedQuestionNumber: section.linkedQuestionNumber,
         lines: openMetrics.safeLines,
         lineStyle: section.lineStyle,
@@ -1194,7 +1308,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
         section.showTopInputRow,
         section.showColumnHeaders,
         section.showColumnSeparators,
-        section.linkedQuestionNumber,
+        section.displayQuestionNumber,
         currentPage.metrics.bubbleRadius,
         currentPage.metrics.bubbleSpacing,
       )
@@ -1232,6 +1346,59 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
       const nextSection = sectionIndex < flowSections.length - 1 ? flowSections[sectionIndex + 1] : null
       if (nextSection?.kind !== 'math') {
         flushPendingMathRow(sectionIndex < flowSections.length - 1)
+      }
+      return
+    }
+
+    if (section.kind === 'image') {
+      const imageAreaX = layoutArea.left
+      const imageAreaWidth = layoutArea.right - layoutArea.left
+      const naturalImageWidth = section.imageWidth ?? imageAreaWidth
+      const naturalImageHeight = section.imageHeight ?? Math.max(90, resolvedRowOffset * 6.2)
+      const aspectRatio = naturalImageWidth > 0 && naturalImageHeight > 0 ? naturalImageWidth / naturalImageHeight : 16 / 9
+      const requestedImageWidth =
+        section.size === 'auto'
+          ? Math.min(naturalImageWidth, imageAreaWidth)
+          : imageAreaWidth * getImageSizeRatio(section.size)
+      const requestedImageHeight = requestedImageWidth / aspectRatio
+      const maxImageHeight = Math.max(90, pageUsableHeight - (section.displayQuestionNumber ? 35 : 18))
+      const imageHeight = Math.min(requestedImageHeight, maxImageHeight)
+      const imageWidth = Math.min(requestedImageWidth, imageHeight * aspectRatio)
+      const imageMetrics = getImageSectionMetrics(resolvedRowOffset, section.displayQuestionNumber, imageHeight)
+      if (hasContentOnPage() && currentY + imageMetrics.totalHeight > pageBottomY) {
+        pushCurrentPage()
+      }
+
+      const imageX =
+        section.align === 'left'
+          ? imageAreaX
+          : section.align === 'right'
+            ? imageAreaX + imageAreaWidth - imageWidth
+            : imageAreaX + (imageAreaWidth - imageWidth) / 2
+      const sectionY = currentY + imageMetrics.topGap
+      const imageBoxY = sectionY + imageMetrics.titleHeight + imageMetrics.titleGap
+
+      currentPage.images.push({
+        id: section.id,
+        imageSrc: section.imageSrc,
+        imageName: section.imageName,
+        imageWidth: section.imageWidth,
+        imageHeight: section.imageHeight,
+        size: section.size,
+        align: section.align,
+        displayQuestionNumber: section.displayQuestionNumber,
+        linkedQuestionNumber: section.linkedQuestionNumber,
+        x: imageX,
+        y: sectionY,
+        width: imageWidth,
+        height: imageMetrics.totalHeight,
+        imageBoxY,
+        imageBoxHeight: imageMetrics.imageBoxHeight,
+      })
+      currentY += imageMetrics.totalHeight
+
+      if (sectionIndex < flowSections.length - 1) {
+        currentY += imageMetrics.afterGap
       }
       return
     }

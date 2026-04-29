@@ -41,48 +41,56 @@ function buildStudentResult(params: {
   }
 }
 
+export type OMRProcessingResponse = {
+  job: ProcessingJob
+  totalFiles: number
+  processedFiles: number
+  failedFiles: number
+  results: OMRResult[]
+}
+
 export class OMRService {
   async process(input: {
     examId: string
     uploadIds: string[]
     templateId: string
     answerKeyId: string
-  }): Promise<{ job: ProcessingJob; files: OMRResult[] }> {
+  }): Promise<OMRProcessingResponse> {
     const exam = db.exams.find((item) => item.id === input.examId)
     if (!exam) {
-      throw new AppError('EXAM_NOT_FOUND', 'Prova nao encontrada para processamento.', 404)
+      throw new AppError('EXAM_NOT_FOUND', 'Prova não encontrada para processamento.', 404)
     }
 
     const template = templateService.findById(input.templateId)
     if (!template) {
-      throw new AppError('TEMPLATE_NOT_FOUND', 'Template nao encontrado. Crie um template antes do processamento.', 404)
+      throw new AppError('TEMPLATE_NOT_FOUND', 'Template não encontrado. Crie um template antes do processamento.', 404)
     }
 
     if (template.examId !== input.examId) {
-      throw new AppError('PROCESS_TEMPLATE_EXAM_MISMATCH', 'O template selecionado nao pertence a prova ativa.', 400)
+      throw new AppError('PROCESS_TEMPLATE_EXAM_MISMATCH', 'O template selecionado não pertence à prova ativa.', 400)
     }
 
     const answerKey = answerKeyService.findById(input.answerKeyId)
     if (!answerKey) {
-      throw new AppError('ANSWER_KEY_NOT_FOUND', 'Gabarito nao encontrado. Crie um gabarito para o template selecionado.', 404)
+      throw new AppError('ANSWER_KEY_NOT_FOUND', 'Gabarito não encontrado. Crie um gabarito para o template selecionado.', 404)
     }
 
     if (answerKey.examId !== input.examId) {
-      throw new AppError('PROCESS_ANSWER_KEY_EXAM_MISMATCH', 'O gabarito selecionado nao pertence a prova ativa.', 400)
+      throw new AppError('PROCESS_ANSWER_KEY_EXAM_MISMATCH', 'O gabarito selecionado não pertence à prova ativa.', 400)
     }
 
     if (answerKey.templateId !== template.id) {
-      throw new AppError('PROCESS_ANSWER_KEY_TEMPLATE_MISMATCH', 'O gabarito selecionado nao corresponde ao template informado.', 400)
+      throw new AppError('PROCESS_ANSWER_KEY_TEMPLATE_MISMATCH', 'O gabarito selecionado não corresponde ao template informado.', 400)
     }
 
     const uploads = input.uploadIds.map((uploadId) => {
       const upload = db.uploads.find((item) => item.id === uploadId)
       if (!upload) {
-        throw new AppError('UPLOAD_NOT_FOUND', `Upload ${uploadId} nao encontrado.`, 404)
+        throw new AppError('UPLOAD_NOT_FOUND', `Upload ${uploadId} não encontrado.`, 404)
       }
 
       if (upload.examId !== input.examId) {
-        throw new AppError('PROCESS_UPLOAD_EXAM_MISMATCH', 'Todos os uploads precisam pertencer a prova ativa.', 400)
+        throw new AppError('PROCESS_UPLOAD_EXAM_MISMATCH', 'Todos os uploads precisam pertencer à prova ativa.', 400)
       }
 
       return upload
@@ -98,69 +106,84 @@ export class OMRService {
       answerKeyVersion: answerKey.name,
       status: 'queued',
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
 
     db.jobs.push(job)
     db.persist()
 
     job.status = 'processing'
+    job.updatedAt = new Date().toISOString()
     db.persist()
 
-    const files: OMRResult[] = []
+    const results: OMRResult[] = []
+    let failedFiles = 0
 
     for (const upload of uploads) {
-      const detection = await analyzeAnswerSheetImage({
-        imagePath: upload.path,
-        templateName: template.name,
-        templateConfig: template.omrConfig,
-      })
+      try {
+        const detection = await analyzeAnswerSheetImage({
+          imagePath: upload.path,
+          templateName: template.name,
+          templateConfig: template.omrConfig,
+        })
 
-      const correction = correctAnswers({ detection, answerKey })
+        const correction = correctAnswers({ detection, answerKey })
 
-      const result: OMRResult = {
-        id: generateId('omr'),
-        jobId: job.id,
-        uploadId: upload.id,
-        fileName: upload.originalName,
-        templateUsedId: template.id,
-        answerKeyUsedId: answerKey.id,
-        totalQuestions: detection.totalQuestions,
-        answers: correction.answers,
-        blankQuestions: detection.blankQuestions,
-        multipleMarkedQuestions: detection.multipleMarkedQuestions,
-        totalCorrect: correction.totalCorrect,
-        totalIncorrect: correction.totalIncorrect,
-        score: correction.score,
-        confidenceAverage: correction.confidenceAverage,
-        metadata: {
-          ...detection.metadata,
-          templateName: `${template.name} (${template.version ?? 'v1'})`,
-          processedAt: new Date().toISOString(),
-        },
+        const result: OMRResult = {
+          id: generateId('omr'),
+          jobId: job.id,
+          uploadId: upload.id,
+          fileName: upload.originalName,
+          templateUsedId: template.id,
+          answerKeyUsedId: answerKey.id,
+          totalQuestions: detection.totalQuestions,
+          answers: correction.answers,
+          blankQuestions: detection.blankQuestions,
+          multipleMarkedQuestions: detection.multipleMarkedQuestions,
+          totalCorrect: correction.totalCorrect,
+          totalIncorrect: correction.totalIncorrect,
+          score: correction.score,
+          confidenceAverage: correction.confidenceAverage,
+          metadata: {
+            ...detection.metadata,
+            templateName: `${template.name} (${template.version ?? 'v1'})`,
+            processedAt: new Date().toISOString(),
+          },
+        }
+
+        results.push(result)
+        db.results.push(result)
+        db.studentResults.push(
+          buildStudentResult({
+            examId: input.examId,
+            upload,
+            omrResultId: result.id,
+            score: result.score,
+            correct: result.totalCorrect,
+            incorrect: result.totalIncorrect,
+            blank: result.blankQuestions.length,
+            multiple: result.multipleMarkedQuestions.length,
+          }),
+        )
+      } catch {
+        failedFiles += 1
       }
 
-      files.push(result)
-      db.results.push(result)
-      db.studentResults.push(
-        buildStudentResult({
-          examId: input.examId,
-          upload,
-          omrResultId: result.id,
-          score: result.score,
-          correct: result.totalCorrect,
-          incorrect: result.totalIncorrect,
-          blank: result.blankQuestions.length,
-          multiple: result.multipleMarkedQuestions.length,
-        }),
-      )
-
+      job.updatedAt = new Date().toISOString()
       db.persist()
     }
 
-    job.status = files.length > 0 ? 'completed' : 'failed'
+    job.status = results.length > 0 ? 'completed' : 'failed'
     job.finishedAt = new Date().toISOString()
+    job.updatedAt = job.finishedAt
     db.persist()
 
-    return { job, files }
+    return {
+      job,
+      totalFiles: uploads.length,
+      processedFiles: results.length,
+      failedFiles,
+      results,
+    }
   }
 }

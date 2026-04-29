@@ -16,15 +16,15 @@ export class OMRController {
     return ok(
       reply,
       {
-        id: result.job.id,
-        status: result.job.status,
-        templateId: result.job.templateId,
-        answerKeyId: result.job.answerKeyId,
-        files: result.files,
+        ...result.job,
+        totalFiles: result.totalFiles,
+        processedFiles: result.processedFiles,
+        failedFiles: result.failedFiles,
+        results: result.results,
       },
       202,
       {
-        totalFilesProcessed: result.files.length,
+        totalFilesProcessed: result.processedFiles,
       },
     )
   }

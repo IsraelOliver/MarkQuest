@@ -1,7 +1,7 @@
 import { db } from '../repositories/in-memory.repository.js'
 import type { Student } from '../types/entities.js'
-import { generateId } from '../utils/id.js'
 import { AppError } from '../utils/app-error.js'
+import { generateId } from '../utils/id.js'
 
 export class StudentService {
   create(input: {
@@ -48,6 +48,11 @@ export class StudentService {
     const student = db.students.find((item) => item.id === id)
     if (!student) {
       throw new AppError('STUDENT_NOT_FOUND', 'Aluno informado não existe.', 404)
+    }
+
+    const classroom = db.classrooms.find((item) => item.id === input.classroomId)
+    if (!classroom) {
+      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada para aluno não existe.', 404)
     }
 
     student.classroomId = input.classroomId

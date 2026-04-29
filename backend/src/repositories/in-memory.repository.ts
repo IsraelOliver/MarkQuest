@@ -16,21 +16,23 @@ type DbShape = {
   answerKeys: AnswerKey[]
 }
 
-const initialState: DbShape = {
-  units: [],
-  classrooms: [],
-  exams: [],
-  students: [],
-  uploads: [],
-  jobs: [],
-  results: [],
-  studentResults: [],
-  templates: [],
-  answerKeys: [],
+function createInitialState(): DbShape {
+  return {
+    units: [],
+    classrooms: [],
+    exams: [],
+    students: [],
+    uploads: [],
+    jobs: [],
+    results: [],
+    studentResults: [],
+    templates: [],
+    answerKeys: [],
+  }
 }
 
 export class JsonRepository {
-  private state: DbShape = initialState
+  private state: DbShape = createInitialState()
   private readonly filePath: string
 
   constructor() {
@@ -80,7 +82,21 @@ export class JsonRepository {
   }
 
   persist() {
-    fs.writeFileSync(this.filePath, JSON.stringify(this.state, null, 2), 'utf-8')
+    const dir = path.dirname(this.filePath)
+    const tempPath = path.join(dir, `${path.basename(this.filePath)}.${process.pid}.tmp`)
+
+    try {
+      fs.mkdirSync(dir, { recursive: true })
+      fs.writeFileSync(tempPath, JSON.stringify(this.state, null, 2), 'utf-8')
+      fs.renameSync(tempPath, this.filePath)
+    } catch (error) {
+      fs.rmSync(tempPath, { force: true })
+      console.error('[JsonRepository] Falha ao persistir arquivo de dados.', {
+        filePath: this.filePath,
+        error,
+      })
+      throw error
+    }
   }
 
   private ensureStorage() {
@@ -88,7 +104,7 @@ export class JsonRepository {
     fs.mkdirSync(dir, { recursive: true })
 
     if (!fs.existsSync(this.filePath)) {
-      fs.writeFileSync(this.filePath, JSON.stringify(initialState, null, 2), 'utf-8')
+      this.persist()
     }
   }
 
@@ -108,8 +124,27 @@ export class JsonRepository {
         templates: parsed.templates ?? [],
         answerKeys: parsed.answerKeys ?? [],
       }
-    } catch {
-      this.state = { ...initialState }
+    } catch (error) {
+      const backupPath = `${this.filePath}.invalid-${Date.now()}`
+      console.error('[JsonRepository] Falha ao carregar JSON de dados. Um arquivo limpo será recriado.', {
+        filePath: this.filePath,
+        backupPath,
+        error,
+      })
+
+      try {
+        if (fs.existsSync(this.filePath)) {
+          fs.renameSync(this.filePath, backupPath)
+        }
+      } catch (backupError) {
+        console.error('[JsonRepository] Falha ao preservar cópia do JSON inválido.', {
+          filePath: this.filePath,
+          backupPath,
+          error: backupError,
+        })
+      }
+
+      this.state = createInitialState()
       this.persist()
     }
   }

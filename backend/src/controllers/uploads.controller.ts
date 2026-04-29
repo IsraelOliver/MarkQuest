@@ -1,6 +1,9 @@
+import path from 'node:path'
 import type { FastifyReply, FastifyRequest } from 'fastify'
+import { ALLOWED_UPLOAD_EXTENSIONS, ALLOWED_UPLOAD_MIME_TYPES, INVALID_UPLOAD_MESSAGE } from '../constants/uploads.js'
 import { uploadBodySchema, uploadListQuerySchema } from '../schemas/uploads.schema.js'
 import { UploadService } from '../services/upload.service.js'
+import { AppError } from '../utils/app-error.js'
 import { saveMultipartFile } from '../utils/file-storage.js'
 import { ok } from '../utils/http-response.js'
 
@@ -15,6 +18,14 @@ export class UploadsController {
         success: false,
         error: { code: 'FILE_REQUIRED', message: 'Arquivo é obrigatório no upload.' },
       })
+    }
+
+    const extension = path.extname(file.filename).toLowerCase()
+    const hasAllowedMimeType = ALLOWED_UPLOAD_MIME_TYPES.includes(file.mimetype as (typeof ALLOWED_UPLOAD_MIME_TYPES)[number])
+    const hasAllowedExtension = ALLOWED_UPLOAD_EXTENSIONS.includes(extension as (typeof ALLOWED_UPLOAD_EXTENSIONS)[number])
+
+    if (!file.file || !file.filename || !hasAllowedMimeType || !hasAllowedExtension) {
+      throw new AppError('INVALID_UPLOAD_FILE', INVALID_UPLOAD_MESSAGE, 400)
     }
 
     const parsed = uploadBodySchema.parse(file.fields)

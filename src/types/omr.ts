@@ -55,7 +55,11 @@ export type ProcessingJob = {
   answerKeyVersion: string
   status: ProcessingJobStatus
   createdAt: string
+  updatedAt?: string
   finishedAt?: string
+  totalFiles?: number
+  processedFiles?: number
+  failedFiles?: number
 }
 
 export type OMRResult = {
@@ -97,7 +101,7 @@ export type CardVisualStyle = 'institutional' | 'vestibular' | 'compact'
 export type CardVisualDensity = 'compact' | 'balanced' | 'spacious'
 export type CardQuestionStyle = 'classic' | 'lined' | 'minimal'
 export type OMRReadMode = 'conservative' | 'balanced' | 'sensitive'
-export type CardTemplateSectionType = 'objective' | 'mathematics' | 'math' | 'open' | 'label' | 'spacer' | 'pageBreak' | 'signature' | 'essay'
+export type CardTemplateSectionType = 'objective' | 'mathematics' | 'math' | 'open' | 'image' | 'label' | 'spacer' | 'pageBreak' | 'signature' | 'essay'
 export type CardTemplateSectionReadMode = 'answers' | 'ignored' | 'manual'
 export type CardLabelAlign = 'left' | 'center' | 'right'
 export type CardLabelSize = 'sm' | 'md' | 'lg'
@@ -108,6 +112,8 @@ export type CardOpenLineStyle = 'line' | 'box'
 export type CardEssayStyle = 'lines' | 'box'
 export type CardEssayLogoPosition = 'top-left' | 'top-center' | 'top-right'
 export type CardEssayQrPosition = 'bottom-right' | 'top-right'
+export type CardImageSize = 'auto' | '25' | '50' | '75' | '100'
+export type CardImageAlign = 'left' | 'center' | 'right'
 
 export type CardObjectiveSection = {
   id: string
@@ -179,6 +185,26 @@ export type CardMathSection = {
   markerLabel: string
 }
 
+export type CardImageSection = {
+  id: string
+  sectionType: 'image'
+  readMode: 'ignored' | 'manual'
+  imageSrc: string | null
+  imageName: string | null
+  imageWidth: number | null
+  imageHeight: number | null
+  size: CardImageSize
+  align: CardImageAlign
+  isQuestion: boolean
+  linkedToMainQuestion: boolean
+  linkedQuestionNumber: number | null
+  markerLabel: string
+  mimeType?: string
+  fileSize?: number
+  optimized?: boolean
+  originalName?: string
+}
+
 export type CardEssaySection = {
   id: string
   sectionType: 'essay'
@@ -206,6 +232,7 @@ export type CardTemplateSection =
   | CardObjectiveSection
   | CardOpenSection
   | CardMathSection
+  | CardImageSection
   | CardEssaySection
   | CardLabelSection
   | CardSpacerSection

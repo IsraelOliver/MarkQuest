@@ -1,7 +1,7 @@
 import { db } from '../repositories/in-memory.repository.js'
 import type { Classroom } from '../types/entities.js'
-import { generateId } from '../utils/id.js'
 import { AppError } from '../utils/app-error.js'
+import { generateId } from '../utils/id.js'
 
 export class ClassroomService {
   create(input: { unitId: string; name: string; year: string }): Classroom {
@@ -31,6 +31,11 @@ export class ClassroomService {
     const classroom = db.classrooms.find((item) => item.id === id)
     if (!classroom) {
       throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada não existe.', 404)
+    }
+
+    const unit = db.units.find((item) => item.id === input.unitId)
+    if (!unit) {
+      throw new AppError('UNIT_NOT_FOUND', 'Unidade informada não existe.', 404)
     }
 
     classroom.unitId = input.unitId

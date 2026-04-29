@@ -13,6 +13,7 @@ const cardPresetSchema = z.enum([
 
 const omrConfigSchema = z
   .object({
+    totalQuestions: z.number().int().positive().max(MAX_QUESTIONS).optional(),
     choicesPerQuestion: z.union([z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).optional(),
     columns: z.number().int().positive().optional(),
     rowsPerColumn: z.number().int().positive().optional(),
@@ -79,6 +80,25 @@ const cardDefinitionSchema = z.object({
         linkedToMainQuestion: z.boolean(),
         linkedQuestionNumber: z.number().int().positive().nullable(),
         markerLabel: z.string().max(12),
+      }),
+      z.object({
+        id: z.string(),
+        sectionType: z.literal('image'),
+        readMode: z.enum(['ignored', 'manual']),
+        imageSrc: z.string().nullable(),
+        imageName: z.string().nullable(),
+        imageWidth: z.number().int().positive().nullable().optional(),
+        imageHeight: z.number().int().positive().nullable().optional(),
+        size: z.enum(['auto', '25', '50', '75', '100']),
+        align: z.enum(['left', 'center', 'right']),
+        isQuestion: z.boolean(),
+        linkedToMainQuestion: z.boolean(),
+        linkedQuestionNumber: z.number().int().positive().nullable(),
+        markerLabel: z.string().max(12),
+        mimeType: z.string().optional(),
+        fileSize: z.number().int().positive().optional(),
+        optimized: z.boolean().optional(),
+        originalName: z.string().optional(),
       }),
       z.object({
         id: z.string(),

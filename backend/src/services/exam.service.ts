@@ -1,7 +1,7 @@
 import { db } from '../repositories/in-memory.repository.js'
 import type { Exam } from '../types/entities.js'
-import { generateId } from '../utils/id.js'
 import { AppError } from '../utils/app-error.js'
+import { generateId } from '../utils/id.js'
 
 export class ExamService {
   create(input: { classroomId: string; title: string; subject: string; totalQuestions: number }): Exam {
@@ -36,6 +36,11 @@ export class ExamService {
     const exam = this.findById(id)
     if (!exam) {
       throw new AppError('EXAM_NOT_FOUND', 'Prova informada não existe.', 404)
+    }
+
+    const classroom = db.classrooms.find((item) => item.id === input.classroomId)
+    if (!classroom) {
+      throw new AppError('CLASSROOM_NOT_FOUND', 'Turma informada não existe.', 404)
     }
 
     exam.classroomId = input.classroomId

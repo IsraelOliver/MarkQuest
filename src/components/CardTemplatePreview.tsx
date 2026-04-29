@@ -1,5 +1,3 @@
-import { useEffect, useState } from 'react'
-import QRCode from 'qrcode'
 import type { CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from '../utils/cardTemplateZones'
 import { getFooterMessageAnchor, wrapFooterMessage } from '../utils/footerMessageLayout'
@@ -9,6 +7,15 @@ import { formatQuestionLabel } from '../utils/questionNumbering'
 import { estimateTextWidth, getLabelTextFontSize, getTemplateRenderMetrics } from '../utils/templateRenderMetrics'
 import { TEMPLATE_PAGE_HEIGHT, TEMPLATE_PAGE_WIDTH, TEMPLATE_PAGE_X, TEMPLATE_PAGE_Y } from '../utils/templateLayoutGeometry'
 import { getPaginatedTemplatePages } from '../utils/templatePageLayout'
+import {
+  getContainedImageLayout,
+  getMathBubbleLayouts,
+  getMathInputBoxLayouts,
+  getQuestionMarkerLayout,
+  imagePlaceholderStyle,
+  mathBubbleStyle,
+  mathInputBoxStyle,
+} from '../utils/templateVisualElements'
 
 type CardTemplatePreviewProps = {
   state: CardTemplateEditorState
@@ -58,7 +65,7 @@ function getThemePalette(style: CardTemplateEditorState['visualTheme']['visualSt
   }
 }
 
-export function CardTemplatePreview({ state, classroomName, examName, examId }: CardTemplatePreviewProps) {
+export function CardTemplatePreview({ state, classroomName, examName }: CardTemplatePreviewProps) {
   const { definition, visualTheme } = state
   const renderModel = buildNormalizedRenderModel(definition)
   const zones = getCardTemplateZones(state)
@@ -67,8 +74,6 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
   const topInstruction =
     definition.header.instructions || 'Marque apenas uma alternativa e preencha todo o campo da bolinha'
   const previewStudentCode = 'ST-001'
-  const previewStudentId = 'preview-student'
-  const [essayQrDataUrl, setEssayQrDataUrl] = useState('')
   const pages = getPaginatedTemplatePages(state)
   const totalPages = pages.length
   const previewViewBox = [
@@ -101,30 +106,6 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
   const pageTextY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 22 : zones.footer.bottom - 8
   const footerMessageStartY = definition.header.footerPagePosition === 'top' ? zones.footer.top + 42 : zones.footer.top + 30
 
-  useEffect(() => {
-    let cancelled = false
-    const qrPayload = JSON.stringify({
-      testId: examId || 'preview-test',
-      studentId: previewStudentId,
-      code: previewStudentCode,
-    })
-
-    QRCode.toDataURL(qrPayload, {
-      errorCorrectionLevel: 'L',
-      margin: 4,
-      width: 320,
-      color: { dark: '#000000', light: '#ffffff' },
-    }).then((dataUrl) => {
-      if (!cancelled) setEssayQrDataUrl(dataUrl)
-    }).catch(() => {
-      if (!cancelled) setEssayQrDataUrl('')
-    })
-
-    return () => {
-      cancelled = true
-    }
-  }, [examId])
-
   const getEssayHeaderValue = (field: 'studentName' | 'class' | 'testName' | 'code' | 'teacher' | 'shift' | 'date') => {
     switch (field) {
       case 'studentName':
@@ -156,7 +137,7 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
 
       <div className="card-editor-preview__frame">
         <div className="card-editor-preview__pages">
-          {pages.map(({ pageKind, pageIndex, metrics, questions, blockTitles, labels, openAnswers, mathBlocks, essays, signatures }) => {
+          {pages.map(({ pageKind, pageIndex, metrics, questions, blockTitles, labels, openAnswers, mathBlocks, images, essays, signatures }) => {
             const renderMetrics = getTemplateRenderMetrics(metrics)
             const previewQrSize = renderMetrics.previewQrSize
             const previewQrX = zones.footer.codeBoxX + (zones.footer.codeBoxWidth - previewQrSize) / 2
@@ -182,33 +163,13 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                     />
                     {essays.map((essay) => (
                       <g key={`essay-${pageIndex}-${essay.id}`}>
-                        {essay.logoBox && definition.header.institutionLogoDataUrl ? (
-                          <image
-                            href={definition.header.institutionLogoDataUrl}
-                            x={essay.logoBox.x}
-                            y={essay.logoBox.y}
-                            width={essay.logoBox.width}
-                            height={essay.logoBox.height}
-                            preserveAspectRatio="xMidYMid meet"
-                          />
-                        ) : null}
-                        {essay.qrBox && essayQrDataUrl ? (
-                          <image
-                            href={essayQrDataUrl}
-                            x={essay.qrBox.x}
-                            y={essay.qrBox.y}
-                            width={essay.qrBox.size}
-                            height={essay.qrBox.size}
-                            preserveAspectRatio="xMidYMid meet"
-                          />
-                        ) : null}
                         <text
                           x={essay.x + essay.width / 2}
                           y={essay.titleY}
                           textAnchor="middle"
                           className="card-editor-preview__title"
                           fill={palette.title}
-                          style={{ fontSize: '18px', fontWeight: 800 }}
+                          style={{ fontSize: '16px', fontWeight: 800 }}
                         >
                           {essay.title}
                         </text>
@@ -244,13 +205,10 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                         })}
                         {essay.showEssayTitleField ? (
                           <g>
-                            <text x={essay.x} y={essay.essayTitleLabelY} className="card-editor-preview__field-label" fill={palette.title}>
-                              Título da redação:
-                            </text>
                             <line
-                              x1={essay.x + 84}
+                              x1={essay.essayTitleLineX}
                               y1={essay.essayTitleLineY}
-                              x2={essay.x + essay.width}
+                              x2={essay.essayTitleLineX + essay.essayTitleLineWidth}
                               y2={essay.essayTitleLineY}
                               stroke="#64748b"
                               strokeWidth="0.9"
@@ -258,20 +216,51 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                           </g>
                         ) : null}
                         {essay.style === 'box' ? (
-                          <rect
-                            x={essay.answerBox.x}
-                            y={essay.answerBox.y}
-                            width={essay.answerBox.width}
-                            height={essay.answerBox.height}
-                            rx="7"
-                            fill="#ffffff"
-                            stroke="#64748b"
-                            strokeWidth="1.1"
-                          />
+                          <g>
+                            <rect
+                              x={essay.answerBox.x}
+                              y={essay.answerBox.y}
+                              width={essay.answerBox.width}
+                              height={essay.answerBox.height}
+                              fill="#ffffff"
+                              stroke="#64748b"
+                              strokeWidth="1.2"
+                            />
+                            <line
+                              x1={essay.answerBox.x + essay.numberColumnWidth}
+                              y1={essay.answerBox.y}
+                              x2={essay.answerBox.x + essay.numberColumnWidth}
+                              y2={essay.answerBox.y + essay.answerBox.height}
+                              stroke="#94a3b8"
+                              strokeWidth="0.9"
+                            />
+                          </g>
                         ) : null}
                         {essay.lineLayouts.map((line) => (
                           <g key={`essay-line-${line.number}`}>
-                            {line.highlight ? (
+                            {essay.style === 'box' ? (
+                              <>
+                                {line.highlight ? (
+                                  <rect
+                                    x={essay.answerBox.x}
+                                    y={line.rowTopY}
+                                    width={essay.numberColumnWidth}
+                                    height={line.rowBottomY - line.rowTopY}
+                                    fill="#e5e7eb"
+                                  />
+                                ) : null}
+                                {line.number < essay.lines ? (
+                                  <line
+                                    x1={essay.answerBox.x}
+                                    y1={line.rowBottomY}
+                                    x2={essay.answerBox.x + essay.answerBox.width}
+                                    y2={line.rowBottomY}
+                                    stroke="#94a3b8"
+                                    strokeWidth="0.8"
+                                  />
+                                ) : null}
+                              </>
+                            ) : line.highlight ? (
                               <rect
                                 x={essay.x}
                                 y={line.lineY - 12}
@@ -284,26 +273,138 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                             <text
                               x={line.numberX}
                               y={line.numberY}
-                              textAnchor="end"
+                              textAnchor={essay.style === 'box' ? 'middle' : 'end'}
                               className="card-editor-preview__tiny"
                               fill="#475569"
                               style={{ fontSize: '8px', fontWeight: 700 }}
                             >
                               {line.number}
                             </text>
-                            <line
-                              x1={line.lineX}
-                              y1={line.lineY}
-                              x2={line.lineX + line.lineWidth}
-                              y2={line.lineY}
-                              stroke="#94a3b8"
-                              strokeWidth={essay.style === 'box' ? '0.45' : '0.8'}
-                              opacity={essay.style === 'box' ? '0.45' : '1'}
-                            />
+                            {essay.style === 'box' ? null : (
+                              <line
+                                x1={line.lineX}
+                                y1={line.lineY}
+                                x2={line.lineX + line.lineWidth}
+                                y2={line.lineY}
+                                stroke="#94a3b8"
+                                strokeWidth="0.8"
+                              />
+                            )}
                           </g>
                         ))}
                       </g>
                     ))}
+                    <line
+                      x1={zones.footer.left}
+                      y1={zones.footer.top}
+                      x2={zones.footer.right}
+                      y2={zones.footer.top}
+                      stroke={sectionStroke}
+                      strokeWidth="1"
+                    />
+                    {definition.header.showInstitutionLogo ? (
+                      definition.header.institutionLogoDataUrl ? (
+                        <image
+                          href={definition.header.institutionLogoDataUrl}
+                          x={logoPlacement.x}
+                          y={logoPlacement.y}
+                          width={logoPlacement.width}
+                          height={logoPlacement.height}
+                          preserveAspectRatio="xMidYMid meet"
+                          filter={definition.header.logoMonochrome ? `url(#preview-logo-mono-${pageIndex})` : undefined}
+                        />
+                      ) : (
+                        <rect
+                          x={logoBoxX}
+                          y={logoBoxY}
+                          width={logoBoxWidth}
+                          height="38"
+                          rx="8"
+                          fill="#ffffff"
+                          stroke="#dbe2ea"
+                          strokeDasharray="6 4"
+                        />
+                      )
+                    ) : null}
+                    {footerLines.length ? (
+                      <text
+                        x={footerTextX}
+                        y={footerMessageStartY}
+                        textAnchor={footerTextAnchor}
+                        className={`card-editor-preview__tiny${definition.header.footerMessageWeight === 'semibold' ? ' card-editor-preview__tiny--strong' : ''}`}
+                        fill="#475569"
+                        style={{ fontSize: `${footerFontSize}px` }}
+                      >
+                        {footerLines.map((line, index) => (
+                          <tspan key={`${line}-${index}`} x={footerTextX} dy={index === 0 ? 0 : footerLineGap}>
+                            {line}
+                          </tspan>
+                        ))}
+                      </text>
+                    ) : null}
+                    <text
+                      x={zones.footer.centerAnchorX}
+                      y={pageTextY}
+                      textAnchor="middle"
+                      className={`card-editor-preview__tiny${definition.header.footerPageTone === 'standard' ? ' card-editor-preview__tiny--strong' : ''}`}
+                      fill={definition.header.footerPageTone === 'standard' ? '#475569' : '#64748b'}
+                    >
+                      Página {pageIndex + 1}/{totalPages}
+                    </text>
+                    <line
+                      x1={zones.footer.signatureX}
+                      y1={zones.footer.top + 34}
+                      x2={zones.footer.signatureX + zones.footer.signatureWidth}
+                      y2={zones.footer.top + 34}
+                      stroke={definition.identification.showSignature ? sectionStroke : '#ffffff'}
+                      strokeWidth="1.5"
+                    />
+                    {definition.identification.showSignature ? (
+                      <text
+                        x={zones.footer.signatureX + 70}
+                        y={zones.footer.top + 54}
+                        className="card-editor-preview__meta"
+                        fill={palette.title}
+                        style={{ fontSize: `${renderMetrics.signatureLabelFontSize}px` }}
+                      >
+                        Assinatura do aluno
+                      </text>
+                    ) : null}
+                    {definition.identification.showExamCode ? (
+                      <g>
+                        {(() => {
+                          const cardIdWidth = estimateTextWidth(previewStudentCode, renderMetrics.cardIdFontSize, 'bold')
+                          const qrCenterX = previewQrX + previewQrSize / 2
+                          return (
+                            <text
+                              x={qrCenterX - cardIdWidth / 2}
+                              y={zones.footer.top + 22}
+                              className="card-editor-preview__meta"
+                              fill={palette.title}
+                              style={{ fontSize: `${renderMetrics.cardIdFontSize}px`, fontWeight: 700 }}
+                            >
+                              {previewStudentCode}
+                            </text>
+                          )
+                        })()}
+                        <rect
+                          x={previewQrX}
+                          y={zones.footer.top + renderMetrics.previewQrTop}
+                          width={previewQrSize}
+                          height={previewQrSize}
+                          fill="#ffffff"
+                        />
+                        <path
+                          d={`M ${previewQrX + 11} ${zones.footer.top + 37} h 14 v 14 h -14 z
+                              M ${previewQrX + 53} ${zones.footer.top + 37} h 14 v 14 h -14 z
+                              M ${previewQrX + 11} ${zones.footer.top + 79} h 14 v 14 h -14 z
+                              M ${previewQrX + 34} ${zones.footer.top + 51} h 8 v 8 h -8 z
+                              M ${previewQrX + 50} ${zones.footer.top + 63} h 8 v 8 h -8 z
+                              M ${previewQrX + 38} ${zones.footer.top + 81} h 10 v 10 h -10 z`}
+                          fill={palette.title}
+                        />
+                      </g>
+                    ) : null}
                   </svg>
                 </div>
               )
@@ -448,7 +549,7 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                       fill={palette.title}
                       style={{ fontSize: `${openAnswer.fontSize}px`, fontWeight: 700 }}
                     >
-                      {openAnswer.linkedQuestionNumber ? `${openAnswer.label} — Questão ${openAnswer.linkedQuestionNumber}` : openAnswer.label}
+                      {openAnswer.displayQuestionNumber ? `Questão ${openAnswer.displayQuestionNumber} — ${openAnswer.label}` : openAnswer.label}
                     </text>
                     {openAnswer.lineStyle === 'box' ? (
                       <rect
@@ -479,7 +580,7 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
 
                 {mathBlocks.map((mathBlock) => (
                   <g key={`math-block-${pageIndex}-${mathBlock.id}`}>
-                    {mathBlock.linkedQuestionNumber ? (
+                    {mathBlock.displayQuestionNumber ? (
                       <text
                         x={mathBlock.x}
                         y={mathBlock.titleY}
@@ -488,7 +589,7 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                         fill={palette.title}
                         style={{ fontSize: '9px', fontWeight: 700 }}
                       >
-                        {`Questão matemática — Questão ${mathBlock.linkedQuestionNumber}`}
+                        {`Questão ${mathBlock.displayQuestionNumber}`}
                       </text>
                     ) : null}
                     {mathBlock.showColumnHeaders ? (
@@ -510,17 +611,17 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                     ) : null}
                     {mathBlock.showTopInputRow ? (
                       <g>
-                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                        {getMathInputBoxLayouts(mathBlock).map((box, columnIndex) => (
                           <rect
                             key={`math-input-${pageIndex}-${mathBlock.id}-${columnIndex}`}
-                            x={Math.round(columnX - mathBlock.inputBoxWidth / 2)}
-                            y={Math.round(mathBlock.topInputY - mathBlock.inputBoxHeight / 2)}
-                            width={mathBlock.inputBoxWidth}
-                            height={mathBlock.inputBoxHeight}
-                            rx="4"
-                            fill="#ffffff"
-                            stroke="#d5dee9"
-                            strokeWidth="0.9"
+                            x={box.x}
+                            y={box.y}
+                            width={box.width}
+                            height={box.height}
+                            rx={box.radius}
+                            fill={mathInputBoxStyle.fillColor}
+                            stroke={mathInputBoxStyle.strokeColor}
+                            strokeWidth={mathInputBoxStyle.strokeWidth}
                             shapeRendering="crispEdges"
                           />
                         ))}
@@ -543,32 +644,90 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                         ))}
                       </g>
                     ) : null}
-                    {mathBlock.rows.map((row) => (
+                    {mathBlock.rows.map((row) => {
+                      const rowBubbles = getMathBubbleLayouts(mathBlock, renderMetrics).filter((bubble) => bubble.digit === String(row.digit))
+                      return (
                       <g key={`math-row-${pageIndex}-${mathBlock.id}-${row.digit}`}>
-                        {mathBlock.columnXs.map((columnX, columnIndex) => (
+                        {rowBubbles.map((bubble, columnIndex) => (
                           <g key={`math-bubble-${pageIndex}-${mathBlock.id}-${row.digit}-${columnIndex}`}>
                             <circle
-                              cx={columnX}
-                              cy={row.y}
-                              r={mathBlock.bubbleRadius}
-                              fill="#ffffff"
+                              cx={bubble.cx}
+                              cy={bubble.cy}
+                              r={bubble.radius}
+                              fill={mathBubbleStyle.fillColor}
                               stroke={palette.title}
-                              strokeWidth={renderMetrics.bubbleStrokeWidthPreview}
+                              strokeWidth={bubble.strokeWidth}
                             />
                             <text
-                              x={columnX}
-                              y={row.y + renderMetrics.bubbleLabelOffsetY}
+                              x={bubble.labelX}
+                              y={bubble.labelY}
                               textAnchor="middle"
                               className="card-editor-preview__tiny"
-                              fill="#475569"
-                              style={{ fontSize: `${renderMetrics.bubbleLabelFontSize}px`, fontWeight: 700 }}
+                              fill={mathBubbleStyle.labelColor}
+                              style={{ fontSize: `${bubble.labelFontSize}px`, fontWeight: mathBubbleStyle.labelWeight }}
                             >
-                              {row.digit}
+                              {bubble.digit}
                             </text>
                           </g>
                         ))}
                       </g>
-                    ))}
+                      )
+                    })}
+                  </g>
+                ))}
+
+                {images.map((imageSection) => (
+                  <g key={`image-section-${pageIndex}-${imageSection.id}`}>
+                    {imageSection.displayQuestionNumber ? (
+                      <text
+                        x={imageSection.x}
+                        y={imageSection.y + 10}
+                        textAnchor="start"
+                        className="card-editor-preview__question"
+                        fill={palette.title}
+                        style={{ fontSize: '10px', fontWeight: 700 }}
+                      >
+                        {`Questão ${imageSection.displayQuestionNumber}`}
+                      </text>
+                    ) : null}
+                    {imageSection.imageSrc ? (
+                      (() => {
+                        const imageLayout = getContainedImageLayout(imageSection)
+                        return (
+                          <image
+                            href={imageSection.imageSrc}
+                            x={imageLayout.x}
+                            y={imageLayout.y}
+                            width={imageLayout.width}
+                            height={imageLayout.height}
+                            preserveAspectRatio="none"
+                          />
+                        )
+                      })()
+                    ) : (
+                      <g>
+                        <rect
+                          x={imageSection.x}
+                          y={imageSection.imageBoxY}
+                          width={imageSection.width}
+                          height={imageSection.imageBoxHeight}
+                          rx={imagePlaceholderStyle.radius}
+                          fill={imagePlaceholderStyle.fillColor}
+                          stroke={imagePlaceholderStyle.strokeColor}
+                          strokeDasharray={imagePlaceholderStyle.strokeDashArray}
+                        />
+                        <text
+                          x={imageSection.x + imageSection.width / 2}
+                          y={imageSection.imageBoxY + imageSection.imageBoxHeight / 2}
+                          textAnchor="middle"
+                          className="card-editor-preview__small"
+                          fill={imagePlaceholderStyle.labelColor}
+                          style={{ fontSize: `${imagePlaceholderStyle.labelFontSize}px`, fontWeight: 700 }}
+                        >
+                          Imagem não selecionada
+                        </text>
+                      </g>
+                    )}
                   </g>
                 ))}
 
@@ -620,17 +779,41 @@ export function CardTemplatePreview({ state, classroomName, examName, examId }: 
                     {(() => {
                       const logicalQuestion = renderModel.logicalQuestionMap.get(question.questionNumber)
                       if (logicalQuestion && logicalQuestion.type !== 'objective' && logicalQuestion.markerLabel) {
+                        const markerLayout = getQuestionMarkerLayout({
+                          markerLabel: logicalQuestion.markerLabel,
+                          questionFontSize: renderMetrics.questionFontSize,
+                          optionGroupWidth: question.optionGroupWidth,
+                          optionStartX: question.optionStartX,
+                          optionY: question.optionY,
+                          bubbleRadius: metrics.bubbleRadius,
+                          bubbleStrokeWidth: renderMetrics.bubbleStrokeWidthPreview,
+                          bubbleLabelOffsetY: renderMetrics.bubbleLabelOffsetY,
+                        })
+
                         return (
-                          <text
-                            x={question.optionStartX + question.optionGroupWidth / 2}
-                            y={question.optionY + renderMetrics.bubbleLabelOffsetY}
-                            textAnchor="middle"
-                            className="card-editor-preview__question"
-                            fill={palette.title}
-                            style={{ fontSize: `${Math.max(renderMetrics.questionFontSize - 0.2, 8.5)}px`, fontWeight: 700 }}
-                          >
-                            {logicalQuestion.markerLabel}
-                          </text>
+                          <g>
+                            <rect
+                              x={markerLayout.x}
+                              y={markerLayout.y}
+                              width={markerLayout.width}
+                              height={markerLayout.height}
+                              rx={markerLayout.radius}
+                              fill="#f8fafc"
+                              stroke={palette.title}
+                              strokeWidth={markerLayout.strokeWidth}
+                            />
+                            <text
+                              x={markerLayout.textX}
+                              y={markerLayout.textY}
+                              textAnchor="middle"
+                              dominantBaseline="central"
+                              className="card-editor-preview__question"
+                              fill={palette.title}
+                              style={{ fontSize: `${markerLayout.fontSize}px`, fontWeight: 700, lineHeight: 'normal' }}
+                            >
+                              {logicalQuestion.markerLabel}
+                            </text>
+                          </g>
                         )
                       }
 
