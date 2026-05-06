@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify'
 import { AnswerKeysController } from '../controllers/answer-keys.controller.js'
+import { AuthController } from '../controllers/auth.controller.js'
 import { ClassroomsController } from '../controllers/classrooms.controller.js'
 import { ExamsController } from '../controllers/exams.controller.js'
 import { ResultsController } from '../controllers/results.controller.js'
@@ -10,6 +11,7 @@ import { UploadsController } from '../controllers/uploads.controller.js'
 import { OMRController } from '../modules/omr/omr.controller.js'
 
 const unitsController = new UnitsController()
+const authController = new AuthController()
 const classroomsController = new ClassroomsController()
 const examsController = new ExamsController()
 const studentsController = new StudentsController()
@@ -20,6 +22,11 @@ const templatesController = new TemplatesController()
 const answerKeysController = new AnswerKeysController()
 
 export async function apiRoute(app: FastifyInstance) {
+  app.post('/auth/register', authController.register)
+  app.post('/auth/login', authController.login)
+  app.post('/auth/logout', authController.logout)
+  app.get('/auth/me', authController.me)
+
   app.post('/units', unitsController.create)
   app.get('/units', unitsController.list)
 
@@ -54,4 +61,5 @@ export async function apiRoute(app: FastifyInstance) {
   app.post('/answer-keys', answerKeysController.create)
   app.get('/answer-keys', answerKeysController.list)
   app.get('/answer-keys/:id', answerKeysController.getById)
+  app.put('/answer-keys/:id', answerKeysController.update)
 }

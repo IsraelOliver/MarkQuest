@@ -627,29 +627,12 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                         ))}
                       </g>
                     ) : null}
-                    {mathBlock.showColumnSeparators ? (
-                      <g>
-                        {mathBlock.columnXs.map((columnX, columnIndex) => (
-                          <text
-                            key={`math-separator-${pageIndex}-${mathBlock.id}-${columnIndex}`}
-                            x={columnX}
-                            y={mathBlock.separatorY}
-                            textAnchor="middle"
-                            className="card-editor-preview__tiny"
-                            fill="#475569"
-                            style={{ fontSize: '8px', fontWeight: 600 }}
-                          >
-                            {mathBlock.columnSeparators[columnIndex]}
-                          </text>
-                        ))}
-                      </g>
-                    ) : null}
                     {mathBlock.rows.map((row) => {
-                      const rowBubbles = getMathBubbleLayouts(mathBlock, renderMetrics).filter((bubble) => bubble.digit === String(row.digit))
+                      const rowBubbles = getMathBubbleLayouts(mathBlock, renderMetrics).filter((bubble) => bubble.symbol === row.symbol)
                       return (
-                      <g key={`math-row-${pageIndex}-${mathBlock.id}-${row.digit}`}>
+                      <g key={`math-row-${pageIndex}-${mathBlock.id}-${row.symbol}`}>
                         {rowBubbles.map((bubble, columnIndex) => (
-                          <g key={`math-bubble-${pageIndex}-${mathBlock.id}-${row.digit}-${columnIndex}`}>
+                          <g key={`math-bubble-${pageIndex}-${mathBlock.id}-${row.symbol}-${columnIndex}`}>
                             <circle
                               cx={bubble.cx}
                               cy={bubble.cy}
@@ -666,7 +649,7 @@ export function CardTemplatePreview({ state, classroomName, examName }: CardTemp
                               fill={mathBubbleStyle.labelColor}
                               style={{ fontSize: `${bubble.labelFontSize}px`, fontWeight: mathBubbleStyle.labelWeight }}
                             >
-                              {bubble.digit}
+                              {bubble.symbol}
                             </text>
                           </g>
                         ))}

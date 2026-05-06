@@ -30,6 +30,23 @@ export type OMRProcessingMetadata = {
   binarizationThreshold: number
   templateName: string
   autoRotationAngle: number
+  rotationCandidates?: Array<{
+    angle: number
+    score: number
+  }>
+  rotationConfidence?: number
+  lowConfidenceWarning?: string
+  boundingBoxDetected?: boolean
+  cropApplied?: boolean
+  cropFallbackUsed?: boolean
+  originalWidth?: number
+  originalHeight?: number
+  processedWidth?: number
+  processedHeight?: number
+  spatialTolerancePx?: number
+  displacementAverage?: number
+  maxDisplacementDetected?: number
+  spatialCorrectionApplied?: boolean
 }
 
 export type OMRDetectionOutput = {

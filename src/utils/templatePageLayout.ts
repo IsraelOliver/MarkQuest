@@ -1,6 +1,6 @@
 import type { CardEssaySection, CardImageSection, CardLabelSection, CardNumberingFormat, CardOpenSection, CardSignatureSection, CardSpacerSection, CardTemplateEditorState } from '../types/omr'
 import { getCardTemplateZones } from './cardTemplateZones'
-import { buildNormalizedRenderModel } from './questionBlocks'
+import { buildNormalizedRenderModel, getMathAllowedCharacters } from './questionBlocks'
 import { getTemplateLayoutMetrics } from './templateLayoutGeometry'
 import { getLabelTextFontSize } from './templateRenderMetrics'
 
@@ -79,6 +79,7 @@ export type TemplateMathLayout = {
   showColumnHeaders: boolean
   columnHeaders: string[]
   showColumnSeparators: boolean
+  separatorMode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
   columnSeparators: string[]
   x: number
   y: number
@@ -93,7 +94,7 @@ export type TemplateMathLayout = {
   gridTopY: number
   columnXs: number[]
   rows: Array<{
-    digit: number
+    symbol: string
     y: number
   }>
   bubbleRadius: number
@@ -238,18 +239,19 @@ type LayoutFlowSection =
       displayQuestionNumber: number | null
       linkedQuestionNumber: number | null
     }
-  | {
-      kind: 'math'
-      id: string
-      columns: number
-      showTopInputRow: boolean
-      showColumnHeaders: boolean
-      columnHeaders: string[]
-      showColumnSeparators: boolean
-      columnSeparators: string[]
-      displayQuestionNumber: number | null
-      linkedQuestionNumber: number | null
-    }
+    | {
+        kind: 'math'
+        id: string
+        columns: number
+        showTopInputRow: boolean
+        showColumnHeaders: boolean
+        columnHeaders: string[]
+        showColumnSeparators: boolean
+        separatorMode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
+        columnSeparators: string[]
+        displayQuestionNumber: number | null
+        linkedQuestionNumber: number | null
+      }
   | {
       kind: 'image'
       id: string
@@ -417,13 +419,14 @@ function getMathColumns(value: number) {
 function getMathSectionMetrics(
   rowOffset: number,
   columns: number,
+  columnSeparators: string[],
   showTopInputRow: boolean,
   showColumnHeaders: boolean,
-  showColumnSeparators: boolean,
   displayQuestionNumber: number | null,
   sharedBubbleRadius: number,
   sharedBubbleSpacing: number,
 ) {
+  const symbolCount = getMathAllowedCharacters(columnSeparators).length
   const safeColumns = getMathColumns(columns)
   const topGap = Math.max(18, rowOffset * 0.66)
   const titleHeight = displayQuestionNumber ? 12 : 0
@@ -431,14 +434,14 @@ function getMathSectionMetrics(
   const compactVerticalGap = Math.max(6, Math.min(8, rowOffset * 0.24))
   const headerHeight = showColumnHeaders ? 12 : 0
   const headerToInputGap = showColumnHeaders && showTopInputRow ? Math.max(4, compactVerticalGap - 1) : 0
-  const headerToGridGap = showColumnHeaders && !showTopInputRow && !showColumnSeparators ? compactVerticalGap : 0
+  const headerToGridGap = showColumnHeaders && !showTopInputRow ? compactVerticalGap : 0
   const inputHeight = showTopInputRow ? 16 : 0
-  const inputToSeparatorGap = showTopInputRow && showColumnSeparators ? compactVerticalGap : 0
-  const inputToGridGap = showTopInputRow && !showColumnSeparators ? Math.max(4, compactVerticalGap - 3) : 0
-  const separatorHeight = showColumnSeparators ? 10 : 0
-  const separatorToGridGap = showColumnSeparators ? compactVerticalGap : 0
+  const inputToSeparatorGap = 0
+  const inputToGridGap = showTopInputRow ? Math.max(4, compactVerticalGap - 3) : 0
+  const separatorHeight = 0
+  const separatorToGridGap = 0
   const rowSpacing = rowOffset
-  const gridHeight = 10 * rowSpacing
+  const gridHeight = symbolCount * rowSpacing
   const afterGap = Math.max(12, rowOffset * 0.42)
   const bubbleRadius = sharedBubbleRadius
   const bubbleDiameter = bubbleRadius * 2
@@ -764,18 +767,19 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
 
         if (section.sectionType === 'math') {
           const manualQuestionMeta = renderModel.manualSectionQuestionMap.get(section.order)
-          return {
-            kind: 'math' as const,
-            id: section.id,
-            columns: section.columns,
-            showTopInputRow: section.showTopInputRow,
-            showColumnHeaders: section.showColumnHeaders,
-            columnHeaders: section.columnHeaders,
-            showColumnSeparators: section.showColumnSeparators,
-            columnSeparators: section.columnSeparators,
-            displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
-            linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
-          }
+            return {
+              kind: 'math' as const,
+              id: section.id,
+              columns: section.columns,
+              showTopInputRow: section.showTopInputRow,
+              showColumnHeaders: section.showColumnHeaders,
+              columnHeaders: section.columnHeaders,
+              showColumnSeparators: section.showColumnSeparators,
+              separatorMode: section.separatorMode,
+              columnSeparators: section.columnSeparators,
+              displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
+              linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
+            }
         }
 
         if (section.sectionType === 'image') {
@@ -915,6 +919,7 @@ function buildLayoutFlowSections(state: CardTemplateEditorState, shouldRenderVis
         showColumnHeaders: section.showColumnHeaders,
         columnHeaders: section.columnHeaders,
         showColumnSeparators: section.showColumnSeparators,
+        separatorMode: section.separatorMode,
         columnSeparators: section.columnSeparators,
         displayQuestionNumber: manualQuestionMeta?.questionNumber ?? null,
         linkedQuestionNumber: section.linkedToMainQuestion ? section.linkedQuestionNumber : null,
@@ -1152,6 +1157,8 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
         metrics.separatorToGridGap +
         metrics.bubbleRadius
 
+      const mathSymbols = getMathAllowedCharacters(section.columnSeparators)
+
       currentPage.mathBlocks.push({
         id: section.id,
         columns: metrics.safeColumns,
@@ -1159,6 +1166,7 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
         showColumnHeaders: section.showColumnHeaders,
         columnHeaders: Array.from({ length: metrics.safeColumns }, (_, index) => section.columnHeaders[index] ?? ''),
         showColumnSeparators: section.showColumnSeparators,
+        separatorMode: section.separatorMode,
         columnSeparators: Array.from({ length: metrics.safeColumns }, (_, index) => section.columnSeparators[index] ?? ''),
         x: blockX,
         y: sectionY,
@@ -1172,9 +1180,9 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
         separatorY,
         gridTopY,
         columnXs: Array.from({ length: metrics.safeColumns }, (_, index) => gridLeftX + index * columnSpacing),
-        rows: Array.from({ length: 10 }, (_, digit) => ({
-          digit,
-          y: gridTopY + digit * metrics.rowSpacing,
+        rows: mathSymbols.map((symbol, rowIndex) => ({
+          symbol,
+          y: gridTopY + rowIndex * metrics.rowSpacing,
         })),
         bubbleRadius: metrics.bubbleRadius,
         inputBoxWidth: metrics.inputBoxWidth,
@@ -1305,9 +1313,9 @@ export function getPaginatedTemplatePages(state: CardTemplateEditorState): Templ
       const mathMetrics = getMathSectionMetrics(
         resolvedRowOffset,
         section.columns,
+        section.columnSeparators,
         section.showTopInputRow,
         section.showColumnHeaders,
-        section.showColumnSeparators,
         section.displayQuestionNumber,
         currentPage.metrics.bubbleRadius,
         currentPage.metrics.bubbleSpacing,

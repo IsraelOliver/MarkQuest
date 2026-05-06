@@ -26,9 +26,13 @@ function mapExam(exam: BackendExam): Exam {
   }
 }
 
+function ensureArray<T>(value: T[]) {
+  return Array.isArray(value) ? value : []
+}
+
 export const academicService = {
   async getUnits() {
-    return request<BackendUnit[]>(API_ENDPOINTS.units, { method: 'GET' })
+    return ensureArray(await request<BackendUnit[]>(API_ENDPOINTS.units, { method: 'GET' }))
   },
 
   async createUnit(payload: { name: string; kind: UnitKind }) {
@@ -36,7 +40,7 @@ export const academicService = {
   },
 
   async getClassrooms() {
-    return request<BackendClassroom[]>(API_ENDPOINTS.classrooms, { method: 'GET' })
+    return ensureArray(await request<BackendClassroom[]>(API_ENDPOINTS.classrooms, { method: 'GET' }))
   },
 
   async createClassroom(payload: { unitId: string; name: string; year: string }) {
@@ -53,7 +57,7 @@ export const academicService = {
 
   async getExams() {
     const exams = await request<BackendExam[]>(API_ENDPOINTS.exams, { method: 'GET' })
-    return exams.map(mapExam)
+    return ensureArray(exams).map(mapExam)
   },
 
   async createExam(payload: { classroomId: string; title: string; subject: string; totalQuestions: number }) {
@@ -72,7 +76,7 @@ export const academicService = {
   },
 
   async getStudents() {
-    return request<BackendStudent[]>(API_ENDPOINTS.students, { method: 'GET' })
+    return ensureArray(await request<BackendStudent[]>(API_ENDPOINTS.students, { method: 'GET' }))
   },
 
   async createStudent(payload: {

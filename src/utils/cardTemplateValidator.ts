@@ -154,10 +154,11 @@ export function normalizeEditorState(state: CardTemplateEditorState): CardTempla
       lineStyle?: 'line' | 'box'
       columns?: number
       showTopInputRow?: boolean
-      showColumnHeaders?: boolean
-      columnHeaders?: string[]
-      showColumnSeparators?: boolean
-      columnSeparators?: string[]
+        showColumnHeaders?: boolean
+        columnHeaders?: string[]
+        showColumnSeparators?: boolean
+        separatorMode?: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
+        columnSeparators?: string[]
       linkedToMainQuestion?: boolean
       linkedQuestionNumber?: number | null
       markerLabel?: string

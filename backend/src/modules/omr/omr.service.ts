@@ -2,10 +2,11 @@ import { correctAnswers } from '../results/correction.service.js'
 import { AnswerKeyService } from '../../services/answer-key.service.js'
 import { TemplateService } from '../../services/template.service.js'
 import { db } from '../../repositories/in-memory.repository.js'
-import type { OMRResult, ProcessingJob, StudentResult, UploadFile } from '../../types/entities.js'
+import type { OMRResult, OMRUploadProcessingReport, ProcessingJob, StudentResult, UploadFile } from '../../types/entities.js'
 import { AppError } from '../../utils/app-error.js'
 import { generateId } from '../../utils/id.js'
 import { analyzeAnswerSheetImage } from './omr.engine.js'
+import { cleanupRasterizedPdfImage, rasterizePdfFirstPage, type PdfRasterizationResult } from './pdf-rasterizer.js'
 
 const templateService = new TemplateService()
 const answerKeyService = new AnswerKeyService()
@@ -39,6 +40,24 @@ function buildStudentResult(params: {
     processedAt: new Date().toISOString(),
     omrResultId: params.omrResultId,
   }
+}
+
+function getErrorInfo(error: unknown): OMRUploadProcessingReport['error'] {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+    }
+  }
+
+  return {
+    name: 'UnknownError',
+    message: String(error),
+  }
+}
+
+function isPdfUpload(upload: UploadFile) {
+  return upload.mimeType === 'application/pdf'
 }
 
 export type OMRProcessingResponse = {
@@ -107,6 +126,7 @@ export class OMRService {
       status: 'queued',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
+      uploadReports: [],
     }
 
     db.jobs.push(job)
@@ -120,9 +140,14 @@ export class OMRService {
     let failedFiles = 0
 
     for (const upload of uploads) {
+      let rasterizedPdf: PdfRasterizationResult | null = null
+
       try {
+        const originalFileWasPdf = isPdfUpload(upload)
+        rasterizedPdf = originalFileWasPdf ? await rasterizePdfFirstPage(upload.path) : null
+
         const detection = await analyzeAnswerSheetImage({
-          imagePath: upload.path,
+          imagePath: rasterizedPdf?.imagePath ?? upload.path,
           templateName: template.name,
           templateConfig: template.omrConfig,
         })
@@ -151,6 +176,41 @@ export class OMRService {
           },
         }
 
+        const report: OMRUploadProcessingReport = {
+          uploadId: upload.id,
+          fileName: upload.originalName,
+          mimeType: upload.mimeType,
+          status: 'processed',
+          processedAt: result.metadata.processedAt,
+          originalMimeType: upload.mimeType,
+          processedMimeType: rasterizedPdf?.processedMimeType ?? upload.mimeType,
+          originalFileWasPdf,
+          processedPage: rasterizedPdf?.processedPage,
+          pdfPageCount: rasterizedPdf?.pdfPageCount,
+          rasterizationDpi: rasterizedPdf?.rasterizationDpi,
+          warning: rasterizedPdf?.warning,
+          width: detection.metadata.width,
+          height: detection.metadata.height,
+          autoRotationAngle: detection.metadata.autoRotationAngle,
+          rotationCandidates: detection.metadata.rotationCandidates,
+          rotationConfidence: detection.metadata.rotationConfidence,
+          lowConfidenceWarning: detection.metadata.lowConfidenceWarning,
+          boundingBoxDetected: detection.metadata.boundingBoxDetected,
+          cropApplied: detection.metadata.cropApplied,
+          cropFallbackUsed: detection.metadata.cropFallbackUsed,
+          originalWidth: detection.metadata.originalWidth,
+          originalHeight: detection.metadata.originalHeight,
+          processedWidth: detection.metadata.processedWidth,
+          processedHeight: detection.metadata.processedHeight,
+          displacementAverage: detection.metadata.displacementAverage,
+          maxDisplacementDetected: detection.metadata.maxDisplacementDetected,
+          spatialCorrectionApplied: detection.metadata.spatialCorrectionApplied,
+          confidenceAverage: correction.confidenceAverage,
+          blankQuestionsCount: detection.blankQuestions.length,
+          multipleMarkedQuestionsCount: detection.multipleMarkedQuestions.length,
+        }
+
+        job.uploadReports?.push(report)
         results.push(result)
         db.results.push(result)
         db.studentResults.push(
@@ -165,8 +225,25 @@ export class OMRService {
             multiple: result.multipleMarkedQuestions.length,
           }),
         )
-      } catch {
+      } catch (error) {
         failedFiles += 1
+        job.uploadReports?.push({
+          uploadId: upload.id,
+          fileName: upload.originalName,
+          mimeType: upload.mimeType,
+          status: 'failed',
+          processedAt: new Date().toISOString(),
+          originalMimeType: upload.mimeType,
+          processedMimeType: rasterizedPdf?.processedMimeType,
+          originalFileWasPdf: isPdfUpload(upload),
+          processedPage: rasterizedPdf?.processedPage,
+          pdfPageCount: rasterizedPdf?.pdfPageCount,
+          rasterizationDpi: rasterizedPdf?.rasterizationDpi,
+          warning: rasterizedPdf?.warning,
+          error: getErrorInfo(error),
+        })
+      } finally {
+        await cleanupRasterizedPdfImage(rasterizedPdf?.imagePath ?? null)
       }
 
       job.updatedAt = new Date().toISOString()

@@ -1,5 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom'
+import { RequireAuth } from '../auth/RequireAuth'
 import { MainLayout } from '../layouts/MainLayout'
+import { RouteErrorBoundary } from '../components/RouteErrorBoundary'
 import { AnswerKeysPage } from '../pages/AnswerKeysPage'
 import { AccountSettingsPage } from '../pages/AccountSettingsPage'
 import { ClassroomDetailPage } from '../pages/ClassroomDetailPage'
@@ -8,6 +10,7 @@ import { ClassroomStudentsPage } from '../pages/ClassroomStudentsPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { ExamDetailPage } from '../pages/ExamDetailPage'
 import { LandingPage } from '../pages/LandingPage'
+import { LoginPage } from '../pages/LoginPage'
 import { ResultsPage } from '../pages/ResultsPage'
 import { TemplatesPage } from '../pages/TemplatesPage'
 import { UnitDetailPage } from '../pages/UnitDetailPage'
@@ -18,10 +21,21 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <LandingPage />,
+    errorElement: <RouteErrorBoundary />,
+  },
+  {
+    path: '/login',
+    element: <LoginPage />,
+    errorElement: <RouteErrorBoundary />,
   },
   {
     path: '/app',
-    element: <MainLayout />,
+    element: (
+      <RequireAuth>
+        <MainLayout />
+      </RequireAuth>
+    ),
+    errorElement: <RouteErrorBoundary />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'dashboard', element: <DashboardPage /> },

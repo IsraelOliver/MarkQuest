@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ApiErrorState } from '../components/ApiErrorState'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
 import { Cabecalho } from '../components/Cabecalho'
@@ -14,7 +15,7 @@ import { MAX_QUESTIONS } from '../utils/questionLimits'
 export function ClassroomExamsPage() {
   const navigate = useNavigate()
   const { unitId, classroomId } = useParams()
-  const { isLoading, units, classrooms, exams, students, refresh } = useAcademicScope()
+  const { isLoading, error: scopeError, units, classrooms, exams, students, refresh } = useAcademicScope()
   const [title, setTitle] = useState('Simulado 1')
   const [subject, setSubject] = useState('Matematica')
   const [totalQuestions, setTotalQuestions] = useState('45')
@@ -28,6 +29,7 @@ export function ClassroomExamsPage() {
   const classroom = classrooms.find((item) => item.id === classroomId)
   const classroomStudents = students.filter((item) => item.classroomId === classroomId)
   const classroomExams = useMemo(() => exams.filter((item) => item.classroomId === classroomId), [classroomId, exams])
+  const loadFailedWithoutData = Boolean(scopeError && !classroomExams.length)
 
   const resetForm = () => {
     setTitle('Simulado 1')
@@ -168,7 +170,10 @@ export function ClassroomExamsPage() {
       ) : null}
 
       {isLoading ? <p>Carregando provas da turma...</p> : null}
-      {!isLoading && !classroomExams.length ? (
+      {!isLoading && loadFailedWithoutData ? (
+        <ApiErrorState message={scopeError ?? 'Nao foi possivel carregar as provas.'} onRetry={refresh} />
+      ) : null}
+      {!isLoading && !scopeError && !classroomExams.length ? (
         <Card>
           <p>Nenhuma prova cadastrada nesta turma ainda.</p>
         </Card>

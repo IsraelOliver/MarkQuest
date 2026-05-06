@@ -86,6 +86,7 @@ export type NormalizedMathSection = {
   showColumnHeaders: boolean
   columnHeaders: string[]
   showColumnSeparators: boolean
+  separatorMode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
   columnSeparators: string[]
   linkedToMainQuestion: boolean
   linkedQuestionNumber: number | null
@@ -202,7 +203,7 @@ export type NormalizedRenderModel = {
 
 export type ManualQuestionLink = {
   sectionId: string
-  sectionType: 'open' | 'math' | 'image'
+  sectionType: 'open' | 'math' | 'image' | 'essay'
   linkedQuestionNumber: number
   markerLabel: string
 }
@@ -210,12 +211,12 @@ export type ManualQuestionLink = {
 export type ManualSectionQuestionMeta = {
   sectionId: string
   sectionOrder: number
-  sectionType: 'open' | 'math' | 'image'
+  sectionType: 'open' | 'math' | 'image' | 'essay'
   questionNumber: number
   linkedToMainQuestion: boolean
 }
 
-export type LogicalQuestionType = 'objective' | 'math' | 'open' | 'image'
+export type LogicalQuestionType = 'objective' | 'math' | 'open' | 'image' | 'essay'
 
 export type LogicalQuestionAnswerModel =
   | {
@@ -226,6 +227,7 @@ export type LogicalQuestionAnswerModel =
       type: 'math'
       answer: null
       columns: number
+      allowedCharacters: string[]
     }
   | {
       type: 'open'
@@ -233,6 +235,10 @@ export type LogicalQuestionAnswerModel =
     }
   | {
       type: 'image'
+      answer: null
+    }
+  | {
+      type: 'essay'
       answer: null
     }
 
@@ -363,13 +369,64 @@ function normalizeMathColumnHeaders(value: string[] | undefined, columns: number
   return Array.from({ length: columns }, (_, index) => normalizeMathColumnHeader(source[index]))
 }
 
+function normalizeMathSeparatorMode(
+  value: string | undefined,
+): 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot' {
+  return value === 'comma' ||
+    value === 'dot' ||
+    value === 'negative' ||
+    value === 'negative-comma' ||
+    value === 'negative-dot'
+    ? value
+    : 'none'
+}
+
 function normalizeMathColumnSeparator(value: string | undefined) {
   return value === '.' || value === ',' || value === '-' ? value : ''
 }
 
-function normalizeMathColumnSeparators(value: string[] | undefined, columns: number) {
-  const source = Array.isArray(value) ? value : []
-  return Array.from({ length: columns }, (_, index) => normalizeMathColumnSeparator(source[index]))
+function inferMathSeparatorMode(
+  separatorMode: string | undefined,
+  legacySeparators: string[] | undefined,
+  showColumnSeparators: boolean | undefined,
+) {
+  const normalizedMode = normalizeMathSeparatorMode(separatorMode)
+  if (normalizedMode !== 'none') return normalizedMode
+
+  const legacySymbols = Array.isArray(legacySeparators)
+    ? [...new Set(legacySeparators.map((value) => normalizeMathColumnSeparator(value)).filter(Boolean))]
+    : []
+
+  if (legacySymbols.includes('-') && legacySymbols.includes(',')) return 'negative-comma'
+  if (legacySymbols.includes('-') && legacySymbols.includes('.')) return 'negative-dot'
+  if (legacySymbols.includes('-')) return 'negative'
+  if (legacySymbols.includes(',')) return 'comma'
+  if (legacySymbols.includes('.')) return 'dot'
+  return showColumnSeparators ? 'comma' : 'none'
+}
+
+export function getMathSeparatorsFromMode(mode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot') {
+  if (mode === 'comma') return [',']
+  if (mode === 'dot') return ['.']
+  if (mode === 'negative') return ['-']
+  if (mode === 'negative-comma') return ['-', ',']
+  if (mode === 'negative-dot') return ['-', '.']
+  return []
+}
+
+function normalizeMathColumnSeparators(
+  separatorMode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot',
+) {
+  return getMathSeparatorsFromMode(separatorMode)
+}
+
+export function getMathAllowedCharacters(columnSeparators: string[] | undefined) {
+  const baseDigits = Array.from({ length: 10 }, (_, digit) => String(digit))
+  const extraSymbols = Array.isArray(columnSeparators)
+    ? [...new Set(columnSeparators.filter((value): value is '.' | ',' | '-' => value === '.' || value === ',' || value === '-'))]
+    : []
+
+  return [...extraSymbols, ...baseDigits]
 }
 
 function normalizeEssayLines(value: number | undefined) {
@@ -449,6 +506,11 @@ function normalizeOpenSection(section: Partial<CardOpenSection>, index: number):
 
 function normalizeMathSection(section: Partial<CardMathSection>, index: number): CardMathSection {
   const columns = normalizeMathColumns(section.columns)
+  const separatorMode = inferMathSeparatorMode(
+    section.separatorMode,
+    section.columnSeparators,
+    section.showColumnSeparators,
+  )
 
   return {
     id: section.id?.trim() || createSectionId(index, 'math'),
@@ -458,8 +520,9 @@ function normalizeMathSection(section: Partial<CardMathSection>, index: number):
     showTopInputRow: section.showTopInputRow ?? true,
     showColumnHeaders: section.showColumnHeaders ?? false,
     columnHeaders: normalizeMathColumnHeaders(section.columnHeaders, columns),
-    showColumnSeparators: section.showColumnSeparators ?? false,
-    columnSeparators: normalizeMathColumnSeparators(section.columnSeparators, columns),
+    showColumnSeparators: separatorMode !== 'none',
+    separatorMode,
+    columnSeparators: normalizeMathColumnSeparators(separatorMode),
     linkedToMainQuestion: section.linkedToMainQuestion ?? false,
     linkedQuestionNumber: normalizeLinkedQuestionNumber(section.linkedQuestionNumber),
     markerLabel: normalizeMarkerLabel(section.markerLabel, 'TIPO B'),
@@ -606,6 +669,7 @@ export function createMathSection(index: number, overrides: Partial<CardMathSect
       showColumnHeaders: overrides.showColumnHeaders ?? false,
       columnHeaders: overrides.columnHeaders ?? [],
       showColumnSeparators: overrides.showColumnSeparators ?? false,
+      separatorMode: overrides.separatorMode,
       columnSeparators: overrides.columnSeparators ?? [],
       linkedToMainQuestion: overrides.linkedToMainQuestion ?? false,
       linkedQuestionNumber: overrides.linkedQuestionNumber ?? null,
@@ -906,19 +970,21 @@ export function getManualQuestionLinks(
 function getLogicalQuestionTypePriority(type: LogicalQuestionType) {
   if (type === 'math') return 3
   if (type === 'image') return 3
+  if (type === 'essay') return 3
   if (type === 'open') return 2
   return 1
 }
 
 function buildLogicalQuestionAnswerModel(
   type: LogicalQuestionType,
-  section: NormalizedObjectiveSection | NormalizedOpenSection | NormalizedMathSection | NormalizedImageSection,
+  section: NormalizedObjectiveSection | NormalizedOpenSection | NormalizedMathSection | NormalizedImageSection | NormalizedEssaySection,
 ): LogicalQuestionAnswerModel {
   if (type === 'math' && section.sectionType === 'math') {
     return {
       type: 'math',
       answer: null,
       columns: section.columns,
+      allowedCharacters: getMathAllowedCharacters(section.columnSeparators),
     }
   }
 
@@ -932,6 +998,13 @@ function buildLogicalQuestionAnswerModel(
   if (type === 'image' && section.sectionType === 'image') {
     return {
       type: 'image',
+      answer: null,
+    }
+  }
+
+  if (type === 'essay' && section.sectionType === 'essay') {
+    return {
+      type: 'essay',
       answer: null,
     }
   }
@@ -967,10 +1040,10 @@ function buildLogicalQuestions(
   let nextManualQuestionNumber = (questions[questions.length - 1]?.questionNumber ?? 0) + 1
 
   sections.forEach((section) => {
-    if (section.sectionType !== 'open' && section.sectionType !== 'math' && section.sectionType !== 'image') return
+    if (section.sectionType !== 'open' && section.sectionType !== 'math' && section.sectionType !== 'image' && section.sectionType !== 'essay') return
     if (section.sectionType === 'image' && !section.isQuestion) return
 
-    if (section.linkedToMainQuestion && section.linkedQuestionNumber !== null) {
+    if (section.sectionType !== 'essay' && section.linkedToMainQuestion && section.linkedQuestionNumber !== null) {
       manualSectionQuestionMap.set(section.order, {
         sectionId: section.id,
         sectionOrder: section.order,
@@ -1017,6 +1090,7 @@ function buildLogicalQuestions(
       number: autoQuestionNumber,
       type: section.sectionType,
       sourceSectionId: section.id,
+      markerLabel: section.sectionType === 'essay' ? section.title : undefined,
       answerModel: buildLogicalQuestionAnswerModel(section.sectionType, section),
     })
   })
@@ -1172,6 +1246,7 @@ export function buildNormalizedRenderModel(
         showColumnHeaders: section.showColumnHeaders,
         columnHeaders: section.columnHeaders,
         showColumnSeparators: section.showColumnSeparators,
+        separatorMode: section.separatorMode,
         columnSeparators: section.columnSeparators,
         linkedToMainQuestion: section.linkedToMainQuestion,
         linkedQuestionNumber: section.linkedQuestionNumber,

@@ -5,7 +5,7 @@ import { uploadBodySchema, uploadListQuerySchema } from '../schemas/uploads.sche
 import { UploadService } from '../services/upload.service.js'
 import { AppError } from '../utils/app-error.js'
 import { saveMultipartFile } from '../utils/file-storage.js'
-import { ok } from '../utils/http-response.js'
+import { API_ERROR_CODES, ok, sendError } from '../utils/http-response.js'
 
 const uploadService = new UploadService()
 
@@ -14,10 +14,7 @@ export class UploadsController {
     const file = await request.file()
 
     if (!file) {
-      return reply.status(400).send({
-        success: false,
-        error: { code: 'FILE_REQUIRED', message: 'Arquivo é obrigatório no upload.' },
-      })
+      return sendError(reply, 400, API_ERROR_CODES.UPLOAD_INVALID, 'Arquivo é obrigatório no upload.', { cause: 'FILE_REQUIRED' })
     }
 
     const extension = path.extname(file.filename).toLowerCase()

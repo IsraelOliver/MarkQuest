@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { ApiErrorState } from '../components/ApiErrorState'
 import { Breadcrumbs } from '../components/Breadcrumbs'
 import { Button } from '../components/Button'
 import { Cabecalho } from '../components/Cabecalho'
@@ -21,22 +22,24 @@ export function UnitsPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [nextUnits, nextClassrooms] = await Promise.all([academicService.getUnits(), academicService.getClassrooms()])
-        setUnits(nextUnits)
-        setClassrooms(nextClassrooms)
-        setShowCreateForm(nextUnits.length === 0)
-      } catch (loadError) {
-        setError(formatApiErrorMessage('Não foi possível carregar as unidades.', loadError))
-      } finally {
-        setIsLoading(false)
-      }
+  const loadData = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const [nextUnits, nextClassrooms] = await Promise.all([academicService.getUnits(), academicService.getClassrooms()])
+      setUnits(nextUnits)
+      setClassrooms(nextClassrooms)
+      setShowCreateForm(nextUnits.length === 0)
+    } catch (loadError) {
+      setError(formatApiErrorMessage('Nao foi possivel carregar as unidades.', loadError))
+    } finally {
+      setIsLoading(false)
     }
-
-    void loadData()
   }, [])
+
+  useEffect(() => {
+    void loadData()
+  }, [loadData])
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -53,11 +56,13 @@ export function UnitsPage() {
       setShowCreateForm(false)
       setMessage(`Unidade ${unit.name} criada com sucesso.`)
     } catch (submitError) {
-      setError(formatApiErrorMessage('Não foi possível criar a unidade.', submitError))
+      setError(formatApiErrorMessage('Nao foi possivel criar a unidade.', submitError))
     } finally {
       setIsSubmitting(false)
     }
   }
+
+  const loadFailedWithoutData = Boolean(error && !units.length)
 
   return (
     <section className="page-shell">
@@ -68,7 +73,7 @@ export function UnitsPage() {
         actions={!showCreateForm ? <Button onClick={() => setShowCreateForm(true)}>+ Criar Nova Unidade</Button> : undefined}
       />
 
-      {showCreateForm ? (
+      {showCreateForm && !loadFailedWithoutData ? (
         <Card>
           <form className="stack-form" onSubmit={handleSubmit}>
             <label className="field">
@@ -103,7 +108,8 @@ export function UnitsPage() {
       ) : null}
 
       {isLoading ? <p>Carregando unidades...</p> : null}
-      {!isLoading && !units.length ? (
+      {!isLoading && loadFailedWithoutData ? <ApiErrorState message={error ?? 'Nao foi possivel carregar as unidades.'} onRetry={loadData} /> : null}
+      {!isLoading && !error && !units.length ? (
         <Card>
           <p>Nenhuma unidade cadastrada ainda.</p>
           <Button onClick={() => setShowCreateForm(true)}>+ Criar Nova Unidade</Button>

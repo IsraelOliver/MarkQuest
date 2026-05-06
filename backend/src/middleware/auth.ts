@@ -1,9 +1,12 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify'
+import type { UserRole } from '../types/entities.js'
+import { verifyAuthToken } from '../utils/auth-token.js'
 
 export type AuthenticatedUser = {
   id: string
-  name?: string
-  role?: string
+  name: string
+  email: string
+  role: UserRole
 }
 
 declare module 'fastify' {
@@ -12,19 +15,30 @@ declare module 'fastify' {
   }
 }
 
-function readHeaderValue(value: string | string[] | undefined) {
-  if (Array.isArray(value)) return value[0]
-  return value
+function readAuthorizationToken(request: FastifyRequest) {
+  const authorization = request.headers.authorization
+  if (!authorization) return null
+
+  const [type, token] = authorization.split(' ')
+  if (type !== 'Bearer' || !token) return null
+
+  return token
 }
 
 export async function optionalAuthHook(request: FastifyRequest) {
-  const userId = readHeaderValue(request.headers['x-markquest-user-id'])
+  const token = readAuthorizationToken(request)
+  if (!token) {
+    request.authUser = null
+    return
+  }
 
-  request.authUser = userId
+  const payload = verifyAuthToken(token)
+  request.authUser = payload
     ? {
-        id: userId,
-        name: readHeaderValue(request.headers['x-markquest-user-name']),
-        role: readHeaderValue(request.headers['x-markquest-user-role']),
+        id: payload.sub,
+        name: payload.name,
+        email: payload.email,
+        role: payload.role,
       }
     : null
 }

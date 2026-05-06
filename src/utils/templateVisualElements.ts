@@ -75,7 +75,7 @@ export function getMathBubbleLayouts(
 ) {
   return mathBlock.rows.flatMap((row) =>
     mathBlock.columnXs.map((columnX) => ({
-      digit: String(row.digit),
+      symbol: row.symbol,
       cx: columnX,
       cy: row.y,
       radius: mathBlock.bubbleRadius,
