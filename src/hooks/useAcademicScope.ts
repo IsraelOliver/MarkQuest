@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { academicService } from '../services/academicService'
 import type { Classroom, Exam, Student, Unit } from '../types/omr'
+import { formatApiErrorMessage } from '../utils/display'
 import {
   getSelectedClassroomId,
   getSelectedExamId,
@@ -12,6 +13,7 @@ import {
 
 type AcademicScopeState = {
   isLoading: boolean
+  error: string | null
   units: Unit[]
   classrooms: Classroom[]
   exams: Exam[]
@@ -28,9 +30,11 @@ export function useAcademicScope(): AcademicScopeState {
   const [classrooms, setClassrooms] = useState<Classroom[]>([])
   const [exams, setExams] = useState<Exam[]>([])
   const [students, setStudents] = useState<Student[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const refresh = async () => {
     setIsLoading(true)
+    setError(null)
 
     try {
       const [nextUnits, nextClassrooms, nextExams, nextStudents] = await Promise.all([
@@ -62,6 +66,8 @@ export function useAcademicScope(): AcademicScopeState {
       setSelectedUnitId(selectedUnit?.id ?? '')
       setSelectedClassroomId(selectedClassroom?.id ?? '')
       setSelectedExamId(selectedExam?.id ?? '')
+    } catch (loadError) {
+      setError(formatApiErrorMessage('Nao foi possivel carregar os dados academicos.', loadError))
     } finally {
       setIsLoading(false)
     }
@@ -77,6 +83,7 @@ export function useAcademicScope(): AcademicScopeState {
 
   return {
     isLoading,
+    error,
     units,
     classrooms,
     exams,

@@ -56,7 +56,30 @@ export type AnswerKeyDto = {
   examId: string
   templateId: string
   answers: string[]
+  questions?: Array<{
+    questionNumber: number
+    questionType: string
+    questionKind: string
+    sourceSectionId: string
+    sourceSectionTitle?: string
+    markerLabel?: string
+    groupKey?: string
+    groupLabel?: string
+    validOptions: string[]
+    correctAnswer: string | null
+    allowedCharacters?: string[]
+    responseColumns?: number
+    score: number
+    weight: number
+    maxScore?: number
+    status: string
+  }>
+  defaultScore?: number
+  defaultWeight?: number
+  essayMaxScore?: number
+  totalScore?: number
   createdAt: string
+  updatedAt?: string
 }
 
 export type UploadDto = {

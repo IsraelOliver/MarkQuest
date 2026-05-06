@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
+import { ApiErrorState } from '../components/ApiErrorState'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { SectionTitle } from '../components/SectionTitle'
@@ -61,6 +62,14 @@ export function ResultsPage() {
   )
 
   const latestJob = data.jobs[0] ?? null
+  const hasLoadedData =
+    data.uploads.length > 0 ||
+    data.templates.length > 0 ||
+    data.answerKeys.length > 0 ||
+    data.jobs.length > 0 ||
+    data.omr.length > 0 ||
+    data.students.length > 0
+  const loadFailedWithoutData = Boolean(error && !hasLoadedData)
 
   useEffect(() => {
     if (examId) {
@@ -68,36 +77,37 @@ export function ResultsPage() {
     }
   }, [examId])
 
-  useEffect(() => {
-    const loadAll = async () => {
-      setIsLoading(true)
-      try {
-        const [uploads, templates, answerKeys, results] = await Promise.all([
-          omrService.getUploads({ examId: selectedExam?.id }),
-          omrService.getTemplates({ examId: selectedExam?.id }),
-          omrService.getAnswerKeys({ examId: selectedExam?.id }),
-          omrService.getResults({ examId: selectedExam?.id }),
-        ])
+  const loadAll = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const [uploads, templates, answerKeys, results] = await Promise.all([
+        omrService.getUploads({ examId: selectedExam?.id }),
+        omrService.getTemplates({ examId: selectedExam?.id }),
+        omrService.getAnswerKeys({ examId: selectedExam?.id }),
+        omrService.getResults({ examId: selectedExam?.id }),
+      ])
 
-        setData({
-          uploads: uploads.items,
-          templates: templates.items,
-          answerKeys: answerKeys.items,
-          jobs: [...results.jobs].reverse(),
-          omr: results.omr,
-          students: results.students,
-        })
+      setData({
+        uploads: uploads.items,
+        templates: templates.items,
+        answerKeys: answerKeys.items,
+        jobs: [...results.jobs].reverse(),
+        omr: results.omr,
+        students: results.students,
+      })
 
-        setSelectedTemplateId((current) => current || templates.items[0]?.id || '')
-      } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar os resultados.', loadError))
-      } finally {
-        setIsLoading(false)
-      }
+      setSelectedTemplateId((current) => current || templates.items[0]?.id || '')
+    } catch (loadError) {
+      setError(formatApiErrorMessage('Nao foi possivel carregar os resultados.', loadError))
+    } finally {
+      setIsLoading(false)
     }
-
-    void loadAll()
   }, [selectedExam?.id])
+
+  useEffect(() => {
+    void loadAll()
+  }, [loadAll])
 
   useEffect(() => {
     if (!selectedTemplateId) {
@@ -214,7 +224,9 @@ export function ResultsPage() {
         </p>
       </Card>
 
-      <div className="results-layout">
+      {!isLoading && loadFailedWithoutData ? <ApiErrorState message={error ?? 'Nao foi possivel carregar os resultados.'} onRetry={loadAll} /> : null}
+
+      {!loadFailedWithoutData ? <div className="results-layout">
         <div className="results-layout__main">
           <Card className="results-run-card">
             <div className="results-run-card__header">
@@ -370,7 +382,7 @@ export function ResultsPage() {
             </div>
           </Card>
         </aside>
-      </div>
+      </div> : null}
     </section>
   )
 }

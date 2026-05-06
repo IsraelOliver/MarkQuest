@@ -1,6 +1,12 @@
 import Jimp from 'jimp'
 import type { BubbleOption } from '../../types/entities.js'
 
+export const DEFAULT_SPATIAL_TOLERANCE_PX = 4
+
+function grayscaleIntensity(pixel: number): number {
+  return Jimp.intToRGBA(pixel).r
+}
+
 export function getBubbleFillRatio(
   image: Jimp,
   centerX: number,
@@ -22,7 +28,7 @@ export function getBubbleFillRatio(
       if (dx * dx + dy * dy > radius * radius) continue
 
       const pixel = image.getPixelColor(x, y)
-      const intensity = pixel & 0xff
+      const intensity = grayscaleIntensity(pixel)
       sampledPixels += 1
       if (intensity < 128) blackPixels += 1
     }
@@ -30,6 +36,42 @@ export function getBubbleFillRatio(
 
   if (sampledPixels === 0) return 0
   return blackPixels / sampledPixels
+}
+
+export function getBestBubbleFillRatio(
+  image: Jimp,
+  centerX: number,
+  centerY: number,
+  radius: number,
+  tolerancePx = DEFAULT_SPATIAL_TOLERANCE_PX,
+): {
+  fillRatio: number
+  offsetX: number
+  offsetY: number
+  displacement: number
+} {
+  const tolerance = Math.max(0, Math.floor(tolerancePx))
+  let bestFillRatio = -1
+  let bestOffsetX = 0
+  let bestOffsetY = 0
+
+  for (let offsetY = -tolerance; offsetY <= tolerance; offsetY += 1) {
+    for (let offsetX = -tolerance; offsetX <= tolerance; offsetX += 1) {
+      const fillRatio = getBubbleFillRatio(image, centerX + offsetX, centerY + offsetY, radius)
+      if (fillRatio <= bestFillRatio) continue
+
+      bestFillRatio = fillRatio
+      bestOffsetX = offsetX
+      bestOffsetY = offsetY
+    }
+  }
+
+  return {
+    fillRatio: Math.max(0, bestFillRatio),
+    offsetX: bestOffsetX,
+    offsetY: bestOffsetY,
+    displacement: Math.hypot(bestOffsetX, bestOffsetY),
+  }
 }
 
 export function detectMarkedOption(

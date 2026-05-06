@@ -2,6 +2,7 @@
 import { Link, useBlocker, useNavigate, useParams } from 'react-router-dom'
 import type { Location } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
+import { ApiErrorState } from '../components/ApiErrorState'
 import { Button } from '../components/Button'
 import { Cabecalho } from '../components/Cabecalho'
 import { Card } from '../components/Card'
@@ -455,6 +456,7 @@ export function TemplatesPage() {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [isSectionMenuOpen, setIsSectionMenuOpen] = useState(false)
   const [questionBlockDrafts, setQuestionBlockDrafts] = useState<Array<{ startQuestion: string; endQuestion: string }>>([])
   const [activeQuestionBlockIndex, setActiveQuestionBlockIndex] = useState<number | null>(0)
@@ -490,6 +492,7 @@ export function TemplatesPage() {
         const response = await omrService.getTemplates({ examId: selectedExam.id })
         const examTemplates = response.items
         setTemplates(examTemplates)
+        setLoadError(null)
         const latestTemplate = [...examTemplates].sort((left, right) => getTemplateTimestamp(right) - getTemplateTimestamp(left))[0]
 
         const context = {
@@ -530,7 +533,9 @@ export function TemplatesPage() {
           setActiveTemplateId(null)
         }
       } catch (loadError) {
-        setError(formatApiErrorMessage('Não foi possível carregar os templates da prova.', loadError))
+        const message = formatApiErrorMessage('Nao foi possivel carregar os templates da prova.', loadError)
+        setLoadError(message)
+        setError(message)
       } finally {
         setIsLoading(false)
       }
@@ -975,7 +980,7 @@ export function TemplatesPage() {
 
   const handleMathSectionChange = (
     index: number,
-    field: keyof Pick<CardMathSection, 'columns' | 'showTopInputRow' | 'showColumnHeaders' | 'columnHeaders' | 'showColumnSeparators' | 'columnSeparators' | 'linkedToMainQuestion' | 'linkedQuestionNumber' | 'markerLabel'>,
+    field: keyof Pick<CardMathSection, 'columns' | 'showTopInputRow' | 'showColumnHeaders' | 'columnHeaders' | 'separatorMode' | 'linkedToMainQuestion' | 'linkedQuestionNumber' | 'markerLabel'>,
     value: number | boolean | string | string[],
   ) => {
     applyState((current) => {
@@ -987,7 +992,6 @@ export function TemplatesPage() {
         const nextColumns = Math.min(10, Math.max(1, Math.round(Number(value) || 1)))
         section.columns = nextColumns
         section.columnHeaders = Array.from({ length: nextColumns }, (_, headerIndex) => section.columnHeaders[headerIndex] ?? '')
-        section.columnSeparators = Array.from({ length: nextColumns }, (_, separatorIndex) => section.columnSeparators[separatorIndex] ?? '')
         return nextState
       }
 
@@ -996,11 +1000,29 @@ export function TemplatesPage() {
         return nextState
       }
 
-      if (field === 'columnSeparators') {
-        section.columnSeparators = Array.from({ length: section.columns }, (_, separatorIndex) => {
-          const candidate = String((value as string[])[separatorIndex] ?? '')
-          return candidate === '.' || candidate === ',' || candidate === '-' ? candidate : ''
-        })
+      if (field === 'separatorMode') {
+        const nextMode = String(value)
+        section.separatorMode =
+          nextMode === 'comma' ||
+          nextMode === 'dot' ||
+          nextMode === 'negative' ||
+          nextMode === 'negative-comma' ||
+          nextMode === 'negative-dot'
+            ? nextMode
+            : 'none'
+        section.showColumnSeparators = section.separatorMode !== 'none'
+          section.columnSeparators =
+            section.separatorMode === 'comma'
+              ? [',']
+            : section.separatorMode === 'dot'
+              ? ['.']
+              : section.separatorMode === 'negative'
+                ? ['-']
+                : section.separatorMode === 'negative-comma'
+                  ? ['-', ',']
+                  : section.separatorMode === 'negative-dot'
+                    ? ['-', '.']
+                    : []
         return nextState
       }
 
@@ -2129,48 +2151,27 @@ export function TemplatesPage() {
             </span>
           </div>
         </label>
-        <label className="card-editor-toggle card-editor-grid__full">
-          <input
-            type="checkbox"
-            checked={section.showColumnSeparators}
-            onChange={(event) => handleMathSectionChange(index, 'showColumnSeparators', event.target.checked)}
-          />
-          <div className="card-editor-toggle__content">
-            <span className="card-editor-toggle__label-row">
-              <span>Exibir separadores por coluna</span>
-              <FieldHelp
-                label="Ajuda sobre os separadores por coluna"
-                content="Use para indicar separadores visuais por coluna, como vírgula, ponto ou hífen."
-              />
-            </span>
-          </div>
-        </label>
-        {section.showColumnSeparators ? (
-          <div className="field card-editor-grid__full">
+        <label className="field card-editor-grid__full">
+          <span className="card-editor-toggle__label-row">
             <span>Separadores das colunas</span>
-            <div className="card-editor-grid card-editor-grid--two">
-              {Array.from({ length: section.columns }, (_, separatorIndex) => (
-                <label className="field" key={`math-separator-${section.id}-${separatorIndex}`}>
-                  <span>Coluna {separatorIndex + 1}</span>
-                  <select
-                    value={section.columnSeparators[separatorIndex] ?? ''}
-                    onChange={(event) => {
-                      const nextSeparators = Array.from({ length: section.columns }, (_, currentIndex) => section.columnSeparators[currentIndex] ?? '')
-                      nextSeparators[separatorIndex] = event.target.value
-                      handleMathSectionChange(index, 'columnSeparators', nextSeparators)
-                    }}
-                  >
-                    <option value="">Nenhum</option>
-                    <option value=".">.</option>
-                    <option value=",">,</option>
-                    <option value="-">-</option>
-                  </select>
-                </label>
-              ))}
-            </div>
-            <small>Cada coluna aceita apenas vazio, ponto, vírgula ou hífen.</small>
-          </div>
-        ) : null}
+            <FieldHelp
+              label="Ajuda sobre os separadores das colunas"
+              content="Escolha quais separadores ficarão disponíveis na grade matemática. O candidato marcará a bolinha do símbolo na coluna correta."
+            />
+          </span>
+          <select
+            value={section.separatorMode}
+            onChange={(event) => handleMathSectionChange(index, 'separatorMode', event.target.value)}
+          >
+            <option value="none">Nenhum separador</option>
+            <option value="comma">Vírgula</option>
+            <option value="dot">Ponto</option>
+            <option value="negative">Sinal negativo</option>
+            <option value="negative-comma">Sinal negativo + vírgula</option>
+            <option value="negative-dot">Sinal negativo + ponto</option>
+          </select>
+          <small>O separador escolhido vale para toda a questão matemática e aparece como bolha selecionável no preview e no PDF.</small>
+        </label>
         <div className="field card-editor-grid__full">
           <span>Vínculo com o cartão principal</span>
           <label className="card-editor-toggle card-editor-toggle--link">
@@ -2836,6 +2837,10 @@ export function TemplatesPage() {
           <Button type="button" variant="ghost" onClick={handleRestoreLastValid} disabled={!lastValidStateRef.current}>Último estado válido</Button>
         </div>
       </div>
+
+      {!isLoading && loadError && !templates.length ? (
+        <ApiErrorState message={loadError} onRetry={() => window.location.reload()} />
+      ) : null}
 
       <div className="card-editor-layout">
         <div className="card-editor-layout__controls">

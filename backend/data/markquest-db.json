@@ -13,6 +13,17 @@
       "createdAt": "2026-03-16T15:03:42.263Z"
     }
   ],
+  "users": [
+    {
+      "id": "usr_a3feef27-e616-40d7-8758-419c41c17726",
+      "name": "Admin MarkQuest",
+      "email": "contato@markquest.com.br",
+      "passwordHash": "scrypt:R8YrW_2PFdHaqcW0MVGTMA:0Qp5PnaKA1ze7AA1lvEjou99WgJXi2E6_2PXhnVqXPxb5oSb7fTxSVYUthev_nig3Y7TBDs7pznZub8k0yAmnA",
+      "role": "admin",
+      "createdAt": "2026-04-29T17:08:31.552Z",
+      "updatedAt": "2026-04-29T17:08:31.552Z"
+    }
+  ],
   "classrooms": [
     {
       "id": "cls_429c3a5a-f47d-4969-9a30-8739a6e62a85",
@@ -717,11 +728,9 @@
               "D",
               "U"
             ],
-            "showColumnSeparators": false,
+            "showColumnSeparators": true,
             "columnSeparators": [
-              "",
-              "",
-              ""
+              "-"
             ],
             "linkedToMainQuestion": true,
             "linkedQuestionNumber": 33,
@@ -745,12 +754,6 @@
             "linkedToMainQuestion": true,
             "linkedQuestionNumber": 82,
             "markerLabel": "TIPO D"
-          },
-          {
-            "id": "section-spacer-24",
-            "sectionType": "spacer",
-            "readMode": "ignored",
-            "size": "md"
           },
           {
             "id": "section-spacer-24",
@@ -861,8 +864,8 @@
         "ambiguityThreshold": 0.07
       },
       "createdAt": "2026-03-23T15:47:33.982Z",
-      "updatedAt": "2026-04-28T20:13:35.015Z",
-      "version": "v26"
+      "updatedAt": "2026-05-06T12:08:28.059Z",
+      "version": "v29"
     }
   ],
   "answerKeys": [
@@ -919,6 +922,4039 @@
         "A"
       ],
       "createdAt": "2026-03-23T14:35:13.426Z"
+    },
+    {
+      "id": "key_d6ea6ba1-9ea1-40ab-92e6-2c92fa55570b",
+      "name": "Gabarito Oficial A",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "templateId": "tpl_97208e45-b1e8-4623-8091-c8e618cf4c57",
+      "answers": [
+        "C",
+        "E",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "A",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "A",
+        "C",
+        "C",
+        "E",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "E",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "B",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "C"
+      ],
+      "questions": [
+        {
+          "questionNumber": 1,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 2,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 3,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 4,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 5,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 6,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 7,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 8,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 9,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 10,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-2",
+          "sourceSectionTitle": "Língua Portuguesa",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 11,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 12,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 13,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 14,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 15,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 16,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 17,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 18,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 19,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 20,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 21,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 22,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 23,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 24,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 25,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 26,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 27,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 28,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 29,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 30,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 31,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 32,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 33,
+          "questionType": "math",
+          "questionKind": "math",
+          "sourceSectionId": "section-math-18",
+          "sourceSectionTitle": "História",
+          "markerLabel": "TIPO B",
+          "validOptions": [],
+          "correctAnswer": null,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 34,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 35,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 36,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 37,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 38,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 39,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 40,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 41,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 42,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 43,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 44,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 45,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 46,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 47,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 48,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 49,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 50,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 51,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 52,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 53,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 54,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 55,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 56,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 57,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 58,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 59,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 60,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 61,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 62,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 63,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 64,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 65,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 66,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 67,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 68,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 69,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-6",
+          "sourceSectionTitle": "Bloco 6",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 70,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 71,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 72,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 73,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 74,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 75,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 76,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 77,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 78,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 79,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 80,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-8",
+          "sourceSectionTitle": "Bloco 8",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 81,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-8",
+          "sourceSectionTitle": "Bloco 8",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 82,
+          "questionType": "open",
+          "questionKind": "open",
+          "sourceSectionId": "section-open-16",
+          "sourceSectionTitle": "Bloco 9",
+          "markerLabel": "TIPO D",
+          "validOptions": [],
+          "correctAnswer": null,
+          "weight": 1,
+          "status": "manual"
+        },
+        {
+          "questionNumber": 83,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 84,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 85,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 86,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 87,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 88,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 89,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 90,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 91,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 92,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 93,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 94,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 95,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 96,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 97,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 98,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 99,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 100,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 101,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 102,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 103,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 104,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 105,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 106,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 107,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 108,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 109,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 110,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 111,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 112,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-12",
+          "sourceSectionTitle": "Bloco 12",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "B",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 113,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 114,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 115,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 116,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 117,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 118,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 119,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 120,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "weight": 1,
+          "status": "active"
+        }
+      ],
+      "defaultWeight": 1,
+      "totalScore": 120,
+      "createdAt": "2026-04-30T12:26:39.137Z"
+    },
+    {
+      "id": "key_b7babbde-1b26-4a0a-8a4c-37106e25ec64",
+      "name": "Gabarito oficial - Simulado 1",
+      "examId": "exam_0db74ae8-4278-4568-8db3-0add6076aae0",
+      "templateId": "tpl_97208e45-b1e8-4623-8091-c8e618cf4c57",
+      "answers": [
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        "D",
+        "E",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E",
+        null,
+        "E",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        null,
+        "C",
+        "C",
+        "E",
+        "C",
+        "E",
+        "E",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "C",
+        "E",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "C",
+        "C",
+        "E",
+        "C",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "B",
+        "E",
+        "C",
+        "C",
+        "E",
+        "E",
+        "E",
+        "E",
+        "E"
+      ],
+      "questions": [
+        {
+          "questionNumber": 1,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 2,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 3,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 4,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 5,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 6,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 7,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 8,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 2,
+          "status": "active"
+        },
+        {
+          "questionNumber": 9,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-1",
+          "sourceSectionTitle": "Matemática",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 10,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-2",
+          "sourceSectionTitle": "Língua Portuguesa",
+          "groupKey": "objective:abcd",
+          "groupLabel": "ABCD",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "D",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 11,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 12,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 13,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 14,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 15,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 16,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 17,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 18,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 19,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 20,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 21,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 22,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 23,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 24,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 25,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 26,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 27,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 28,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 29,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 30,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 31,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 32,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-3",
+          "sourceSectionTitle": "Inglês",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 33,
+          "questionType": "math",
+          "questionKind": "math",
+          "sourceSectionId": "section-math-18",
+          "sourceSectionTitle": "História",
+          "markerLabel": "TIPO B",
+          "groupKey": "math:TIPO B",
+          "groupLabel": "Matemática / TIPO B",
+          "validOptions": [],
+          "correctAnswer": "-11",
+          "allowedCharacters": [
+            "-",
+            "0",
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9"
+          ],
+          "responseColumns": 3,
+          "score": 0.9917355371900827,
+          "weight": 1.5,
+          "status": "active"
+        },
+        {
+          "questionNumber": 34,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 35,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 36,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 37,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 38,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 39,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 40,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 41,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 42,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 43,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 44,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 45,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 46,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 47,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 48,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 49,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 50,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 51,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 52,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 53,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 54,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 55,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 56,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 57,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 58,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 59,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 60,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 61,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 62,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 63,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 64,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 65,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 66,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 67,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 68,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-5",
+          "sourceSectionTitle": "Bloco 5",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 69,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-6",
+          "sourceSectionTitle": "Bloco 6",
+          "groupKey": "objective:abcd",
+          "groupLabel": "ABCD",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 70,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 71,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 72,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 73,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 74,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 75,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 76,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 77,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 78,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 79,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-7",
+          "sourceSectionTitle": "Bloco 7",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 80,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-8",
+          "sourceSectionTitle": "Bloco 8",
+          "groupKey": "objective:abcd",
+          "groupLabel": "ABCD",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 81,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-8",
+          "sourceSectionTitle": "Bloco 8",
+          "groupKey": "objective:abcd",
+          "groupLabel": "ABCD",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 82,
+          "questionType": "open",
+          "questionKind": "open",
+          "sourceSectionId": "section-open-16",
+          "sourceSectionTitle": "Bloco 9",
+          "markerLabel": "TIPO D",
+          "groupKey": "open:TIPO D",
+          "groupLabel": "Discursiva / TIPO D",
+          "validOptions": [],
+          "correctAnswer": null,
+          "score": 0.9917355371900827,
+          "weight": 1.5,
+          "maxScore": 0.9917355371900827,
+          "status": "manual"
+        },
+        {
+          "questionNumber": 83,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 84,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 85,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 86,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 87,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 88,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 89,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 90,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 91,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 92,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 93,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 94,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 95,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 96,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 97,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 98,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 99,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 100,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 101,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-10",
+          "sourceSectionTitle": "Bloco 10",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 102,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 103,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 104,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 105,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 106,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 107,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 108,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 109,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 110,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 111,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-11",
+          "sourceSectionTitle": "Bloco 11",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 112,
+          "questionType": "objective",
+          "questionKind": "ad",
+          "sourceSectionId": "section-objective-12",
+          "sourceSectionTitle": "Bloco 12",
+          "groupKey": "objective:abcd",
+          "groupLabel": "ABCD",
+          "validOptions": [
+            "A",
+            "B",
+            "C",
+            "D"
+          ],
+          "correctAnswer": "B",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 113,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 114,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 115,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "C",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 116,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 117,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 118,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 119,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 120,
+          "questionType": "objective",
+          "questionKind": "ce",
+          "sourceSectionId": "section-objective-13",
+          "sourceSectionTitle": "Bloco 13",
+          "groupKey": "objective:ce",
+          "groupLabel": "C/E",
+          "validOptions": [
+            "C",
+            "E"
+          ],
+          "correctAnswer": "E",
+          "score": 0.9917355371900827,
+          "weight": 1,
+          "status": "active"
+        },
+        {
+          "questionNumber": 121,
+          "questionType": "essay",
+          "questionKind": "essay",
+          "sourceSectionId": "section-essay-18",
+          "sourceSectionTitle": "Redação",
+          "markerLabel": "Folha de Redação - Oficial",
+          "groupKey": "essay:redacao",
+          "groupLabel": "Redação",
+          "validOptions": [],
+          "correctAnswer": null,
+          "score": 10,
+          "weight": 1,
+          "maxScore": 10,
+          "status": "manual"
+        }
+      ],
+      "defaultWeight": 1,
+      "totalScore": 130.99173553718992,
+      "createdAt": "2026-04-30T12:27:37.747Z",
+      "defaultScore": 1,
+      "essayMaxScore": 10,
+      "updatedAt": "2026-05-06T13:30:37.872Z",
+      "annulledScoringMode": "redistribute-group"
     }
   ]
 }

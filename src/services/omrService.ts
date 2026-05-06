@@ -38,6 +38,7 @@ type BackendProcessingJob = {
   totalFiles?: number
   processedFiles?: number
   failedFiles?: number
+  uploadReports?: ProcessingJob['uploadReports']
   results?: BackendOMRResult[]
 }
 
@@ -86,13 +87,31 @@ type BackendTemplate = {
   updatedAt?: string
 }
 
+type TemplateMappingOptions = {
+  requireDefinition?: boolean
+}
+
+export type TemplateCompatibilityWarning = {
+  templateId: string
+  templateName: string
+  missingFields: string[]
+  message: string
+}
+
 type BackendAnswerKey = {
   id: string
   name: string
   examId: string
   templateId: string
-  answers: string[]
+  answers: Array<string | null>
+  questions?: AnswerKey['questions']
+  defaultScore?: number
+  defaultWeight?: number
+  essayMaxScore?: number
+  totalScore?: number
+  annulledScoringMode?: AnswerKey['annulledScoringMode']
   createdAt: string
+  updatedAt?: string
 }
 
 function withQuery(path: string, query?: Record<string, string | undefined>) {
@@ -105,6 +124,10 @@ function withQuery(path: string, query?: Record<string, string | undefined>) {
 
   const serialized = params.toString()
   return serialized ? `${path}?${serialized}` : path
+}
+
+function ensureArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : []
 }
 
 function mapUpload(upload: BackendUpload): AnswerSheet {
@@ -134,6 +157,7 @@ function mapJob(job: BackendProcessingJob): ProcessingJob {
     totalFiles: job.totalFiles,
     processedFiles: job.processedFiles,
     failedFiles: job.failedFiles,
+    uploadReports: job.uploadReports,
   }
 }
 
@@ -166,25 +190,79 @@ function mapOmrResult(result: BackendOMRResult): OMRResult {
   }
 }
 
-function mapTemplate(template: BackendTemplate): Template {
-  const fallbackState = createEditorStateFromPreset('enem-a4', template.name)
+function getMissingTemplateFields(template: BackendTemplate) {
+  const missingFields: string[] = []
+
+  if (!template.definition) missingFields.push('definition')
+  if (!template.visualTheme) missingFields.push('visualTheme')
+  if (!template.presetId) missingFields.push('presetId')
+
+  return missingFields
+}
+
+function createTemplateCompatibilityWarning(template: BackendTemplate): TemplateCompatibilityWarning {
+  const missingFields = getMissingTemplateFields(template)
+
+  return {
+    templateId: template.id,
+    templateName: template.name,
+    missingFields,
+    message: `Template ${template.id} incompatível para telas que dependem da definição completa. Campos ausentes: ${missingFields.join(', ')}.`,
+  }
+}
+
+function resolveTemplateDefinition(template: BackendTemplate, options?: TemplateMappingOptions) {
+  if (template.definition && template.visualTheme && template.presetId) {
+    return {
+      presetId: template.presetId,
+      definition: {
+        ...template.definition,
+        totalQuestions: template.totalQuestions,
+      },
+      visualTheme: template.visualTheme,
+    }
+  }
+
+  if (template.definition && template.presetId && !template.visualTheme) {
+    const presetState = createEditorStateFromPreset(template.presetId, template.name)
+
+    return {
+      presetId: template.presetId,
+      definition: {
+        ...template.definition,
+        totalQuestions: template.totalQuestions,
+      },
+      visualTheme: presetState.visualTheme,
+    }
+  }
+
+  if (!template.definition || !template.visualTheme || !template.presetId) {
+    const compatibilityWarning = createTemplateCompatibilityWarning(template)
+    if (options?.requireDefinition) {
+      throw new Error(compatibilityWarning.message)
+    }
+
+    return null
+  }
+
+  return null
+}
+
+function mapTemplate(template: BackendTemplate, options?: TemplateMappingOptions): Template {
+  const resolvedDefinition = resolveTemplateDefinition(template, options)
+
+  if (!resolvedDefinition) {
+    throw new Error(`Template ${template.id} sem definicao completa.`)
+  }
 
   return {
     id: template.id,
     name: template.name,
     examId: template.examId,
     totalQuestions: template.totalQuestions,
-    presetId: template.presetId ?? fallbackState.presetId,
-    definition: template.definition
-      ? {
-          ...template.definition,
-          totalQuestions: template.totalQuestions,
-        }
-      : {
-          ...fallbackState.definition,
-          totalQuestions: template.totalQuestions,
-        },
-    visualTheme: template.visualTheme ?? fallbackState.visualTheme,
+    presetId: resolvedDefinition.presetId,
+    definition: resolvedDefinition.definition,
+    visualTheme: resolvedDefinition.visualTheme,
     omrConfig: createTemplateLayoutConfig(template.totalQuestions, template.omrConfig),
     version: template.version ?? 'v1',
     createdAt: template.createdAt,
@@ -195,11 +273,19 @@ function mapTemplate(template: BackendTemplate): Template {
 function mapAnswerKey(answerKey: BackendAnswerKey): AnswerKey {
   return {
     id: answerKey.id,
+    name: answerKey.name,
     examId: answerKey.examId,
     templateId: answerKey.templateId,
     version: answerKey.name,
     answers: answerKey.answers,
+    questions: answerKey.questions,
+    defaultScore: answerKey.defaultScore,
+    defaultWeight: answerKey.defaultWeight,
+    essayMaxScore: answerKey.essayMaxScore,
+    totalScore: answerKey.totalScore,
+    annulledScoringMode: answerKey.annulledScoringMode,
     createdAt: answerKey.createdAt,
+    updatedAt: answerKey.updatedAt,
   }
 }
 
@@ -236,7 +322,7 @@ export const omrService = {
 
     return {
       endpoint,
-      items: uploads.map(mapUpload),
+      items: ensureArray(uploads).map(mapUpload),
     }
   },
 
@@ -265,9 +351,9 @@ export const omrService = {
 
     return {
       endpoint,
-      jobs: results.jobs.map(mapJob),
-      omr: results.omrResults.map(mapOmrResult),
-      students: results.studentResults.map(mapStudentResult),
+      jobs: ensureArray(results.jobs).map(mapJob),
+      omr: ensureArray(results.omrResults).map(mapOmrResult),
+      students: ensureArray(results.studentResults).map(mapStudentResult),
     }
   },
 
@@ -288,13 +374,35 @@ export const omrService = {
     return { endpoint: API_ENDPOINTS.templates, item: mapTemplate(template) }
   },
 
-  async getTemplates(filters?: { examId?: string }): Promise<{ endpoint: string; items: Template[] }> {
+  async getTemplates(
+    filters?: { examId?: string },
+    options?: TemplateMappingOptions,
+  ): Promise<{ endpoint: string; items: Template[]; warnings: TemplateCompatibilityWarning[] }> {
     const endpoint = withQuery(API_ENDPOINTS.templates, filters)
     const templates = await request<BackendTemplate[]>(endpoint, { method: 'GET' })
+    const items: Template[] = []
+    const warnings: TemplateCompatibilityWarning[] = []
+
+    ensureArray(templates).forEach((template) => {
+      try {
+        const mappedTemplate = mapTemplate(template, options)
+        items.push(mappedTemplate)
+      } catch (error) {
+        const warning = createTemplateCompatibilityWarning(template)
+        warnings.push(warning)
+
+        if (options?.requireDefinition) {
+          throw error
+        }
+
+        console.warn(warning.message)
+      }
+    })
 
     return {
       endpoint,
-      items: templates.map(mapTemplate),
+      items,
+      warnings,
     }
   },
 
@@ -322,7 +430,13 @@ export const omrService = {
     name: string
     examId: string
     templateId: string
-    answers: string[]
+    answers: Array<string | null>
+      questions?: AnswerKey['questions']
+      defaultScore?: number
+      defaultWeight?: number
+      essayMaxScore?: number
+      totalScore?: number
+      annulledScoringMode?: AnswerKey['annulledScoringMode']
   }): Promise<{ endpoint: string; item: AnswerKey }> {
     const answerKey = await request<BackendAnswerKey>(API_ENDPOINTS.answerKeys, {
       method: 'POST',
@@ -332,13 +446,37 @@ export const omrService = {
     return { endpoint: API_ENDPOINTS.answerKeys, item: mapAnswerKey(answerKey) }
   },
 
+  async updateAnswerKey(
+    answerKeyId: string,
+    payload: {
+      name: string
+      examId: string
+      templateId: string
+      answers: Array<string | null>
+        questions?: AnswerKey['questions']
+        defaultScore?: number
+        defaultWeight?: number
+        essayMaxScore?: number
+        totalScore?: number
+        annulledScoringMode?: AnswerKey['annulledScoringMode']
+      },
+  ): Promise<{ endpoint: string; item: AnswerKey }> {
+    const endpoint = `${API_ENDPOINTS.answerKeys}/${answerKeyId}`
+    const answerKey = await request<BackendAnswerKey>(endpoint, {
+      method: 'PUT',
+      body: payload,
+    })
+
+    return { endpoint, item: mapAnswerKey(answerKey) }
+  },
+
   async getAnswerKeys(filters?: { examId?: string; templateId?: string }): Promise<{ endpoint: string; items: AnswerKey[] }> {
     const endpoint = withQuery(API_ENDPOINTS.answerKeys, filters)
     const answerKeys = await request<BackendAnswerKey[]>(endpoint, { method: 'GET' })
 
     return {
       endpoint,
-      items: answerKeys.map(mapAnswerKey),
+      items: ensureArray(answerKeys).map(mapAnswerKey),
     }
   },
 }

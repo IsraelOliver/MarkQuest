@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify'
-import { answerKeyListQuerySchema, createAnswerKeySchema } from '../schemas/answer-keys.schema.js'
+import { answerKeyListQuerySchema, createAnswerKeySchema, updateAnswerKeySchema } from '../schemas/answer-keys.schema.js'
 import { AnswerKeyService } from '../services/answer-key.service.js'
 import { API_ERROR_CODES, ok, sendError } from '../utils/http-response.js'
 
@@ -19,9 +19,14 @@ export class AnswerKeysController {
   async getById(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
     const answerKey = answerKeyService.findById(request.params.id)
     if (!answerKey) {
-      return sendError(reply, 404, API_ERROR_CODES.NOT_FOUND, 'Gabarito não encontrado.', { cause: 'ANSWER_KEY_NOT_FOUND' })
+      return sendError(reply, 404, API_ERROR_CODES.NOT_FOUND, 'Gabarito nao encontrado.', { cause: 'ANSWER_KEY_NOT_FOUND' })
     }
 
     return ok(reply, answerKey)
+  }
+
+  async update(request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) {
+    const payload = updateAnswerKeySchema.parse(request.body)
+    return ok(reply, answerKeyService.update(request.params.id, payload))
   }
 }

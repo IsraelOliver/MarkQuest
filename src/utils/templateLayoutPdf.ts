@@ -679,20 +679,6 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
           })
         }
 
-        if (mathBlock.showColumnSeparators) {
-          mathBlock.columnXs.forEach((columnX, columnIndex) => {
-            const separatorText = mathBlock.columnSeparators[columnIndex] ?? ''
-            const separatorWidth = fontBold.widthOfTextAtSize(separatorText, 8)
-            page.drawText(separatorText, {
-              x: columnX - separatorWidth / 2,
-              y: toPdfY(mathBlock.separatorY),
-              size: 8,
-              font: fontBold,
-              color: rgb(0.278, 0.349, 0.412),
-            })
-          })
-        }
-
         getMathBubbleLayouts(mathBlock, renderMetrics).forEach((bubble) => {
           page.drawCircle({
             x: bubble.cx,
@@ -702,8 +688,8 @@ export async function generateTemplateLayoutPdf(payload: TemplatePdfPayload) {
             borderWidth: bubble.strokeWidth,
             color: rgb(1, 1, 1),
           })
-          const digitWidth = fontBold.widthOfTextAtSize(bubble.digit, bubble.labelFontSize)
-          page.drawText(bubble.digit, {
+          const digitWidth = fontBold.widthOfTextAtSize(bubble.symbol, bubble.labelFontSize)
+          page.drawText(bubble.symbol, {
             x: bubble.labelX - digitWidth / 2,
             y: toPdfY(bubble.labelY),
             size: bubble.labelFontSize,

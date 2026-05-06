@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Breadcrumbs } from '../components/Breadcrumbs'
+import { ApiErrorState } from '../components/ApiErrorState'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { SectionTitle } from '../components/SectionTitle'
@@ -29,20 +30,22 @@ export function UploadsPage() {
     }
   }, [examId])
 
-  useEffect(() => {
-    const loadUploads = async () => {
-      try {
-        const response = await omrService.getUploads({ examId: selectedExam?.id })
-        setUploads(response.items)
-      } catch (loadError) {
-        setError(formatApiErrorMessage('Nao foi possivel carregar os uploads.', loadError))
-      } finally {
-        setIsLoading(false)
-      }
+  const loadUploads = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await omrService.getUploads({ examId: selectedExam?.id })
+      setUploads(response.items)
+    } catch (loadError) {
+      setError(formatApiErrorMessage('Nao foi possivel carregar os uploads.', loadError))
+    } finally {
+      setIsLoading(false)
     }
-
-    void loadUploads()
   }, [selectedExam?.id])
+
+  useEffect(() => {
+    void loadUploads()
+  }, [loadUploads])
 
   useEffect(() => {
     if (!filteredStudents.length) {
@@ -62,6 +65,7 @@ export function UploadsPage() {
   const totalUploadsLabel = uploads.length === 1 ? '1 cartao enviado' : `${uploads.length} cartoes enviados`
   const studentUploadsLabel =
     uploadsForSelectedStudent.length === 1 ? '1 arquivo deste aluno' : `${uploadsForSelectedStudent.length} arquivos deste aluno`
+  const loadFailedWithoutData = Boolean(error && !uploads.length)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -232,8 +236,9 @@ export function UploadsPage() {
             </div>
 
             {isLoading ? <p>Carregando uploads...</p> : null}
-            {!isLoading && selectedStudent && !uploadsForSelectedStudent.length ? <p>Nenhum arquivo enviado para este aluno ainda.</p> : null}
-            {!isLoading && !selectedStudent && !uploads.length ? <p>Nenhum upload enviado ainda.</p> : null}
+            {!isLoading && loadFailedWithoutData ? <ApiErrorState message={error ?? 'Nao foi possivel carregar os uploads.'} onRetry={loadUploads} /> : null}
+            {!isLoading && !error && selectedStudent && !uploadsForSelectedStudent.length ? <p>Nenhum arquivo enviado para este aluno ainda.</p> : null}
+            {!isLoading && !error && !selectedStudent && !uploads.length ? <p>Nenhum upload enviado ainda.</p> : null}
 
             <div className="uploads-history-list">
               {(selectedStudent ? uploadsForSelectedStudent : uploads).map((sheet) => (

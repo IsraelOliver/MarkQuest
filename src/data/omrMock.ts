@@ -116,6 +116,7 @@ export const templatesMock: Template[] = [
 export const answerKeysMock: AnswerKey[] = [
   {
     id: 'key-01',
+    name: 'Gabarito Oficial A',
     examId: 'exam-2026-math-01',
     templateId: 'template-01',
     version: 'v1',

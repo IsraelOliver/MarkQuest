@@ -45,6 +45,47 @@ export type AnswerSheet = {
 
 export type ProcessingJobStatus = 'queued' | 'processing' | 'completed' | 'failed'
 
+export type OMRUploadProcessingReport = {
+  uploadId: string
+  fileName: string
+  mimeType: string
+  status: 'processed' | 'failed'
+  processedAt: string
+  originalMimeType?: string
+  processedMimeType?: string
+  originalFileWasPdf?: boolean
+  processedPage?: number
+  pdfPageCount?: number
+  rasterizationDpi?: number
+  warning?: string
+  width?: number
+  height?: number
+  autoRotationAngle?: number
+  rotationCandidates?: Array<{
+    angle: number
+    score: number
+  }>
+  rotationConfidence?: number
+  lowConfidenceWarning?: string
+  boundingBoxDetected?: boolean
+  cropApplied?: boolean
+  cropFallbackUsed?: boolean
+  originalWidth?: number
+  originalHeight?: number
+  processedWidth?: number
+  processedHeight?: number
+  displacementAverage?: number
+  maxDisplacementDetected?: number
+  spatialCorrectionApplied?: boolean
+  confidenceAverage?: number
+  blankQuestionsCount?: number
+  multipleMarkedQuestionsCount?: number
+  error?: {
+    name: string
+    message: string
+  }
+}
+
 export type ProcessingJob = {
   id: string
   examId: string
@@ -60,6 +101,7 @@ export type ProcessingJob = {
   totalFiles?: number
   processedFiles?: number
   failedFiles?: number
+  uploadReports?: OMRUploadProcessingReport[]
 }
 
 export type OMRResult = {
@@ -179,6 +221,7 @@ export type CardMathSection = {
   showColumnHeaders: boolean
   columnHeaders: string[]
   showColumnSeparators: boolean
+  separatorMode: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
   columnSeparators: string[]
   linkedToMainQuestion: boolean
   linkedQuestionNumber: number | null
@@ -342,11 +385,43 @@ export type Template = {
   updatedAt?: string
 }
 
+export type AnswerKeyQuestionStatus = 'active' | 'annulled' | 'manual'
+export type AnswerKeyQuestionType = 'objective' | 'math' | 'open' | 'image' | 'essay'
+export type AnswerKeyQuestionKind = 'ce' | 'ad' | 'ae' | 'math' | 'open' | 'image' | 'essay'
+export type AnnulledScoringMode = 'redistribute-group' | 'redistribute-exam' | 'grant-student'
+
+export type AnswerKeyQuestion = {
+  questionNumber: number
+  questionType: AnswerKeyQuestionType
+  questionKind: AnswerKeyQuestionKind
+  sourceSectionId: string
+  sourceSectionTitle?: string
+  markerLabel?: string
+  groupKey?: string
+  groupLabel?: string
+  validOptions: string[]
+  correctAnswer: string | null
+  allowedCharacters?: string[]
+  responseColumns?: number
+  score: number
+  weight: number
+  maxScore?: number
+  status: AnswerKeyQuestionStatus
+}
+
 export type AnswerKey = {
   id: string
+  name: string
   examId: string
   templateId: string
   version: string
-  answers: string[]
+  answers: Array<string | null>
+  questions?: AnswerKeyQuestion[]
+  defaultScore?: number
+  defaultWeight?: number
+  essayMaxScore?: number
+  totalScore?: number
+  annulledScoringMode?: AnnulledScoringMode
   createdAt: string
+  updatedAt?: string
 }

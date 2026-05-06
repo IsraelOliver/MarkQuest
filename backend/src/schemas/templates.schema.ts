@@ -76,6 +76,7 @@ const cardDefinitionSchema = z.object({
         showColumnHeaders: z.boolean(),
         columnHeaders: z.array(z.string().max(3)).min(0).max(10),
         showColumnSeparators: z.boolean(),
+        separatorMode: z.enum(['none', 'comma', 'dot', 'negative', 'negative-comma', 'negative-dot']).optional(),
         columnSeparators: z.array(z.enum(['', '.', ',', '-'])).min(0).max(10),
         linkedToMainQuestion: z.boolean(),
         linkedQuestionNumber: z.number().int().positive().nullable(),

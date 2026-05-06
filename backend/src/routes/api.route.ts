@@ -61,4 +61,5 @@ export async function apiRoute(app: FastifyInstance) {
   app.post('/answer-keys', answerKeysController.create)
   app.get('/answer-keys', answerKeysController.list)
   app.get('/answer-keys/:id', answerKeysController.getById)
+  app.put('/answer-keys/:id', answerKeysController.update)
 }
