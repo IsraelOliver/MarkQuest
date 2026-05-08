@@ -58,6 +58,63 @@ type ProcessingJobDto = {
     processedPage?: number
     pdfPageCount?: number
     rasterizationDpi?: number
+    rasterizedPages?: Array<{
+      pageNumber: number
+      pageCount: number
+      rasterizationDpi: number
+      width: number
+      height: number
+      imagePath: string
+      processedMimeType: 'image/png'
+    }>
+    templatePageMap?: {
+      pageCount: number
+      templateHasExplicitBlockPageNumber: false
+      templateHasExplicitPageBreaks: boolean
+      mappingStrategy: 'page-breaks' | 'heuristic-after-last-objective' | 'single-page-fallback'
+      notes: string[]
+      pages: Array<{
+        pageNumber: number
+        blocksFound: Array<{
+          id: string
+          sectionType: string
+          readMode: string
+          title?: string
+          markerLabel?: string
+          linkedQuestionNumber?: number | null
+        }>
+        mathQuestionsFound: number[]
+        openQuestionsFound: number[]
+        automaticReadPending: boolean
+        automaticReadPendingReasons: string[]
+        notes: string[]
+      }>
+    }
+    mathReadReports?: Array<{
+      questionNumber: number
+      pageNumber: number
+      answer: string
+      expectedAnswer: string | null
+      detectedAnswer: string
+      diagnosticMatch: boolean | null
+      diagnosticStatus: 'match' | 'mismatch' | 'blank' | 'ambiguous' | 'missingAnswerKey'
+      diagnosticWarnings: string[]
+      confidence: number
+      geometrySource: 'operationalCellGrid' | 'persistedOperationalGeometry' | 'derivedRuntimeGeometry' | 'fallbackDiagnosticGeometry'
+      geometryScaled: boolean
+      markedCells: Array<{
+        columnNumber: number
+        rowSymbol: string
+        fillRatio: number
+      }>
+      blankColumns: number[]
+      multipleMarkedColumns: number[]
+      warnings: string[]
+      error?: {
+        name: string
+        message: string
+      }
+    }>
     warning?: string
   }>
   results: Array<{
@@ -398,6 +455,17 @@ describe('OMR processing smoke test with real engine', () => {
         processedPage: 1,
         pdfPageCount: 1,
         rasterizationDpi: 144,
+        rasterizedPages: [
+          expect.objectContaining({
+            pageNumber: 1,
+            pageCount: 1,
+            rasterizationDpi: 144,
+            width: expect.any(Number),
+            height: expect.any(Number),
+            imagePath: expect.stringMatching(/pdf_page_/),
+            processedMimeType: 'image/png',
+          }),
+        ],
         status: 'processed',
         confidenceAverage: expect.any(Number),
         blankQuestionsCount: 2,
@@ -423,6 +491,73 @@ describe('OMR processing smoke test with real engine', () => {
       url: '/api/templates',
       payload: {
         ...templatePayload,
+        definition: {
+          ...templatePayload.definition,
+          questionBlocks: [
+            templatePayload.definition.questionBlocks[0],
+            { id: 'page-break-1', sectionType: 'pageBreak', readMode: 'ignored' },
+            {
+              id: 'label-math',
+              sectionType: 'label',
+              readMode: 'ignored',
+              text: 'Questoes do tipo B',
+              align: 'left',
+              size: 'md',
+            },
+            {
+              id: 'section-math-33',
+              sectionType: 'math',
+              readMode: 'manual',
+              columns: 3,
+              showTopInputRow: true,
+              showColumnHeaders: false,
+              columnHeaders: [],
+              showColumnSeparators: true,
+              separatorMode: 'negative',
+              columnSeparators: ['-'],
+              linkedToMainQuestion: true,
+              linkedQuestionNumber: 33,
+              markerLabel: 'TIPO B',
+              operationalCellGrid: {
+                geometryVersion: 'math-cell-grid-v1',
+                pageNumber: 2,
+                pageWidth: 595.28,
+                pageHeight: 841.89,
+                blockId: 'section-math-33',
+                questionNumber: 33,
+                columns: [1, 2, 3].map((columnNumber, columnIndex) => ({
+                  columnNumber,
+                  cells: ['-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((symbol, rowIndex) => {
+                    const centerX = 365 + columnIndex * 44
+                    const centerY = 168 + rowIndex * 27
+                    const radius = 7
+
+                    return {
+                      symbol,
+                      centerX,
+                      centerY,
+                      radius,
+                      normalizedCenterX: centerX / 595.28,
+                      normalizedCenterY: centerY / 841.89,
+                      normalizedRadius: radius / 595.28,
+                    }
+                  }),
+                })),
+              },
+            },
+            {
+              id: 'section-open-82',
+              sectionType: 'open',
+              readMode: 'manual',
+              label: 'Questao discursiva',
+              lines: 4,
+              lineStyle: 'line',
+              linkedToMainQuestion: true,
+              linkedQuestionNumber: 82,
+              markerLabel: 'TIPO D',
+            },
+          ],
+        },
         omrConfig: {
           ...templatePayload.omrConfig,
           startXRatio: 0.25,
@@ -446,6 +581,22 @@ describe('OMR processing smoke test with real engine', () => {
         examId: exam.id,
         templateId: template.id,
         answers: ['A', 'C', 'D', 'A', 'B', 'D', 'E', 'A', 'B', 'C'],
+        questions: [
+          {
+            questionNumber: 33,
+            questionType: 'math',
+            questionKind: 'math',
+            sourceSectionId: 'section-math-33',
+            markerLabel: 'TIPO B',
+            validOptions: [],
+            correctAnswer: '-12',
+            allowedCharacters: ['-', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+            responseColumns: 3,
+            score: 1,
+            weight: 1,
+            status: 'manual',
+          },
+        ],
       },
     })
     const answerKey = parseJson<ApiSuccess<{ id: string }>>(answerKeyResponse).data
@@ -508,8 +659,89 @@ describe('OMR processing smoke test with real engine', () => {
       processedPage: 1,
       pdfPageCount: 2,
       rasterizationDpi: 144,
-      warning: 'PDF com múltiplas páginas: apenas a primeira página foi processada.',
+      warning: expect.stringContaining('primeira'),
       status: 'processed',
     })
-  }, 30_000)
+    expect(job.uploadReports?.[0]?.rasterizedPages).toEqual([
+      expect.objectContaining({
+        pageNumber: 1,
+        pageCount: 2,
+        rasterizationDpi: 144,
+        width: expect.any(Number),
+        height: expect.any(Number),
+        imagePath: expect.stringMatching(/pdf_page_/),
+        processedMimeType: 'image/png',
+      }),
+      expect.objectContaining({
+        pageNumber: 2,
+        pageCount: 2,
+        rasterizationDpi: 144,
+        width: expect.any(Number),
+        height: expect.any(Number),
+        imagePath: expect.stringMatching(/pdf_page_/),
+        processedMimeType: 'image/png',
+      }),
+    ])
+    expect(job.uploadReports?.[0]?.templatePageMap).toMatchObject({
+      pageCount: 2,
+      templateHasExplicitBlockPageNumber: false,
+      templateHasExplicitPageBreaks: true,
+      mappingStrategy: 'page-breaks',
+      pages: [
+        expect.objectContaining({
+          pageNumber: 1,
+          automaticReadPending: false,
+          mathQuestionsFound: [],
+          openQuestionsFound: [],
+        }),
+        expect.objectContaining({
+          pageNumber: 2,
+          mathQuestionsFound: [33],
+          openQuestionsFound: [82],
+          automaticReadPending: true,
+          automaticReadPendingReasons: ['math', 'open'],
+          blocksFound: expect.arrayContaining([
+            expect.objectContaining({
+              id: 'section-math-33',
+              sectionType: 'math',
+              markerLabel: 'TIPO B',
+              linkedQuestionNumber: 33,
+            }),
+            expect.objectContaining({
+              id: 'section-open-82',
+              sectionType: 'open',
+              markerLabel: 'TIPO D',
+              linkedQuestionNumber: 82,
+            }),
+          ]),
+        }),
+      ],
+    })
+    expect(job.uploadReports?.[0]?.mathReadReports).toEqual([
+      expect.objectContaining({
+        questionNumber: 33,
+        pageNumber: 2,
+        answer: expect.any(String),
+        expectedAnswer: '-12',
+        detectedAnswer: expect.any(String),
+        diagnosticMatch: false,
+        diagnosticStatus: 'blank',
+        diagnosticWarnings: expect.arrayContaining([
+          expect.stringContaining('em branco'),
+        ]),
+        confidence: expect.any(Number),
+        geometrySource: 'operationalCellGrid',
+        geometryScaled: true,
+        markedCells: expect.any(Array),
+        blankColumns: expect.any(Array),
+        multipleMarkedColumns: expect.any(Array),
+        warnings: expect.arrayContaining([
+          expect.stringMatching(/diagn[oó]stico/i),
+          expect.stringContaining('Malha operacional por'),
+        ]),
+      }),
+    ])
+  }, 45_000)
 })
+
+

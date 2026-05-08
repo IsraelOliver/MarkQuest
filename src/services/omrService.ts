@@ -12,6 +12,7 @@ import type {
 } from '../types/omr'
 import { createEditorStateFromPreset } from '../utils/cardTemplatePresets'
 import { createTemplateLayoutConfig } from '../utils/templateLayout'
+import { withDerivedMathOperationalGeometry } from '../utils/templatePageLayout'
 import { API_ENDPOINTS, request } from './apiClient'
 
 type BackendUpload = {
@@ -255,15 +256,24 @@ function mapTemplate(template: BackendTemplate, options?: TemplateMappingOptions
     throw new Error(`Template ${template.id} sem definicao completa.`)
   }
 
+  const omrConfig = createTemplateLayoutConfig(template.totalQuestions, template.omrConfig)
+  const definition = withDerivedMathOperationalGeometry({
+    name: template.name,
+    presetId: resolvedDefinition.presetId,
+    definition: resolvedDefinition.definition,
+    visualTheme: resolvedDefinition.visualTheme,
+    omrConfig,
+  })
+
   return {
     id: template.id,
     name: template.name,
     examId: template.examId,
     totalQuestions: template.totalQuestions,
     presetId: resolvedDefinition.presetId,
-    definition: resolvedDefinition.definition,
+    definition,
     visualTheme: resolvedDefinition.visualTheme,
-    omrConfig: createTemplateLayoutConfig(template.totalQuestions, template.omrConfig),
+    omrConfig,
     version: template.version ?? 'v1',
     createdAt: template.createdAt,
     updatedAt: template.updatedAt,

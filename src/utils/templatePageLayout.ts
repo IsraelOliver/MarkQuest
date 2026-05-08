@@ -1,4 +1,16 @@
-import type { CardEssaySection, CardImageSection, CardLabelSection, CardNumberingFormat, CardOpenSection, CardSignatureSection, CardSpacerSection, CardTemplateEditorState } from '../types/omr'
+import type {
+  CardMathOperationalCellGrid,
+  CardEssaySection,
+  CardImageSection,
+  CardLabelSection,
+  CardMathOperationalGeometry,
+  CardNumberingFormat,
+  CardOpenSection,
+  CardSignatureSection,
+  CardSpacerSection,
+  CardTemplateDefinition,
+  CardTemplateEditorState,
+} from '../types/omr'
 import { getCardTemplateZones } from './cardTemplateZones'
 import { buildNormalizedRenderModel, getMathAllowedCharacters } from './questionBlocks'
 import { getTemplateLayoutMetrics } from './templateLayoutGeometry'
@@ -198,6 +210,107 @@ export type TemplatePageLayout = {
   images: TemplateImageLayout[]
   essays: TemplateEssayLayout[]
   signatures: TemplateSignatureLayout[]
+}
+
+function safeRatio(value: number, total: number) {
+  if (!Number.isFinite(value) || !Number.isFinite(total) || total <= 0) {
+    return 0
+  }
+
+  return Math.min(1, Math.max(0, value / total))
+}
+
+function buildMathOperationalGeometry(page: TemplatePageLayout, mathBlock: TemplateMathLayout): CardMathOperationalGeometry {
+  const pageWidth = page.metrics.contentWidth
+  const pageHeight = page.metrics.contentHeight
+  const rowSymbols = mathBlock.rows.map((row) => row.symbol)
+  const firstColumnX = mathBlock.columnXs[0] ?? mathBlock.x + mathBlock.bubbleRadius
+  const secondColumnX = mathBlock.columnXs[1] ?? firstColumnX
+  const firstRowY = mathBlock.rows[0]?.y ?? mathBlock.gridTopY
+  const secondRowY = mathBlock.rows[1]?.y ?? firstRowY
+  const lastColumnX = mathBlock.columnXs[mathBlock.columnXs.length - 1] ?? firstColumnX
+  const lastRowY = mathBlock.rows[mathBlock.rows.length - 1]?.y ?? firstRowY
+  const columnGap = Math.max(0, secondColumnX - firstColumnX)
+  const rowGap = Math.max(0, secondRowY - firstRowY)
+  const gridWidth = Math.max(mathBlock.bubbleRadius * 2, lastColumnX - firstColumnX + mathBlock.bubbleRadius * 2)
+  const gridHeight = Math.max(mathBlock.bubbleRadius * 2, lastRowY - firstRowY + mathBlock.bubbleRadius * 2)
+
+  return {
+    questionNumber: mathBlock.linkedQuestionNumber ?? mathBlock.displayQuestionNumber,
+    pageNumber: page.pageIndex + 1,
+    columns: mathBlock.columns,
+    rowSymbols,
+    allowedSymbols: rowSymbols,
+    startX: firstColumnX,
+    startY: firstRowY,
+    columnGap,
+    rowGap,
+    bubbleRadius: mathBlock.bubbleRadius,
+    width: gridWidth,
+    height: gridHeight,
+    pageWidth,
+    pageHeight,
+    startXRatio: safeRatio(firstColumnX, pageWidth),
+    startYRatio: safeRatio(firstRowY, pageHeight),
+    columnGapRatio: safeRatio(columnGap, pageWidth),
+    rowGapRatio: safeRatio(rowGap, pageHeight),
+    bubbleRadiusRatio: safeRatio(mathBlock.bubbleRadius, pageWidth),
+    widthRatio: safeRatio(gridWidth, pageWidth),
+    heightRatio: safeRatio(gridHeight, pageHeight),
+  }
+}
+
+function buildMathOperationalCellGrid(page: TemplatePageLayout, mathBlock: TemplateMathLayout): CardMathOperationalCellGrid {
+  const pageWidth = page.metrics.contentWidth
+  const pageHeight = page.metrics.contentHeight
+
+  return {
+    geometryVersion: 'math-cell-grid-v1',
+    pageNumber: page.pageIndex + 1,
+    pageWidth,
+    pageHeight,
+    blockId: mathBlock.id,
+    questionNumber: mathBlock.linkedQuestionNumber ?? mathBlock.displayQuestionNumber,
+    columns: mathBlock.columnXs.map((columnX, columnIndex) => ({
+      columnNumber: columnIndex + 1,
+      cells: mathBlock.rows.map((row) => ({
+        symbol: row.symbol,
+        centerX: columnX,
+        centerY: row.y,
+        radius: mathBlock.bubbleRadius,
+        normalizedCenterX: safeRatio(columnX, pageWidth),
+        normalizedCenterY: safeRatio(row.y, pageHeight),
+        normalizedRadius: safeRatio(mathBlock.bubbleRadius, pageWidth),
+      })),
+    })),
+  }
+}
+
+export function withDerivedMathOperationalGeometry(state: CardTemplateEditorState): CardTemplateDefinition {
+  const mathGeometryById = new Map<string, CardMathOperationalGeometry>()
+  const mathCellGridById = new Map<string, CardMathOperationalCellGrid>()
+
+  getPaginatedTemplatePages(state).forEach((page) => {
+    page.mathBlocks.forEach((mathBlock) => {
+      mathGeometryById.set(mathBlock.id, buildMathOperationalGeometry(page, mathBlock))
+      mathCellGridById.set(mathBlock.id, buildMathOperationalCellGrid(page, mathBlock))
+    })
+  })
+
+  return {
+    ...state.definition,
+    questionBlocks: state.definition.questionBlocks.map((section) => {
+      if (section.sectionType !== 'math') {
+        return section
+      }
+
+      return {
+        ...section,
+        operationalGeometry: mathGeometryById.get(section.id) ?? section.operationalGeometry,
+        operationalCellGrid: mathCellGridById.get(section.id) ?? section.operationalCellGrid,
+      }
+    }),
+  }
 }
 
 type LayoutFlowSection =

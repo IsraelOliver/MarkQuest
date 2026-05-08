@@ -36,6 +36,7 @@ import {
   createEditorStateFromTemplate,
 } from '../utils/cardTemplatePresets'
 import { getTemplateLayoutBlueprint } from '../utils/templateLayoutBlueprint'
+import { withDerivedMathOperationalGeometry } from '../utils/templatePageLayout'
 import {
   getConfidenceLabel,
   getReadModeFromConfig,
@@ -1502,7 +1503,7 @@ export function TemplatesPage() {
       examId: selectedExam.id,
       totalQuestions: effectiveTotalQuestions,
       presetId: currentState.presetId,
-      definition: currentState.definition,
+      definition: withDerivedMathOperationalGeometry(currentState),
       visualTheme: currentState.visualTheme,
       omrConfig: currentState.omrConfig,
     }

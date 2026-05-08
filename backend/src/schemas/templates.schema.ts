@@ -81,6 +81,57 @@ const cardDefinitionSchema = z.object({
         linkedToMainQuestion: z.boolean(),
         linkedQuestionNumber: z.number().int().positive().nullable(),
         markerLabel: z.string().max(12),
+        operationalGeometry: z
+          .object({
+            questionNumber: z.number().int().positive().nullable(),
+            pageNumber: z.number().int().positive().nullable(),
+            columns: z.number().int().min(1).max(10),
+            rowSymbols: z.array(z.string().min(1)).min(1),
+            allowedSymbols: z.array(z.string().min(1)).min(1),
+            startX: z.number(),
+            startY: z.number(),
+            columnGap: z.number().min(0),
+            rowGap: z.number().min(0),
+            bubbleRadius: z.number().positive(),
+            width: z.number().positive(),
+            height: z.number().positive(),
+            pageWidth: z.number().positive(),
+            pageHeight: z.number().positive(),
+            startXRatio: z.number().min(0).max(1),
+            startYRatio: z.number().min(0).max(1),
+            columnGapRatio: z.number().min(0).max(1),
+            rowGapRatio: z.number().min(0).max(1),
+            bubbleRadiusRatio: z.number().min(0).max(1),
+            widthRatio: z.number().min(0).max(1),
+            heightRatio: z.number().min(0).max(1),
+          })
+          .optional(),
+        operationalCellGrid: z
+          .object({
+            geometryVersion: z.literal('math-cell-grid-v1'),
+            pageNumber: z.number().int().positive().nullable(),
+            pageWidth: z.number().positive(),
+            pageHeight: z.number().positive(),
+            blockId: z.string().min(1),
+            questionNumber: z.number().int().positive().nullable(),
+            columns: z.array(
+              z.object({
+                columnNumber: z.number().int().positive(),
+                cells: z.array(
+                  z.object({
+                    symbol: z.string().min(1),
+                    centerX: z.number(),
+                    centerY: z.number(),
+                    radius: z.number().positive(),
+                    normalizedCenterX: z.number().min(0).max(1),
+                    normalizedCenterY: z.number().min(0).max(1),
+                    normalizedRadius: z.number().min(0).max(1),
+                  }),
+                ).min(1),
+              }),
+            ).min(1),
+          })
+          .optional(),
       }),
       z.object({
         id: z.string(),

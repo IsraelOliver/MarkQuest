@@ -457,7 +457,7 @@ describe('API contracts', () => {
             groupKey: 'math:TIPO B',
             groupLabel: 'Matemática / TIPO B',
             validOptions: [],
-            correctAnswer: '12,-',
+            correctAnswer: '-12,',
             allowedCharacters: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', '.', '-'],
             responseColumns: 4,
             score: 1.25,

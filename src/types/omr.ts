@@ -57,6 +57,96 @@ export type OMRUploadProcessingReport = {
   processedPage?: number
   pdfPageCount?: number
   rasterizationDpi?: number
+  rasterizedPages?: Array<{
+    pageNumber: number
+    pageCount: number
+    rasterizationDpi: number
+    width: number
+    height: number
+    imagePath: string
+    processedMimeType: 'image/png'
+  }>
+  templatePageMap?: {
+    pageCount: number
+    templateHasExplicitBlockPageNumber: false
+    templateHasExplicitPageBreaks: boolean
+    mappingStrategy: 'page-breaks' | 'heuristic-after-last-objective' | 'single-page-fallback'
+    notes: string[]
+    pages: Array<{
+      pageNumber: number
+      blocksFound: Array<{
+        id: string
+        sectionType: CardTemplateSection['sectionType']
+        readMode: CardTemplateSection['readMode']
+        title?: string
+        markerLabel?: string
+        linkedQuestionNumber?: number | null
+      }>
+      mathQuestionsFound: number[]
+      openQuestionsFound: number[]
+      automaticReadPending: boolean
+      automaticReadPendingReasons: string[]
+      notes: string[]
+    }>
+  }
+  mathReadReports?: Array<{
+    questionNumber: number
+    pageNumber: number
+    answer: string
+    expectedAnswer: string | null
+    detectedAnswer: string
+    diagnosticMatch: boolean | null
+    diagnosticStatus: 'match' | 'mismatch' | 'blank' | 'ambiguous' | 'missingAnswerKey'
+    diagnosticWarnings: string[]
+    confidence: number
+    geometrySource: 'operationalCellGrid' | 'persistedOperationalGeometry' | 'derivedRuntimeGeometry' | 'fallbackDiagnosticGeometry'
+    geometryScaled: boolean
+    markThresholdUsed?: number
+    ambiguityThresholdUsed?: number
+    debugOverlayPath?: string
+    markedCells: Array<{
+      columnNumber: number
+      rowSymbol: string
+      fillRatio: number
+    }>
+    columnDiagnostics?: Array<{
+      columnNumber: number
+      status: 'marked' | 'blank' | 'multiple'
+      thresholdUsed: number
+      ambiguityThresholdUsed: number
+        topCandidate?: {
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+        }
+        secondCandidate?: {
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+        }
+        cellEvaluations: Array<{
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+      }>
+    }>
+    blankColumns: number[]
+    multipleMarkedColumns: number[]
+    warnings: string[]
+    error?: {
+      name: string
+      message: string
+    }
+  }>
   warning?: string
   width?: number
   height?: number
@@ -212,6 +302,55 @@ export type CardOpenSection = {
   markerLabel: string
 }
 
+export type CardMathOperationalGeometry = {
+  questionNumber: number | null
+  pageNumber: number | null
+  columns: number
+  rowSymbols: string[]
+  allowedSymbols: string[]
+  startX: number
+  startY: number
+  columnGap: number
+  rowGap: number
+  bubbleRadius: number
+  width: number
+  height: number
+  pageWidth: number
+  pageHeight: number
+  startXRatio: number
+  startYRatio: number
+  columnGapRatio: number
+  rowGapRatio: number
+  bubbleRadiusRatio: number
+  widthRatio: number
+  heightRatio: number
+}
+
+export type CardMathOperationalCell = {
+  symbol: string
+  centerX: number
+  centerY: number
+  radius: number
+  normalizedCenterX: number
+  normalizedCenterY: number
+  normalizedRadius: number
+}
+
+export type CardMathOperationalCellColumn = {
+  columnNumber: number
+  cells: CardMathOperationalCell[]
+}
+
+export type CardMathOperationalCellGrid = {
+  geometryVersion: 'math-cell-grid-v1'
+  pageNumber: number | null
+  pageWidth: number
+  pageHeight: number
+  blockId: string
+  questionNumber: number | null
+  columns: CardMathOperationalCellColumn[]
+}
+
 export type CardMathSection = {
   id: string
   sectionType: 'math'
@@ -226,6 +365,8 @@ export type CardMathSection = {
   linkedToMainQuestion: boolean
   linkedQuestionNumber: number | null
   markerLabel: string
+  operationalGeometry?: CardMathOperationalGeometry
+  operationalCellGrid?: CardMathOperationalCellGrid
 }
 
 export type CardImageSection = {

@@ -890,10 +890,17 @@ a {
   font-weight: 700;
 }
 
-.uploads-layout,
-.results-layout {
+.uploads-layout {
   display: grid;
   grid-template-columns: 300px minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+  margin-top: 1rem;
+}
+
+.results-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
   align-items: start;
   margin-top: 1rem;
@@ -910,6 +917,13 @@ a {
   min-width: 0;
   display: grid;
   gap: 1rem;
+}
+
+.results-top-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.9fr);
+  gap: 1rem;
+  align-items: start;
 }
 
 .uploads-student-list,
@@ -978,7 +992,7 @@ a {
 
 .results-summary-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
   gap: 1rem;
 }
 
@@ -1007,6 +1021,7 @@ a {
 
 .results-latest-job-card__details {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.8rem;
   margin-top: 1rem;
 }
@@ -1018,6 +1033,327 @@ a {
   border: 1px solid #e2e8f0;
   border-radius: 0.9rem;
   background: #f8fafc;
+  min-width: 0;
+}
+
+.results-technical-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.results-expand-actions {
+  display: flex;
+  justify-content: flex-start;
+  margin-top: -0.2rem;
+  margin-bottom: 0.55rem;
+}
+
+.results-expand-button,
+.results-inline-button {
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0;
+}
+
+.results-expand-button:hover,
+.results-expand-button:focus-visible,
+.results-inline-button:hover,
+.results-inline-button:focus-visible {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+.results-technical-empty p {
+  margin: 0;
+  color: #475569;
+}
+
+.results-technical-card {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.results-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0.28rem 0.62rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.results-badge--success {
+  background: #dcfce7;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.results-badge--warning {
+  background: #ffedd5;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.results-badge--critical {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.results-badge--neutral {
+  background: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.results-badge--info {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1d4ed8;
+}
+
+.results-technical-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.results-technical-card__eyebrow {
+  margin: 0 0 0.3rem;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.results-technical-card__header h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.results-technical-card__status {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.results-technical-card__status--processed {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.results-technical-card__status--failed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.results-technical-card__badges,
+.results-math-diagnostic-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.results-technical-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.results-technical-card__grid div,
+.results-technical-card__details div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  min-width: 0;
+}
+
+.results-technical-card__grid span,
+.results-technical-card__details span {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.results-technical-card__grid strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.results-technical-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+}
+
+.results-technical-card__details p {
+  margin: 0;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.results-math-diagnostic-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.results-math-diagnostic-empty p {
+  margin: 0;
+  color: #475569;
+}
+
+.results-math-diagnostic-card {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.results-math-diagnostic-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.results-math-diagnostic-card__eyebrow {
+  margin: 0 0 0.3rem;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.results-math-diagnostic-card__header h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.results-math-diagnostic-card__status {
+  flex-shrink: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.results-math-diagnostic-card__status--match {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.results-math-diagnostic-card__status--mismatch {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.results-math-diagnostic-card__status--blank,
+.results-math-diagnostic-card__status--missingAnswerKey {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.results-math-diagnostic-card__status--ambiguous {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.results-math-diagnostic-card__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.results-math-diagnostic-card__grid div,
+.results-math-diagnostic-card__details div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  min-width: 0;
+}
+
+.results-math-diagnostic-card__grid span,
+.results-math-diagnostic-card__details span {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.results-math-diagnostic-card__grid strong {
+  color: #0f172a;
+  font-size: 0.95rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.results-math-diagnostic-card__details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.75rem;
+}
+
+.results-math-diagnostic-card__details p {
+  margin: 0;
+  color: #334155;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.results-warning-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.results-warning-summary span,
+.results-warning-summary p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.results-warning-summary__details {
+  display: grid;
+  gap: 0.28rem;
+  padding-top: 0.15rem;
+}
+
+.results-warning-summary__details p {
+  margin: 0;
+  color: #475569;
+  font-size: 0.88rem;
+  line-height: 1.4;
 }
 
 .answer-key-layout {
@@ -3796,6 +4132,28 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .results-top-grid,
+  .results-latest-job-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .results-technical-card__header,
+  .results-technical-card__details,
+  .results-math-diagnostic-card__header,
+  .results-math-diagnostic-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .results-technical-card__header,
+  .results-math-diagnostic-card__header {
+    display: grid;
+  }
+
+  .results-technical-card__grid,
+  .results-math-diagnostic-card__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .answer-key-header {
     grid-template-columns: 1fr;
   }
@@ -3893,6 +4251,13 @@ a {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
   }
 
+  .results-technical-card__grid,
+  .results-technical-card__details,
+  .results-math-diagnostic-card__grid,
+  .results-math-diagnostic-card__details {
+    grid-template-columns: 1fr;
+  }
+
   .answer-key-question__compact-top {
     gap: 0.28rem;
   }
@@ -3977,12 +4342,14 @@ a {
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   margin-bottom: 1rem;
 }
 
 .table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
 }
 

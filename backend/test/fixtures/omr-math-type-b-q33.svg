@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Fixture controlada para futura leitura OMR da questão matemática tipo B.
+  Questão: 33
+  Colunas: 3
+  Separador habilitado: sinal negativo
+  Resposta esperada futura: -12
+-->
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="420"
+  height="560"
+  viewBox="0 0 420 560"
+  data-question-number="33"
+  data-question-type="math"
+  data-columns="3"
+  data-separator-mode="negative"
+  data-expected-answer="-12"
+>
+  <rect width="420" height="560" fill="#ffffff" />
+  <text x="28" y="36" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="#0f172a">
+    Questão 33 · Tipo B
+  </text>
+
+  <g font-family="Arial, sans-serif" font-size="15" fill="#334155" text-anchor="middle">
+    <text x="110" y="76">Coluna 1</text>
+    <text x="210" y="76">Coluna 2</text>
+    <text x="310" y="76">Coluna 3</text>
+  </g>
+
+  <!-- Linhas de símbolos permitidos: -, 0, 1, 2, ..., 9 -->
+  <g font-family="Arial, sans-serif" font-size="16" fill="#0f172a" text-anchor="middle">
+    <!-- row 1: - -->
+    <circle cx="110" cy="118" r="16" fill="#111827" stroke="#111827" stroke-width="2" data-column="1" data-symbol="-" data-selected="true" />
+    <text x="110" y="123" fill="#ffffff">-</text>
+    <circle cx="210" cy="118" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="-" />
+    <text x="210" y="123">-</text>
+    <circle cx="310" cy="118" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="-" />
+    <text x="310" y="123">-</text>
+
+    <!-- row 2: 0 -->
+    <circle cx="110" cy="158" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="0" />
+    <text x="110" y="163">0</text>
+    <circle cx="210" cy="158" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="0" />
+    <text x="210" y="163">0</text>
+    <circle cx="310" cy="158" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="0" />
+    <text x="310" y="163">0</text>
+
+    <!-- row 3: 1 -->
+    <circle cx="110" cy="198" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="1" />
+    <text x="110" y="203">1</text>
+    <circle cx="210" cy="198" r="16" fill="#111827" stroke="#111827" stroke-width="2" data-column="2" data-symbol="1" data-selected="true" />
+    <text x="210" y="203" fill="#ffffff">1</text>
+    <circle cx="310" cy="198" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="1" />
+    <text x="310" y="203">1</text>
+
+    <!-- row 4: 2 -->
+    <circle cx="110" cy="238" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="2" />
+    <text x="110" y="243">2</text>
+    <circle cx="210" cy="238" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="2" />
+    <text x="210" y="243">2</text>
+    <circle cx="310" cy="238" r="16" fill="#111827" stroke="#111827" stroke-width="2" data-column="3" data-symbol="2" data-selected="true" />
+    <text x="310" y="243" fill="#ffffff">2</text>
+
+    <!-- row 5: 3 -->
+    <circle cx="110" cy="278" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="3" />
+    <text x="110" y="283">3</text>
+    <circle cx="210" cy="278" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="3" />
+    <text x="210" y="283">3</text>
+    <circle cx="310" cy="278" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="3" />
+    <text x="310" y="283">3</text>
+
+    <!-- row 6: 4 -->
+    <circle cx="110" cy="318" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="4" />
+    <text x="110" y="323">4</text>
+    <circle cx="210" cy="318" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="4" />
+    <text x="210" y="323">4</text>
+    <circle cx="310" cy="318" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="4" />
+    <text x="310" y="323">4</text>
+
+    <!-- row 7: 5 -->
+    <circle cx="110" cy="358" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="5" />
+    <text x="110" y="363">5</text>
+    <circle cx="210" cy="358" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="5" />
+    <text x="210" y="363">5</text>
+    <circle cx="310" cy="358" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="5" />
+    <text x="310" y="363">5</text>
+
+    <!-- row 8: 6 -->
+    <circle cx="110" cy="398" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="6" />
+    <text x="110" y="403">6</text>
+    <circle cx="210" cy="398" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="6" />
+    <text x="210" y="403">6</text>
+    <circle cx="310" cy="398" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="6" />
+    <text x="310" y="403">6</text>
+
+    <!-- row 9: 7 -->
+    <circle cx="110" cy="438" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="7" />
+    <text x="110" y="443">7</text>
+    <circle cx="210" cy="438" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="7" />
+    <text x="210" y="443">7</text>
+    <circle cx="310" cy="438" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="7" />
+    <text x="310" y="443">7</text>
+
+    <!-- row 10: 8 -->
+    <circle cx="110" cy="478" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="8" />
+    <text x="110" y="483">8</text>
+    <circle cx="210" cy="478" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="8" />
+    <text x="210" y="483">8</text>
+    <circle cx="310" cy="478" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="8" />
+    <text x="310" y="483">8</text>
+
+    <!-- row 11: 9 -->
+    <circle cx="110" cy="518" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="1" data-symbol="9" />
+    <text x="110" y="523">9</text>
+    <circle cx="210" cy="518" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="2" data-symbol="9" />
+    <text x="210" y="523">9</text>
+    <circle cx="310" cy="518" r="16" fill="#ffffff" stroke="#111827" stroke-width="2" data-column="3" data-symbol="9" />
+    <text x="310" y="523">9</text>
+  </g>
+</svg>

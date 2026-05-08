@@ -80,6 +80,96 @@ export type OMRUploadProcessingReport = {
   processedPage?: number
   pdfPageCount?: number
   rasterizationDpi?: number
+  rasterizedPages?: Array<{
+    pageNumber: number
+    pageCount: number
+    rasterizationDpi: number
+    width: number
+    height: number
+    imagePath: string
+    processedMimeType: 'image/png'
+  }>
+  templatePageMap?: {
+    pageCount: number
+    templateHasExplicitBlockPageNumber: false
+    templateHasExplicitPageBreaks: boolean
+    mappingStrategy: 'page-breaks' | 'heuristic-after-last-objective' | 'single-page-fallback'
+    notes: string[]
+    pages: Array<{
+      pageNumber: number
+      blocksFound: Array<{
+        id: string
+        sectionType: CardTemplateSection['sectionType']
+        readMode: CardTemplateSection['readMode']
+        title?: string
+        markerLabel?: string
+        linkedQuestionNumber?: number | null
+      }>
+      mathQuestionsFound: number[]
+      openQuestionsFound: number[]
+      automaticReadPending: boolean
+      automaticReadPendingReasons: string[]
+      notes: string[]
+    }>
+  }
+  mathReadReports?: Array<{
+    questionNumber: number
+    pageNumber: number
+    answer: string
+    expectedAnswer: string | null
+    detectedAnswer: string
+    diagnosticMatch: boolean | null
+    diagnosticStatus: 'match' | 'mismatch' | 'blank' | 'ambiguous' | 'missingAnswerKey'
+    diagnosticWarnings: string[]
+    confidence: number
+    geometrySource: 'operationalCellGrid' | 'persistedOperationalGeometry' | 'derivedRuntimeGeometry' | 'fallbackDiagnosticGeometry'
+    geometryScaled: boolean
+    markThresholdUsed?: number
+    ambiguityThresholdUsed?: number
+    debugOverlayPath?: string
+    markedCells: Array<{
+      columnNumber: number
+      rowSymbol: string
+      fillRatio: number
+    }>
+    columnDiagnostics?: Array<{
+      columnNumber: number
+      status: 'marked' | 'blank' | 'multiple'
+      thresholdUsed: number
+      ambiguityThresholdUsed: number
+        topCandidate?: {
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+        }
+        secondCandidate?: {
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+        }
+        cellEvaluations: Array<{
+          symbol: string
+          fillRatio: number
+          thresholdUsed?: number
+          centerX: number
+          centerY: number
+          radius: number
+      }>
+    }>
+    blankColumns: number[]
+    multipleMarkedColumns: number[]
+    warnings: string[]
+    error?: {
+      name: string
+      message: string
+    }
+  }>
   warning?: string
   width?: number
   height?: number
@@ -164,13 +254,56 @@ export type CardTemplateSection =
         showTopInputRow: boolean
         showColumnHeaders: boolean
         columnHeaders: string[]
-        showColumnSeparators: boolean
-        separatorMode?: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
-        columnSeparators: string[]
-        linkedToMainQuestion: boolean
-        linkedQuestionNumber: number | null
-        markerLabel: string
+      showColumnSeparators: boolean
+      separatorMode?: 'none' | 'comma' | 'dot' | 'negative' | 'negative-comma' | 'negative-dot'
+      columnSeparators: string[]
+      linkedToMainQuestion: boolean
+      linkedQuestionNumber: number | null
+      markerLabel: string
+      operationalGeometry?: {
+        questionNumber: number | null
+        pageNumber: number | null
+        columns: number
+        rowSymbols: string[]
+        allowedSymbols: string[]
+        startX: number
+        startY: number
+        columnGap: number
+        rowGap: number
+        bubbleRadius: number
+        width: number
+        height: number
+        pageWidth: number
+        pageHeight: number
+        startXRatio: number
+        startYRatio: number
+        columnGapRatio: number
+        rowGapRatio: number
+        bubbleRadiusRatio: number
+        widthRatio: number
+        heightRatio: number
       }
+      operationalCellGrid?: {
+        geometryVersion: 'math-cell-grid-v1'
+        pageNumber: number | null
+        pageWidth: number
+        pageHeight: number
+        blockId: string
+        questionNumber: number | null
+        columns: Array<{
+          columnNumber: number
+          cells: Array<{
+            symbol: string
+            centerX: number
+            centerY: number
+            radius: number
+            normalizedCenterX: number
+            normalizedCenterY: number
+            normalizedRadius: number
+          }>
+        }>
+      }
+    }
   | {
       id: string
       sectionType: 'image'
